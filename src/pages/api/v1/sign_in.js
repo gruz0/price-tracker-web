@@ -1,0 +1,57 @@
+import { withSentry } from '@sentry/nextjs'
+import * as Sentry from '@sentry/nextjs'
+
+import { findUserByLoginAndPassword } from '../../../services'
+import { isEmptyString } from '../../../lib/validators'
+
+import {
+  METHOD_NOT_ALLOWED,
+  MISSING_LOGIN,
+  MISSING_PASSWORD,
+  UNHANDLED_ERROR,
+  INVALID_CREDENTIALS,
+} from '../../../lib/messages'
+
+const handler = async (req, res) => {
+  if (req.method !== 'POST') {
+    return res.status(405).json(METHOD_NOT_ALLOWED)
+  }
+
+  const { login, password } = req.body
+
+  if (isEmptyString(login)) {
+    return res.status(422).json(MISSING_LOGIN)
+  }
+
+  if (isEmptyString(password)) {
+    return res.status(422).json(MISSING_PASSWORD)
+  }
+
+  let user
+
+  try {
+    user = findUserByLoginAndPassword(login, password)
+  } catch (err) {
+    Sentry.withScope(function (scope) {
+      scope.setContext('args', { login })
+      scope.setTag('section', 'findUserByLoginAndPassword')
+      Sentry.captureException(err)
+    })
+
+    return res.status(400).json(UNHANDLED_ERROR)
+  }
+
+  if (!user) {
+    return res.status(403).json(INVALID_CREDENTIALS)
+  }
+
+  return res.status(200).json({
+    token: user.token,
+    user: {
+      id: user.id,
+      login: user.login,
+    },
+  })
+}
+
+export default withSentry(handler)
