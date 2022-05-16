@@ -10,14 +10,62 @@ export default function ProductsList({ products }) {
   const totalPages = Math.ceil(productsCount / recordsPerPage)
   const showPagination = productsCount / recordsPerPage > 1
 
+  const [search, setSearch] = useState('')
+  const [displayWithDiscount, setDisplayWithDiscount] = useState(false)
+  const [displayFavorited, setDisplayFavorited] = useState(false)
+  const [displayInStock, setDisplayInStock] = useState(false)
+
   const currentTableData = useMemo(() => {
     const startFrom = (currentPage - 1) * recordsPerPage
 
-    return products.slice(startFrom, startFrom + recordsPerPage)
-  }, [currentPage])
+    let filtered = products
+
+    filtered = displayWithDiscount
+      ? filtered.filter((product) => product.has_discount)
+      : filtered
+
+    filtered = displayFavorited
+      ? filtered.filter((product) => product.favorited)
+      : filtered
+
+    filtered = displayInStock
+      ? filtered.filter((product) => product.in_stock)
+      : filtered
+
+    filtered =
+      search.trim().length > 0
+        ? filtered.filter((product) =>
+            product.title.toLowerCase().includes(search.trim().toLowerCase())
+          )
+        : filtered
+
+    return filtered.slice(startFrom, startFrom + recordsPerPage)
+  }, [
+    search,
+    displayWithDiscount,
+    displayFavorited,
+    displayInStock,
+    currentPage,
+  ])
 
   const changePage = (_e, { activePage }) => {
     setCurrentPage(activePage)
+  }
+
+  const toggleDisplayWithDiscount = () => {
+    setDisplayWithDiscount(!displayWithDiscount)
+  }
+
+  const toggleDisplayFavorited = () => {
+    setDisplayFavorited(!displayFavorited)
+  }
+
+  const toggleDisplayInStock = () => {
+    setDisplayInStock(!displayInStock)
+  }
+
+  const handleSearchChange = (e) => {
+    setSearch(e.target.value)
   }
 
   return (
@@ -33,12 +81,6 @@ export default function ProductsList({ products }) {
               title="Самая низкая цена с момента добавления товара в систему"
             />
           </Table.HeaderCell>
-          <Table.HeaderCell>
-            <Icon
-              name="arrow alternate circle up"
-              title="Самая высокая цена с момента добавления товара в систему"
-            />
-          </Table.HeaderCell>
           <Table.HeaderCell>Наличие</Table.HeaderCell>
           <Table.HeaderCell>Избр.</Table.HeaderCell>
           <Table.HeaderCell>Обновлено</Table.HeaderCell>
@@ -46,22 +88,23 @@ export default function ProductsList({ products }) {
         </Table.Row>
         <Table.Row>
           <Table.HeaderCell title="Показать только товары со скидкой">
-            <Checkbox toggle />
+            <Checkbox toggle onClick={toggleDisplayWithDiscount} />
           </Table.HeaderCell>
           <Table.HeaderCell title="Поиск по любому совпадению в названии товара">
             <Input
               fluid
               size="mini"
               placeholder="Введите любую фразу или часть фразы для поиска..."
-              id="search"
+              value={search}
+              onChange={handleSearchChange}
             />
           </Table.HeaderCell>
-          <Table.HeaderCell colspan={3}></Table.HeaderCell>
+          <Table.HeaderCell colSpan={2}></Table.HeaderCell>
           <Table.HeaderCell title="Показать только товары в наличии">
-            <Checkbox toggle />
+            <Checkbox toggle onClick={toggleDisplayInStock} />
           </Table.HeaderCell>
           <Table.HeaderCell title="Показать только избранные товары">
-            <Checkbox toggle />
+            <Checkbox toggle onClick={toggleDisplayFavorited} />
           </Table.HeaderCell>
           <Table.HeaderCell></Table.HeaderCell>
           <Table.HeaderCell></Table.HeaderCell>

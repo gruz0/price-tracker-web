@@ -23,18 +23,9 @@ const getCrawlers = () => {
 }
 
 export const getCrawlerByToken = (token) => {
-  let crawler
   const crawlers = getCrawlers()
 
-  crawlers.forEach((c) => {
-    if (c.token === token) {
-      crawler = c
-
-      return
-    }
-  })
-
-  return crawler
+  return crawlers.find((c) => c.token === token)
 }
 
 export const addCrawlerLog = (crawler, args) => {
