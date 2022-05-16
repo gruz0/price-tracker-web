@@ -17,4 +17,4 @@ jobs:
         dockerfile: Dockerfile
 
     - name: Build the Docker image
-      run: make build-docker-image
+      run: docker build --no-cache .
