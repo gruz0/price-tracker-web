@@ -14,7 +14,7 @@ export default function Product({ product }) {
         <>
           {product.in_stock && (
             <>
-              {product.my_price < product.actual_price && (
+              {product.my_price > product.actual_price && (
                 <Label
                   ribbon
                   color="green"
@@ -24,11 +24,11 @@ export default function Product({ product }) {
                     ` р. с момента отслеживания вами этого товара`
                   }
                 >
-                  {priceDiff} р.{' '}
+                  -{priceDiff} р.{' '}
                 </Label>
               )}
 
-              {product.my_price > product.actual_price && (
+              {product.my_price < product.actual_price && (
                 <Label
                   ribbon
                   color="red"
@@ -54,7 +54,6 @@ export default function Product({ product }) {
 
       <Table.Cell>{product.actual_price}</Table.Cell>
       <Table.Cell>{product.lowest_price}</Table.Cell>
-      <Table.Cell>{product.highest_price}</Table.Cell>
 
       <Table.Cell textAlign="center">
         {product.in_stock ? (

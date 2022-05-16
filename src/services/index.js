@@ -45,17 +45,14 @@ const getUserByToken = (token) => {
 const findUserByLoginAndPassword = (login, password) => {
   const users = getUsers()
 
-  const matchedUsers = users.filter(
-    (u) => u.login.toLowerCase() === login.toLowerCase()
-  )
+  const user = users.find((u) => {
+    return (
+      u.login.toLowerCase() === login.toLowerCase() &&
+      u.password === encryptPassword(u.id, u.login, password)
+    )
+  })
 
-  if (matchedUsers.length !== 1) {
-    return null
-  }
-
-  const user = matchedUsers[0]
-
-  if (user.password !== encryptPassword(user.id, user.login, password)) {
+  if (!user) {
     return null
   }
 
@@ -108,9 +105,13 @@ const getUserProducts = (userId) => {
   }
 
   userProducts = matchedProducts.map((matchedProduct) => {
-    const userProduct = userProducts.filter(
+    const userProduct = userProducts.find(
       (product) => product.id === matchedProduct.id
-    )[0]
+    )
+
+    if (!userProduct) {
+      throw new Error('Не должно быть ситуации, когда userProduct не найден')
+    }
 
     const {
       id,
@@ -136,6 +137,7 @@ const getUserProducts = (userId) => {
       updated_at,
       my_price: userProduct.price,
       favorited: userProduct.favorited,
+      has_discount: userProduct.price > matchedProduct.price,
     }
   })
 
@@ -199,7 +201,9 @@ const getProducts = () => {
     }
   })
 
-  return productsWithPrices
+  return productsWithPrices.sort(
+    (a, b) => new Date(b.updated_at) - new Date(a.updated_at)
+  )
 }
 
 const getOutdatedProducts = (lastUpdateInHours = 1, productsLimit = 20) => {
@@ -239,20 +243,24 @@ const getOutdatedProducts = (lastUpdateInHours = 1, productsLimit = 20) => {
 const getUserProduct = (userId, productId) => {
   const userProducts = getUserProducts(userId)
 
-  const matchedProducts = userProducts.filter(
-    (product) => product.id === productId
-  )
+  const userProduct = userProducts.find((product) => product.id === productId)
 
-  if (matchedProducts.length !== 1) {
+  if (!userProduct) {
     return null
   }
 
-  const userProduct = matchedProducts[0]
-
   const productHistory = getProductHistory(productId)
 
+  // Надо вручную рассчитывать максимальную цену
+  const highestPrice = [...productHistory].sort(
+    (a, b) => new Date(b.original_price) - new Date(a.original_price)
+  )[0].original_price
+
   return {
-    product: userProduct,
+    product: {
+      ...userProduct,
+      highest_price: highestPrice,
+    },
     history: productHistory,
   }
 }
@@ -304,13 +312,7 @@ const findProductByURLHash = (urlHash) => {
     return null
   }
 
-  const result = products.filter((product) => product.url_hash === urlHash)
-
-  if (result.length === 0) {
-    return null
-  }
-
-  return result[0]
+  return products.find((product) => product.url_hash === urlHash)
 }
 
 const getNewProductsQueue = () => {
@@ -372,8 +374,7 @@ const createProduct = ({
 const addProductToUser = (userId, productId, productPrice) => {
   let userProducts = getUserProducts(userId)
 
-  const hasProduct =
-    userProducts.filter((product) => product.id === productId).length > 0
+  const hasProduct = userProducts.find((product) => product.id === productId)
 
   if (hasProduct) {
     return

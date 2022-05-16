@@ -1,8 +1,13 @@
 import { Chart as GoogleChart } from 'react-google-charts'
-import { formatDateTimeWithoutYear } from '../../lib/formatDate'
 
 export default function Chart({ product, history }) {
-  let historyData = [['Дата', 'Цены']]
+  let historyData = [
+    [
+      { type: 'datetime', label: 'Дата' },
+      { type: 'number', label: 'Цена со скидкой' },
+      { type: 'number', label: 'Цена без скидки' },
+    ],
+  ]
 
   const historyAscending = [...history].sort(
     (a, b) => new Date(a.created_at) - new Date(b.created_at)
@@ -10,18 +15,21 @@ export default function Chart({ product, history }) {
 
   historyAscending.forEach((history) => {
     historyData.push([
-      formatDateTimeWithoutYear(history.created_at),
+      new Date(history.created_at),
       history.discount_price || history.original_price,
+      history.original_price,
     ])
   })
 
   const options = {
-    vAxis: { minValue: product.lowest_price },
+    vAxis: { minValue: 0, maxValue: product.highest_price + 300 },
+    curveType: 'function',
+    legend: { position: 'bottom' },
   }
 
   return (
     <GoogleChart
-      chartType="Line"
+      chartType="LineChart"
       data={historyData}
       options={options}
       width={'100%'}
