@@ -1,6 +1,6 @@
 import React from 'react'
 import { Grid, Header } from 'semantic-ui-react'
-import Layout from '../components/Layout'
+import LandingLayout from '../components/LandingLayout'
 
 const HomePage = () => (
   <Grid textAlign="center" style={{ marginTop: '1em' }}>
@@ -13,14 +13,14 @@ const HomePage = () => (
 )
 
 HomePage.getLayout = (page) => (
-  <Layout
+  <LandingLayout
     meta={{
       title: 'Трекер цен',
       description: 'Покупайте вовремя!',
     }}
   >
     {page}
-  </Layout>
+  </LandingLayout>
 )
 
 export default HomePage
