@@ -3,7 +3,7 @@ import * as Sentry from '@sentry/nextjs'
 
 import {
   findProductByURLHash,
-  getObsoletedProducts,
+  getOutdatedProducts,
   findUser,
   createProduct,
   addProductToUser,
@@ -100,10 +100,10 @@ const handler = async (req, res) => {
     let products
 
     try {
-      products = getObsoletedProducts()
+      products = getOutdatedProducts()
     } catch (err) {
       Sentry.withScope(function (scope) {
-        scope.setTag('section', 'getObsoletedProducts')
+        scope.setTag('section', 'getOutdatedProducts')
         scope.setTag('crawler_id', crawlerId)
         Sentry.captureException(err)
       })

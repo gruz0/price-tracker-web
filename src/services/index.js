@@ -202,7 +202,7 @@ const getProducts = () => {
   return productsWithPrices
 }
 
-const getObsoletedProducts = (lastUpdateInHours = 1) => {
+const getOutdatedProducts = (lastUpdateInHours = 1, productsLimit = 20) => {
   let products = []
 
   const files = fs.readdirSync(productsPath)
@@ -220,12 +220,20 @@ const getObsoletedProducts = (lastUpdateInHours = 1) => {
       const diffInHours = Math.abs((now - lastRecordTimestamp) / (1000 * 3600))
 
       if (diffInHours >= lastUpdateInHours) {
-        products.push({ id, url })
+        products.push({ id, url, last_updated_at: history[0].created_at })
       }
     }
   })
 
-  return products
+  // Выбираем самые старые записи в количестве productsLimit
+  const suitableProducts = products
+    .sort((a, b) => new Date(a.last_updated_at) - new Date(b.last_updated_at))
+    .slice(0, productsLimit)
+    .map((p) => {
+      return { id: p.id, url: p.url }
+    })
+
+  return suitableProducts
 }
 
 const getUserProduct = (userId, productId) => {
@@ -463,7 +471,7 @@ module.exports = {
   addNewProductToQueue,
   findProductByURLHash,
   getProducts,
-  getObsoletedProducts,
+  getOutdatedProducts,
   getProduct,
   getNewProductsQueue,
   createProduct,
