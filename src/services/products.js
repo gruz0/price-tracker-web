@@ -27,9 +27,7 @@ export const getProductHistory = (productId) => {
 }
 
 export const getSuccessProductHistory = (productHistory) => {
-  return productHistory.filter(
-    (history) => history.status === 'ok' && history.in_stock === true
-  )
+  return productHistory.filter((history) => history.status === 'ok')
 }
 
 export const getProductLatestValidPriceFromHistory = (productId) => {
@@ -39,7 +37,9 @@ export const getProductLatestValidPriceFromHistory = (productId) => {
     throw new Error(`Товар с ID ${productId} не содержит истории цен`)
   }
 
-  const successProductHistory = getSuccessProductHistory(productHistory)
+  const successProductHistory = getSuccessProductHistory(productHistory).filter(
+    (product) => product.in_stock === true
+  )
 
   if (successProductHistory.length === 0) {
     console.error({ productHistory })
