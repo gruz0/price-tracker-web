@@ -10,11 +10,11 @@ export const AuthProvider = ({ children }) => {
   const [isLoading, setIsLoading] = useState(false)
   const isAuthenticated = !!user
 
-  const logout = ({ redirectLocation }) => {
+  const logout = ({ redirectLocation = '/sign_in' }) => {
     Cookies.remove('token')
     setUser(null)
     setIsLoading(false)
-    router.push(redirectLocation || '/sign_in')
+    router.push(redirectLocation)
   }
 
   const authenticate = async (token) => {

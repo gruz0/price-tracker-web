@@ -1,7 +1,6 @@
 import { withSentry } from '@sentry/nextjs'
 import * as Sentry from '@sentry/nextjs'
 
-import { getNewProductsQueue } from '../../../../services'
 import { isEmptyString } from '../../../../lib/validators'
 import {
   CRAWLER_DOES_NOT_EXIST,
@@ -12,7 +11,11 @@ import {
   UNABLE_TO_GET_CRAWLER_BY_TOKEN,
   UNABLE_TO_GET_NEW_PRODUCTS_REQUESTS,
 } from '../../../../lib/messages'
-import { addCrawlerLog, getCrawlerByToken } from '../../../../services/crawlers'
+import {
+  addCrawlerLog,
+  getCrawlerByToken,
+  getNewProductsQueue,
+} from '../../../../services/crawlers'
 
 const handler = async (req, res) => {
   const { authorization } = req.headers

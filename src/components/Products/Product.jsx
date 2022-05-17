@@ -4,42 +4,45 @@ import Link from 'next/link'
 import { formatDateTime } from '../../lib/formatDate'
 
 export default function Product({ product }) {
-  const formattedDate = formatDateTime(product.updated_at)
+  const formattedDate = formatDateTime(product.price_updated_at)
 
-  const priceDiff = Math.abs(product.my_price - product.actual_price)
+  const myBenefit = product.my_benefit
+  const myBenefitAbsolute = Math.abs(myBenefit)
 
   return (
-    <Table.Row negative={product.status == 'not_found'}>
+    <Table.Row>
       <Table.Cell>
         <>
           {product.in_stock && (
             <>
-              {product.my_price > product.actual_price && (
+              {product.has_discount ? (
                 <Label
                   ribbon
                   color="green"
                   title={
                     `Товар подешевел на ` +
-                    priceDiff +
+                    myBenefitAbsolute +
                     ` р. с момента отслеживания вами этого товара`
                   }
                 >
-                  -{priceDiff} р.{' '}
+                  -{myBenefitAbsolute} р.{' '}
                 </Label>
-              )}
-
-              {product.my_price < product.actual_price && (
-                <Label
-                  ribbon
-                  color="red"
-                  title={
-                    `Товар подорожал на ` +
-                    priceDiff +
-                    ` р. с момента отслеживания вами этого товара`
-                  }
-                >
-                  +{priceDiff} р.
-                </Label>
+              ) : (
+                <>
+                  {myBenefit < 0 && (
+                    <Label
+                      ribbon
+                      color="red"
+                      title={
+                        `Товар подорожал на ` +
+                        myBenefitAbsolute +
+                        ` р. с момента отслеживания вами этого товара`
+                      }
+                    >
+                      +{myBenefitAbsolute} р.
+                    </Label>
+                  )}
+                </>
               )}
             </>
           )}
@@ -52,8 +55,8 @@ export default function Product({ product }) {
         </Link>
       </Table.Cell>
 
-      <Table.Cell>{product.actual_price}</Table.Cell>
-      <Table.Cell>{product.lowest_price}</Table.Cell>
+      <Table.Cell>{product.last_price}</Table.Cell>
+      <Table.Cell>{product.lowest_price_ever}</Table.Cell>
 
       <Table.Cell textAlign="center">
         {product.in_stock ? (

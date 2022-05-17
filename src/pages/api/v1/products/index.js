@@ -7,20 +7,24 @@ import {
   buildCleanURL,
   calculateHash,
 } from '../../../../lib/helpers'
+
 import {
-  addNewProductToQueue,
-  addProductToUser,
   findProductByURLHash,
-  getUserByToken,
-  getUserProducts,
-} from '../../../../services'
+  addNewProductToQueue,
+  getProductLatestValidPriceFromHistory,
+} from '../../../../services/products'
+import { getUserByToken } from '../../../../services/auth'
+import {
+  addProductToUser,
+  getUserProductsWithActualState,
+} from '../../../../services/users'
 
 import {
   METHOD_NOT_ALLOWED,
   FORBIDDEN,
   REDIRECT_TO_PRODUCT_PAGE,
   UNABLE_TO_GET_USER_BY_TOKEN,
-  UNABLE_TO_GET_USER_PRODUCTS,
+  UNABLE_TO_GET_USER_PRODUCTS_WITH_PRICES,
   INVALID_URL,
   UNABLE_TO_CLEAN_URL,
   UNABLE_TO_CALCULATE_URL_HASH,
@@ -28,6 +32,7 @@ import {
   PRODUCT_ADDED_TO_QUEUE,
   UNABLE_TO_ADD_NEW_PRODUCT_TO_QUEUE,
   UNABLE_TO_ADD_EXISTING_PRODUCT_TO_USER,
+  UNABLE_TO_GET_PRODUCT_LATEST_PRICE_FROM_HISTORY,
 } from '../../../../lib/messages'
 
 const handler = async (req, res) => {
@@ -63,15 +68,15 @@ const handler = async (req, res) => {
     let products
 
     try {
-      products = getUserProducts(user.id)
+      products = getUserProductsWithActualState(user.id)
     } catch (err) {
       Sentry.withScope(function (scope) {
-        scope.setTag('section', 'getUserProducts')
+        scope.setTag('section', 'getUserProductsWithActualState')
         scope.setUser({ user })
         Sentry.captureException(err)
       })
 
-      return res.status(400).json(UNABLE_TO_GET_USER_PRODUCTS)
+      return res.status(400).json(UNABLE_TO_GET_USER_PRODUCTS_WITH_PRICES)
     }
 
     return res.status(200).json({ products: products })
@@ -162,8 +167,23 @@ const handler = async (req, res) => {
     return res.status(201).json(PRODUCT_ADDED_TO_QUEUE)
   }
 
+  let productLatestPrice
+
   try {
-    addProductToUser(user.id, product.id, product.price)
+    productLatestPrice = getProductLatestValidPriceFromHistory(product.id)
+  } catch (err) {
+    Sentry.withScope(function (scope) {
+      scope.setContext('args', { product })
+      scope.setTag('section', 'getProductLatestValidPriceFromHistory')
+      scope.setUser({ user })
+      Sentry.captureException(err)
+    })
+
+    return res.status(400).json(UNABLE_TO_GET_PRODUCT_LATEST_PRICE_FROM_HISTORY)
+  }
+
+  try {
+    addProductToUser(user.id, product.id, productLatestPrice)
   } catch (err) {
     Sentry.withScope(function (scope) {
       scope.setContext('args', { user, product })

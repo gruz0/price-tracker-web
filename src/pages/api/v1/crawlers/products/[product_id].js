@@ -1,7 +1,7 @@
 import { withSentry } from '@sentry/nextjs'
 import * as Sentry from '@sentry/nextjs'
 
-import { getProduct, addProductHistory } from '../../../../../services'
+import { getProduct } from '../../../../../services/products'
 import { isEmptyString, isNotDefined } from '../../../../../lib/validators'
 import {
   METHOD_NOT_ALLOWED,
@@ -21,6 +21,7 @@ import {
 import {
   getCrawlerByToken,
   addCrawlerLog,
+  addProductHistory,
 } from '../../../../../services/crawlers'
 
 const handler = async (req, res) => {

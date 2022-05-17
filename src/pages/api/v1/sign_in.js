@@ -1,7 +1,7 @@
 import { withSentry } from '@sentry/nextjs'
 import * as Sentry from '@sentry/nextjs'
 
-import { findUserByLoginAndPassword } from '../../../services'
+import { findUserByLoginAndPassword } from '../../../services/auth'
 import { isEmptyString } from '../../../lib/validators'
 
 import {

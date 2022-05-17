@@ -2,34 +2,30 @@ import Link from 'next/link'
 import { Image, Icon, Statistic } from 'semantic-ui-react'
 import { formatTime } from '../../lib/formatDate'
 
-export default function Statistics({ product, history }) {
-  const actualPrice = product.actual_price
-
-  const updatedAt = history[0].created_at
-
-  const inStock = history[0].in_stock
-
+export default function Statistics({ product }) {
   return (
     <Statistic.Group size="small" widths={6}>
       <Statistic>
-        <Statistic.Value>{actualPrice}</Statistic.Value>
+        <Statistic.Value>{product.last_price}</Statistic.Value>
         <Statistic.Label>Последняя цена, руб.</Statistic.Label>
       </Statistic>
       <Statistic>
-        <Statistic.Value>{product.lowest_price}</Statistic.Value>
+        <Statistic.Value>{product.lowest_price_ever}</Statistic.Value>
         <Statistic.Label>Самая низкая, руб.</Statistic.Label>
       </Statistic>
       <Statistic>
-        <Statistic.Value>{product.highest_price}</Statistic.Value>
+        <Statistic.Value>{product.highest_price_ever}</Statistic.Value>
         <Statistic.Label>Самая высокая, руб.</Statistic.Label>
       </Statistic>
       <Statistic>
-        <Statistic.Value>{formatTime(updatedAt)}</Statistic.Value>
+        <Statistic.Value>
+          {formatTime(product.price_updated_at)}
+        </Statistic.Value>
         <Statistic.Label>Обновлено</Statistic.Label>
       </Statistic>
       <Statistic>
         <Statistic.Value>
-          {inStock ? (
+          {product.in_stock ? (
             <Icon color="green" name="checkmark" />
           ) : (
             <Icon color="red" name="close" />

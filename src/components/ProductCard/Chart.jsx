@@ -22,7 +22,7 @@ export default function Chart({ product, history }) {
   })
 
   const options = {
-    vAxis: { minValue: 0, maxValue: product.highest_price + 300 },
+    vAxis: { minValue: 0, maxValue: product.highest_price_ever + 300 },
     curveType: 'function',
     legend: { position: 'bottom' },
   }

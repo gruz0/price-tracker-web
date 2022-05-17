@@ -1,14 +1,6 @@
 import { withSentry } from '@sentry/nextjs'
 import * as Sentry from '@sentry/nextjs'
 
-import {
-  findProductByURLHash,
-  getOutdatedProducts,
-  findUser,
-  createProduct,
-  addProductToUser,
-  removeNewProductFromQueue,
-} from '../../../../../services'
 import { isEmptyString } from '../../../../../lib/validators'
 import {
   METHOD_NOT_ALLOWED,
@@ -29,11 +21,21 @@ import {
   UNABLE_TO_FIND_PRODUCT_BY_URL_HASH,
   UNABLE_TO_CREATE_NEW_PRODUCT,
   UNABLE_TO_ADD_EXISTING_PRODUCT_TO_USER,
+  UNABLE_TO_GET_PRODUCT_LATEST_PRICE_FROM_HISTORY,
 } from '../../../../../lib/messages'
 import {
   getCrawlerByToken,
   addCrawlerLog,
+  getOutdatedProducts,
+  removeNewProductFromQueue,
+  createProduct,
 } from '../../../../../services/crawlers'
+import { findUser } from '../../../../../services/auth'
+import {
+  findProductByURLHash,
+  getProductLatestValidPriceFromHistory,
+} from '../../../../../services/products'
+import { addProductToUser } from '../../../../../services/users'
 
 const handler = async (req, res) => {
   if (!['POST', 'GET'].includes(req.method)) {
@@ -193,6 +195,8 @@ const handler = async (req, res) => {
     return res.status(400).json(UNABLE_TO_FIND_PRODUCT_BY_URL_HASH)
   }
 
+  // Маловероятно, что будет ситуация, когда один и тот же товар решат добавить одновременно два человека.
+  // Для этого здесь и присутствует этот код, чтобы _случайно_ не создать два одинаковых товара в системе.
   if (!product) {
     const productArgs = {
       shop,
@@ -219,8 +223,23 @@ const handler = async (req, res) => {
     }
   }
 
+  let productLatestPrice
+
   try {
-    addProductToUser(user.id, product.id, product.price)
+    productLatestPrice = getProductLatestValidPriceFromHistory(product.id)
+  } catch (err) {
+    Sentry.withScope(function (scope) {
+      scope.setContext('args', { product })
+      scope.setTag('section', 'getProductLatestValidPriceFromHistory')
+      scope.setTag('crawler_id', crawlerId)
+      Sentry.captureException(err)
+    })
+
+    return res.status(400).json(UNABLE_TO_GET_PRODUCT_LATEST_PRICE_FROM_HISTORY)
+  }
+
+  try {
+    addProductToUser(user.id, product.id, productLatestPrice)
   } catch (err) {
     Sentry.withScope(function (scope) {
       scope.setContext('args', { user, product })
