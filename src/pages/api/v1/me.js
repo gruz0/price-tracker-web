@@ -1,7 +1,7 @@
 import { withSentry } from '@sentry/nextjs'
 import * as Sentry from '@sentry/nextjs'
 
-import { getUserByToken } from '../../../services'
+import { getUserByToken } from '../../../services/auth'
 import { checkToken } from '../../../lib/auth'
 import {
   METHOD_NOT_ALLOWED,

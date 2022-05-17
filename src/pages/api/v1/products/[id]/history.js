@@ -1,11 +1,14 @@
 import { withSentry } from '@sentry/nextjs'
 import * as Sentry from '@sentry/nextjs'
 
-import { checkToken } from '../../../../lib/auth'
-import { getUserByToken } from '../../../../services/auth'
-import { isProductExists } from '../../../../services/products'
-import { getUserProduct } from '../../../../services/users'
+import { checkToken } from '../../../../../lib/auth'
 
+import { getUserByToken } from '../../../../../services/auth'
+import { getProduct } from '../../../../../services/products'
+import {
+  getUserProduct,
+  getUserProductWithActualStateAndHistory,
+} from '../../../../../services/users'
 import {
   METHOD_NOT_ALLOWED,
   UNABLE_TO_GET_USER_BY_TOKEN,
@@ -14,7 +17,8 @@ import {
   PRODUCT_DOES_NOT_EXIST,
   UNABLE_TO_GET_USER_PRODUCT,
   USER_DOES_NOT_HAVE_PRODUCT,
-} from '../../../../lib/messages'
+  UNABLE_TO_GET_PRODUCT_HISTORY,
+} from '../../../../../lib/messages'
 
 const handler = async (req, res) => {
   if (req.method !== 'GET') {
@@ -46,10 +50,10 @@ const handler = async (req, res) => {
 
   const productId = req.query.id
 
-  let exists
+  let product
 
   try {
-    exists = isProductExists(productId)
+    product = getProduct(productId)
   } catch (err) {
     Sentry.withScope(function (scope) {
       scope.setContext('args', { productId })
@@ -61,17 +65,17 @@ const handler = async (req, res) => {
     return res.status(400).json(UNABLE_TO_GET_PRODUCT_BY_ID)
   }
 
-  if (!exists) {
+  if (!product) {
     return res.status(404).json(PRODUCT_DOES_NOT_EXIST)
   }
 
   let userProduct
 
   try {
-    userProduct = getUserProduct(user.id, productId)
+    userProduct = getUserProduct(user.id, product.id)
   } catch (err) {
     Sentry.withScope(function (scope) {
-      scope.setContext('args', { user, productId })
+      scope.setContext('args', { user, product })
       scope.setTag('section', 'getUserProduct')
       scope.setUser({ user })
       Sentry.captureException(err)
@@ -84,7 +88,30 @@ const handler = async (req, res) => {
     return res.status(404).json(USER_DOES_NOT_HAVE_PRODUCT)
   }
 
-  return res.status(200).json({ product: userProduct })
+  // FIXME: До этого момента сверху всё копипаста из src/pages/products/[id].jsx
+
+  let productWithActualStateAndHistory
+
+  try {
+    productWithActualStateAndHistory = getUserProductWithActualStateAndHistory(
+      product,
+      userProduct
+    )
+  } catch (err) {
+    Sentry.withScope(function (scope) {
+      scope.setContext('args', { user, userProduct })
+      scope.setTag('section', 'getUserProductWithActualStateAndHistory')
+      scope.setUser({ user })
+      Sentry.captureException(err)
+    })
+
+    return res.status(400).json(UNABLE_TO_GET_PRODUCT_HISTORY)
+  }
+
+  return res.status(200).json({
+    product: productWithActualStateAndHistory.product,
+    history: productWithActualStateAndHistory.history,
+  })
 }
 
 export default withSentry(handler)

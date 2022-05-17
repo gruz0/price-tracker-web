@@ -139,6 +139,16 @@ export const UNABLE_TO_GET_USER_PRODUCTS = {
   message: 'Не удалось получить список товаров',
 }
 
+export const UNABLE_TO_GET_USER_PRODUCTS_WITH_PRICES = {
+  status: 'unable_to_get_user_products_with_prices',
+  message: 'Не удалось получить список товаров с ценами',
+}
+
+export const UNABLE_TO_GET_PRODUCT_LATEST_PRICE_FROM_HISTORY = {
+  status: 'unable_to_get_product_latest_price_from_history',
+  message: 'Не удалось получить актуальную цену товара из истории',
+}
+
 export const INVALID_URL = {
   status: 'invalid_url',
   message:
