@@ -14,7 +14,6 @@ export default function PriceTable({ history }) {
           <Table.HeaderCell>Цена со скидкой</Table.HeaderCell>
           <Table.HeaderCell>Цена без скидки</Table.HeaderCell>
           <Table.HeaderCell>Наличие</Table.HeaderCell>
-          <Table.HeaderCell>Статус</Table.HeaderCell>
         </Table.Row>
       </Table.Header>
       <Table.Body>
@@ -32,7 +31,6 @@ export default function PriceTable({ history }) {
                 <Icon color="red" name="close" size="large" />
               )}
             </Table.Cell>
-            <Table.Cell>{history.status}</Table.Cell>
           </Table.Row>
         ))}
       </Table.Body>
