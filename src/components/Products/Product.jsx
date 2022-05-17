@@ -13,9 +13,9 @@ export default function Product({ product }) {
     <Table.Row>
       <Table.Cell>
         <>
-          {product.in_stock && (
+          {product.has_discount ? (
             <>
-              {product.has_discount ? (
+              {product.in_stock ? (
                 <Label
                   ribbon
                   color="green"
@@ -28,21 +28,33 @@ export default function Product({ product }) {
                   -{myBenefitAbsolute} р.{' '}
                 </Label>
               ) : (
-                <>
-                  {myBenefit < 0 && (
-                    <Label
-                      ribbon
-                      color="red"
-                      title={
-                        `Товар подорожал на ` +
-                        myBenefitAbsolute +
-                        ` р. с момента отслеживания вами этого товара`
-                      }
-                    >
-                      +{myBenefitAbsolute} р.
-                    </Label>
-                  )}
-                </>
+                <Label
+                  ribbon
+                  color="orange"
+                  title={
+                    `Товар подешевел на ` +
+                    myBenefitAbsolute +
+                    ` р. с момента отслеживания вами этого товара, но его нет в наличии`
+                  }
+                >
+                  -{myBenefitAbsolute} р.{' '}
+                </Label>
+              )}
+            </>
+          ) : (
+            <>
+              {myBenefit < 0 && (
+                <Label
+                  ribbon
+                  color="red"
+                  title={
+                    `Товар подорожал на ` +
+                    myBenefitAbsolute +
+                    ` р. с момента отслеживания вами этого товара`
+                  }
+                >
+                  +{myBenefitAbsolute} р.
+                </Label>
               )}
             </>
           )}
