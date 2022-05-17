@@ -420,9 +420,11 @@ const getProductHistory = (productId) => {
     return []
   }
 
-  const history = productHistory
+  let history = productHistory
     .filter((item) => typeof item.created_at !== 'undefined')
     .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+
+  history = history.filter((record) => record.status === 'ok')
 
   return history
 }
