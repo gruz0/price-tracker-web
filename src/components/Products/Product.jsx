@@ -6,7 +6,7 @@ import { formatDateTime } from '../../lib/formatDate'
 export default function Product({ product }) {
   const formattedDate = formatDateTime(product.updated_at)
 
-  const priceDiff = product.my_price - product.actual_price
+  const priceDiff = Math.abs(product.my_price - product.actual_price)
 
   return (
     <Table.Row negative={product.status == 'not_found'}>
@@ -20,7 +20,7 @@ export default function Product({ product }) {
                   color="green"
                   title={
                     `Товар подешевел на ` +
-                    Math.abs(priceDiff) +
+                    priceDiff +
                     ` р. с момента отслеживания вами этого товара`
                   }
                 >
@@ -34,7 +34,7 @@ export default function Product({ product }) {
                   color="red"
                   title={
                     `Товар подорожал на ` +
-                    Math.abs(priceDiff) +
+                    priceDiff +
                     ` р. с момента отслеживания вами этого товара`
                   }
                 >
