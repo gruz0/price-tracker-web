@@ -144,6 +144,13 @@ export const UNABLE_TO_GET_USER_PRODUCTS_WITH_PRICES = {
   message: 'Не удалось получить список товаров с ценами',
 }
 
+export const UNABLE_TO_ADD_PRODUCT_TO_USER_RIGHT_NOW_BECAUSE_OF_MISSING_PRICE =
+  {
+    status: 'unable_to_add_product_to_user_right_now_because_of_missing_price',
+    message:
+      'Нет возможности добавить товар, т.к. у него нет цены на данный момент',
+  }
+
 export const UNABLE_TO_GET_PRODUCT_LATEST_PRICE_FROM_HISTORY = {
   status: 'unable_to_get_product_latest_price_from_history',
   message: 'Не удалось получить актуальную цену товара из истории',

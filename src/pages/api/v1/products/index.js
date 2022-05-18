@@ -33,6 +33,7 @@ import {
   UNABLE_TO_ADD_NEW_PRODUCT_TO_QUEUE,
   UNABLE_TO_ADD_EXISTING_PRODUCT_TO_USER,
   UNABLE_TO_GET_PRODUCT_LATEST_PRICE_FROM_HISTORY,
+  UNABLE_TO_ADD_PRODUCT_TO_USER_RIGHT_NOW_BECAUSE_OF_MISSING_PRICE,
 } from '../../../../lib/messages'
 
 const handler = async (req, res) => {
@@ -167,7 +168,7 @@ const handler = async (req, res) => {
     return res.status(201).json(PRODUCT_ADDED_TO_QUEUE)
   }
 
-  let productLatestPrice
+  let productLatestPrice = null
 
   try {
     productLatestPrice = getProductLatestValidPriceFromHistory(product.id)
@@ -180,6 +181,12 @@ const handler = async (req, res) => {
     })
 
     return res.status(400).json(UNABLE_TO_GET_PRODUCT_LATEST_PRICE_FROM_HISTORY)
+  }
+
+  if (!productLatestPrice || productLatestPrice === 0) {
+    return res
+      .status(400)
+      .json(UNABLE_TO_ADD_PRODUCT_TO_USER_RIGHT_NOW_BECAUSE_OF_MISSING_PRICE)
   }
 
   try {

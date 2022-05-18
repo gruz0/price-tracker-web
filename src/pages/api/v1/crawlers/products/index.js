@@ -159,6 +159,9 @@ const handler = async (req, res) => {
     // TODO: Добавить сюда запись ID этого товара в список исключений
     // текущего crawler_id, чтобы краулер из другого местоположения попробовал
     // при следующем проходе обойти этот товар.
+
+    // NOTE: Мы не удаляем товар из очереди, чтобы другой краулер мог обработать его в следующий раз.
+    return res.status(200).json({})
   }
 
   let user
@@ -195,9 +198,26 @@ const handler = async (req, res) => {
     return res.status(400).json(UNABLE_TO_FIND_PRODUCT_BY_URL_HASH)
   }
 
-  // Маловероятно, что будет ситуация, когда один и тот же товар решат добавить одновременно два человека.
-  // Для этого здесь и присутствует этот код, чтобы _случайно_ не создать два одинаковых товара в системе.
-  if (!product) {
+  let productLatestPrice = null
+
+  if (product) {
+    try {
+      productLatestPrice = getProductLatestValidPriceFromHistory(product.id)
+    } catch (err) {
+      Sentry.withScope(function (scope) {
+        scope.setContext('args', { product })
+        scope.setTag('section', 'getProductLatestValidPriceFromHistory')
+        scope.setTag('crawler_id', crawlerId)
+        Sentry.captureException(err)
+      })
+
+      return res
+        .status(400)
+        .json(UNABLE_TO_GET_PRODUCT_LATEST_PRICE_FROM_HISTORY)
+    }
+  } else {
+    // Маловероятно, что будет ситуация, когда один и тот же товар решат добавить одновременно два человека.
+    // Для этого здесь и присутствует этот код, чтобы _случайно_ не создать два одинаковых товара в системе.
     const productArgs = {
       shop,
       url_hash,
@@ -208,6 +228,8 @@ const handler = async (req, res) => {
       in_stock,
       status,
     }
+
+    productLatestPrice = discount_price || original_price
 
     try {
       product = createProduct(productArgs)
@@ -223,35 +245,23 @@ const handler = async (req, res) => {
     }
   }
 
-  let productLatestPrice
-
-  try {
-    productLatestPrice = getProductLatestValidPriceFromHistory(product.id)
-  } catch (err) {
-    Sentry.withScope(function (scope) {
-      scope.setContext('args', { product })
-      scope.setTag('section', 'getProductLatestValidPriceFromHistory')
-      scope.setTag('crawler_id', crawlerId)
-      Sentry.captureException(err)
-    })
-
-    return res.status(400).json(UNABLE_TO_GET_PRODUCT_LATEST_PRICE_FROM_HISTORY)
-  }
-
-  try {
-    addProductToUser(user.id, product.id, productLatestPrice)
-  } catch (err) {
-    Sentry.withScope(function (scope) {
-      scope.setContext('args', { user, product })
-      scope.setTag('section', 'addProductToUser')
-      scope.setTag('crawler_id', crawlerId)
-      Sentry.captureException(err)
-    })
-
-    return res.status(400).json(UNABLE_TO_ADD_EXISTING_PRODUCT_TO_USER)
-  }
-
   removeNewProductFromQueue(url_hash)
+
+  // Если нет никакой цены, то просто не добавлять его пользователю.
+  if (productLatestPrice !== null && productLatestPrice > 0) {
+    try {
+      addProductToUser(user.id, product.id, productLatestPrice)
+    } catch (err) {
+      Sentry.withScope(function (scope) {
+        scope.setContext('args', { user, product })
+        scope.setTag('section', 'addProductToUser')
+        scope.setTag('crawler_id', crawlerId)
+        Sentry.captureException(err)
+      })
+
+      return res.status(400).json(UNABLE_TO_ADD_EXISTING_PRODUCT_TO_USER)
+    }
+  }
 
   return res.status(200).json(product)
 }
