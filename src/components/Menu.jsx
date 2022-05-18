@@ -37,6 +37,11 @@ function AuthDetails() {
     return (
       <Container>
         <Menu.Menu position="right">
+          <Menu.Item active={router.pathname == '/sign_up'}>
+            <Link href="/sign_up" passHref>
+              <a>Регистрация</a>
+            </Link>
+          </Menu.Item>
           <Menu.Item active={router.pathname == '/sign_in'}>
             <Link href="/sign_in" passHref>
               <a>Вход</a>
