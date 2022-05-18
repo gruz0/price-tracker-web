@@ -5,6 +5,7 @@ import { isUserExists, createUser } from '../../../services/auth'
 import { isEmptyString, isNotDefined } from '../../../lib/validators'
 
 import {
+  LOGIN_IS_INVALID,
   METHOD_NOT_ALLOWED,
   MISSING_LOGIN,
   MISSING_PASSWORD,
@@ -29,6 +30,12 @@ const handler = async (req, res) => {
     return res.status(422).json(MISSING_PASSWORD)
   }
 
+  const cleanLogin = login.toLowerCase().trim()
+
+  if (!cleanLogin.match(/^[a-z0-9\-_]+$/i)) {
+    return res.status(422).json(LOGIN_IS_INVALID)
+  }
+
   // TODO: Добавить проверку сложности пароля
   // TODO: Добавить проверку в haveibeenpwned: https://github.com/mxschmitt/react-have-i-been-pwned/blob/master/index.js
   if (password.toString().length < 8) {
@@ -38,10 +45,10 @@ const handler = async (req, res) => {
   let userExists
 
   try {
-    userExists = isUserExists(login)
+    userExists = isUserExists(cleanLogin)
   } catch (err) {
     Sentry.withScope(function (scope) {
-      scope.setContext('args', { login })
+      scope.setContext('args', { cleanLogin })
       scope.setTag('section', 'isUserExists')
       Sentry.captureException(err)
     })
@@ -56,10 +63,10 @@ const handler = async (req, res) => {
   let user
 
   try {
-    user = createUser(login, password)
+    user = createUser(cleanLogin, password)
   } catch (err) {
     Sentry.withScope(function (scope) {
-      scope.setContext('args', { login })
+      scope.setContext('args', { cleanLogin })
       scope.setTag('section', 'createUser')
       Sentry.captureException(err)
     })

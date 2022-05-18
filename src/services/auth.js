@@ -36,7 +36,7 @@ export const getUserByToken = (token) => {
     }
   })
 
-  return user
+  return buildUser(user)
 }
 
 export const findUserByLoginAndPassword = (login, password) => {
@@ -44,7 +44,7 @@ export const findUserByLoginAndPassword = (login, password) => {
 
   const user = users.find((u) => {
     return (
-      u.login.toLowerCase() === login.toLowerCase() &&
+      u.login.toLowerCase().trim() === login.toLowerCase().trim() &&
       u.password === encryptPassword(u.id, u.login, password)
     )
   })
@@ -53,11 +53,7 @@ export const findUserByLoginAndPassword = (login, password) => {
     return null
   }
 
-  return {
-    id: user.id,
-    login: user.login,
-    token: user.token,
-  }
+  return buildUser(user)
 }
 
 export const isUserExists = (login) => {
@@ -78,7 +74,7 @@ export const findUser = (id) => {
     }
   })
 
-  return user
+  return buildUser(user)
 }
 
 export const createUser = (login, password) => {
@@ -92,13 +88,14 @@ export const createUser = (login, password) => {
 
   const userId = uuid.v4()
   const userToken = uuid.v4()
+  const lowercasedLogin = login.toLowerCase().trim()
 
-  const newUser = {
+  const newUser = buildUser({
     id: userId,
-    login: login,
+    login: lowercasedLogin,
     token: userToken,
     created_at: new Date(),
-  }
+  })
 
   const userPath = usersPath + '/' + userId + '.json'
 
@@ -106,7 +103,7 @@ export const createUser = (login, password) => {
     userPath,
     {
       ...newUser,
-      password: encryptPassword(userId, login, password),
+      password: encryptPassword(userId, lowercasedLogin, password),
     },
     { spaces: 2 }
   )
@@ -123,5 +120,14 @@ export const createUser = (login, password) => {
     { spaces: 2 }
   )
 
-  return newUser
+  return buildUser(newUser)
+}
+
+const buildUser = ({ id, login, token, created_at }) => {
+  return {
+    id,
+    login: login.toLowerCase().trim(),
+    token,
+    created_at,
+  }
 }

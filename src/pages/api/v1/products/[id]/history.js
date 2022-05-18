@@ -57,7 +57,7 @@ const handler = async (req, res) => {
   } catch (err) {
     Sentry.withScope(function (scope) {
       scope.setContext('args', { productId })
-      scope.setTag('section', 'isProductExists')
+      scope.setTag('section', 'getProduct')
       scope.setUser({ user })
       Sentry.captureException(err)
     })
