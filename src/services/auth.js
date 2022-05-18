@@ -1,7 +1,9 @@
 const fs = require('fs-extra')
+const uuid = require('uuid')
 
 import { encryptPassword } from '../lib/auth'
 import { usersPath } from './const'
+import { isEmptyString } from '../lib/validators'
 
 const getUsers = () => {
   let users = []
@@ -58,6 +60,12 @@ export const findUserByLoginAndPassword = (login, password) => {
   }
 }
 
+export const isUserExists = (login) => {
+  const users = getUsers()
+
+  return users.find((u) => u.login.toLowerCase() === login.toLowerCase())
+}
+
 export const findUser = (id) => {
   let user
   const users = getUsers()
@@ -71,4 +79,49 @@ export const findUser = (id) => {
   })
 
   return user
+}
+
+export const createUser = (login, password) => {
+  if (isEmptyString(login)) {
+    throw new Error('Логин пустой')
+  }
+
+  if (isEmptyString(password)) {
+    throw new Error('Пароль пустой')
+  }
+
+  const userId = uuid.v4()
+  const userToken = uuid.v4()
+
+  const newUser = {
+    id: userId,
+    login: login,
+    token: userToken,
+    created_at: new Date(),
+  }
+
+  const userPath = usersPath + '/' + userId + '.json'
+
+  fs.writeJsonSync(
+    userPath,
+    {
+      ...newUser,
+      password: encryptPassword(userId, login, password),
+    },
+    { spaces: 2 }
+  )
+
+  const userDirectoryPath = usersPath + '/' + userId
+
+  fs.mkdirSync(userDirectoryPath)
+
+  fs.writeJsonSync(
+    userDirectoryPath + '/products.json',
+    {
+      products: [],
+    },
+    { spaces: 2 }
+  )
+
+  return newUser
 }

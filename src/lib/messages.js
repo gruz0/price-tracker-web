@@ -28,6 +28,11 @@ export const MISSING_PASSWORD = {
   message: 'Не заполнено поле password',
 }
 
+export const PASSWORD_IS_TOO_SHORT = {
+  status: 'password_is_too_short',
+  message: 'Пароль должен быть не меньше 8 символов',
+}
+
 export const MISSING_PRODUCT_ID = {
   status: 'missing_product_id',
   message: 'Отсутствует product_id в запросе',
@@ -71,6 +76,11 @@ export const INVALID_CREDENTIALS = {
 export const METHOD_NOT_ALLOWED = {
   status: 'method_not_allowed',
   message: 'Method Not Allowed',
+}
+
+export const USER_ALREADY_EXISTS = {
+  status: 'user_already_exists',
+  message: 'Пользователь с таким логином уже существует',
 }
 
 export const USER_DOES_NOT_EXIST = {
@@ -181,6 +191,16 @@ export const UNABLE_TO_FIND_USER = {
 export const UNABLE_TO_FIND_PRODUCT_BY_URL_HASH = {
   status: 'unable_to_find_product_by_url_hash',
   message: 'Не удалось выполнить поиск товара по ссылке',
+}
+
+export const UNABLE_TO_CHECK_USER_EXISTENCE = {
+  status: 'unable_to_check_user_existence',
+  message: 'Не удалось проверить пользователя по логину',
+}
+
+export const UNABLE_TO_CREATE_NEW_USER = {
+  status: 'unable_to_create_new_user',
+  message: 'Не удалось создать нового пользователя',
 }
 
 export const UNABLE_TO_CREATE_NEW_PRODUCT = {

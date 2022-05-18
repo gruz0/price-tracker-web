@@ -56,7 +56,7 @@ export const AuthProvider = ({ children }) => {
   }
 
   const signUp = async (login, password) => {
-    return await fetch('/api/v1/signup', {
+    return await fetch('/api/v1/sign_up', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
