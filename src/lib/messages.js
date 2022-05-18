@@ -23,6 +23,12 @@ export const MISSING_LOGIN = {
   message: 'Не заполнено поле login',
 }
 
+export const LOGIN_IS_INVALID = {
+  status: 'login_is_invalid',
+  message:
+    'Логин может содержать только буквы латинского алфавита, цифры, знак подчёркивания и дефис',
+}
+
 export const MISSING_PASSWORD = {
   status: 'missing_password',
   message: 'Не заполнено поле password',
