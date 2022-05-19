@@ -22,6 +22,8 @@ import {
   UNABLE_TO_CREATE_NEW_PRODUCT,
   UNABLE_TO_ADD_EXISTING_PRODUCT_TO_USER,
   UNABLE_TO_GET_PRODUCT_LATEST_PRICE_FROM_HISTORY,
+  UNABLE_TO_REMOVE_PRODUCT_FROM_QUEUE,
+  UNABLE_TO_MOVE_PRODUCT_FROM_QUEUE_TO_CHANGE_LOCATION,
 } from '../../../../../lib/messages'
 import {
   getCrawlerByToken,
@@ -29,6 +31,7 @@ import {
   getOutdatedProducts,
   removeNewProductFromQueue,
   createProduct,
+  moveProductFromQueueToChangeLocation,
 } from '../../../../../services/crawlers'
 import { findUser } from '../../../../../services/auth'
 import {
@@ -151,16 +154,36 @@ const handler = async (req, res) => {
   // Мы не будем обрабатывать товары, ссылки которых не открываются
   // на момент добавления в систему.
   if (status === 'not_found') {
-    removeNewProductFromQueue(url_hash)
+    try {
+      removeNewProductFromQueue(url_hash)
+    } catch (err) {
+      Sentry.withScope(function (scope) {
+        scope.setContext('args', { url_hash })
+        scope.setTag('section', 'removeNewProductFromQueue')
+        scope.setTag('crawler_id', crawlerId)
+        Sentry.captureException(err)
+      })
+
+      return res.status(400).json(UNABLE_TO_REMOVE_PRODUCT_FROM_QUEUE)
+    }
     return res.status(200).json({})
   }
 
   if (status === 'required_to_change_location') {
-    // TODO: Добавить сюда запись ID этого товара в список исключений
-    // текущего crawler_id, чтобы краулер из другого местоположения попробовал
-    // при следующем проходе обойти этот товар.
+    try {
+      moveProductFromQueueToChangeLocation(url_hash)
+    } catch (err) {
+      Sentry.withScope(function (scope) {
+        scope.setContext('args', { url_hash })
+        scope.setTag('section', 'moveProductFromQueueToChangeLocation')
+        scope.setTag('crawler_id', crawlerId)
+        Sentry.captureException(err)
+      })
 
-    // NOTE: Мы не удаляем товар из очереди, чтобы другой краулер мог обработать его в следующий раз.
+      return res
+        .status(400)
+        .json(UNABLE_TO_MOVE_PRODUCT_FROM_QUEUE_TO_CHANGE_LOCATION)
+    }
     return res.status(200).json({})
   }
 
@@ -245,7 +268,18 @@ const handler = async (req, res) => {
     }
   }
 
-  removeNewProductFromQueue(url_hash)
+  try {
+    removeNewProductFromQueue(url_hash)
+  } catch (err) {
+    Sentry.withScope(function (scope) {
+      scope.setContext('args', { url_hash })
+      scope.setTag('section', 'removeNewProductFromQueue')
+      scope.setTag('crawler_id', crawlerId)
+      Sentry.captureException(err)
+    })
+
+    return res.status(400).json(UNABLE_TO_REMOVE_PRODUCT_FROM_QUEUE)
+  }
 
   // Если нет никакой цены, то просто не добавлять его пользователю.
   if (productLatestPrice !== null && productLatestPrice > 0) {
