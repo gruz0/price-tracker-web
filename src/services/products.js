@@ -37,9 +37,7 @@ export const getProductLatestValidPriceFromHistory = (productId) => {
     throw new Error(`Товар с ID ${productId} не содержит истории цен`)
   }
 
-  const successProductHistory = getSuccessProductHistory(productHistory).filter(
-    (product) => product.in_stock === true
-  )
+  const successProductHistory = getSuccessProductHistory(productHistory)
 
   if (successProductHistory.length === 0) {
     console.error({ productHistory })

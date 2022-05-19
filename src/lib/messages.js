@@ -219,6 +219,17 @@ export const UNABLE_TO_ADD_NEW_PRODUCT_TO_QUEUE = {
   message: 'Не удалось добавить новый товар в очередь',
 }
 
+export const UNABLE_TO_REMOVE_PRODUCT_FROM_QUEUE = {
+  status: 'unable_to_remove_product_from_queue',
+  message: 'Не удалось удалить товар из очереди',
+}
+
+export const UNABLE_TO_MOVE_PRODUCT_FROM_QUEUE_TO_CHANGE_LOCATION = {
+  status: 'unable_to_move_product_from_queue_to_change_location',
+  message:
+    'Не удалось переместить товар из очереди в список на смену местоположения',
+}
+
 export const UNABLE_TO_GET_NEW_PRODUCTS_REQUESTS = {
   status: 'unable_to_get_new_products_requests',
   message: 'Не удалось получить список новых товаров',

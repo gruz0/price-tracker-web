@@ -4,6 +4,10 @@ const uuid = require('uuid')
 
 const crawlersPath = path.join(process.cwd(), '/data/crawlers')
 const crawlersLogsPath = path.join(process.cwd(), '/data/crawlers_logs')
+const productsQueueChangeLocationPath = path.join(
+  process.cwd(),
+  '/data/queue_change_location'
+)
 
 import { productsPath, productsQueuePath } from './const'
 import { getProductHistory } from './products'
@@ -179,4 +183,15 @@ export const getNewProductsQueue = () => {
   })
 
   return products
+}
+
+export const moveProductFromQueueToChangeLocation = (url_hash) => {
+  try {
+    fs.mkdirSync(productsQueueChangeLocationPath)
+  } catch (err) {}
+
+  const from = productsQueuePath + '/' + url_hash + '.json'
+  const to = productsQueueChangeLocationPath + '/' + url_hash + '.json'
+
+  fs.moveSync(from, to)
 }
