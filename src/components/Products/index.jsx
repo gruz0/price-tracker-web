@@ -1,24 +1,31 @@
-import React, { useState, useMemo } from 'react'
-import { Table, Input, Checkbox, Icon, Pagination } from 'semantic-ui-react'
-import Product from './Product'
+import React, { useState, useEffect } from 'react'
+import { Table, Input, Checkbox, Icon } from 'semantic-ui-react'
+import PaginationComponent from './Pagination'
+import ProductsTable from './ProductsTable'
 
 export default function ProductsList({ products }) {
   const recordsPerPage = 10
 
+  const [filteredProducts, setFilteredProducts] = useState([])
+
   const [currentPage, setCurrentPage] = useState(1)
-  const productsCount = products.length
-  const totalPages = Math.ceil(productsCount / recordsPerPage)
-  const showPagination = productsCount / recordsPerPage > 1
+  const [totalPages, setTotalPages] = useState(null)
+  const [showPagination, setShowPagination] = useState(null)
 
   const [search, setSearch] = useState('')
   const [displayWithDiscount, setDisplayWithDiscount] = useState(false)
   const [displayFavorited, setDisplayFavorited] = useState(false)
   const [displayInStock, setDisplayInStock] = useState(false)
 
-  const currentTableData = useMemo(() => {
-    const startFrom = (currentPage - 1) * recordsPerPage
-
+  useEffect(() => {
     let filtered = products
+
+    filtered =
+      search.trim().length > 0
+        ? filtered.filter((product) =>
+            product.title.toLowerCase().includes(search.trim().toLowerCase())
+          )
+        : filtered
 
     filtered = displayWithDiscount
       ? filtered.filter((product) => product.has_discount)
@@ -32,20 +39,27 @@ export default function ProductsList({ products }) {
       ? filtered.filter((product) => product.in_stock)
       : filtered
 
-    filtered =
-      search.trim().length > 0
-        ? filtered.filter((product) =>
-            product.title.toLowerCase().includes(search.trim().toLowerCase())
-          )
-        : filtered
+    const recordsCount = filtered.length
+    const pagesCount = Math.ceil(recordsCount / recordsPerPage)
 
-    return filtered.slice(startFrom, startFrom + recordsPerPage)
+    if (currentPage > pagesCount) {
+      setCurrentPage(1)
+    }
+
+    const startFrom = (currentPage - 1) * recordsPerPage
+
+    setTotalPages(pagesCount)
+    setShowPagination(pagesCount > 1)
+    setFilteredProducts(filtered.slice(startFrom, startFrom + recordsPerPage))
   }, [
+    products,
     search,
     displayWithDiscount,
     displayFavorited,
     displayInStock,
     currentPage,
+    totalPages,
+    showPagination,
   ])
 
   const changePage = (_e, { activePage }) => {
@@ -111,18 +125,18 @@ export default function ProductsList({ products }) {
         </Table.Row>
       </Table.Header>
       <Table.Body>
-        {currentTableData.map((product) => (
-          <Product key={product.id} product={product} />
-        ))}
+        {filteredProducts.length > 0 && (
+          <ProductsTable products={filteredProducts} />
+        )}
       </Table.Body>
       {showPagination && (
         <Table.Footer>
           <Table.Row>
             <Table.HeaderCell colSpan={9}>
-              <Pagination
-                defaultActivePage={1}
+              <PaginationComponent
+                showPagination={showPagination}
                 totalPages={totalPages}
-                onPageChange={changePage}
+                changePage={changePage}
               />
             </Table.HeaderCell>
           </Table.Row>
