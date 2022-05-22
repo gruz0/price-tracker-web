@@ -1,64 +1,19 @@
 import React from 'react'
-import { Table, Image, Icon, Label } from 'semantic-ui-react'
+import { Table } from 'semantic-ui-react'
 import Link from 'next/link'
 import { formatDateTime } from '../../lib/formatDate'
+import PriceLabel from './PriceLabel'
+import FavoritedIcon from './FavoritedIcon'
+import InStock from './InStockIcon'
+import Shop from './Shop'
 
 export default function Product({ product }) {
   const formattedDate = formatDateTime(product.price_updated_at)
 
-  const myBenefit = product.my_benefit
-  const myBenefitAbsolute = Math.abs(myBenefit)
-
   return (
     <Table.Row>
       <Table.Cell>
-        <>
-          {product.has_discount ? (
-            <>
-              {product.in_stock ? (
-                <Label
-                  ribbon
-                  color="green"
-                  title={
-                    `Товар подешевел на ` +
-                    myBenefitAbsolute +
-                    ` р. с момента отслеживания вами этого товара`
-                  }
-                >
-                  -{myBenefitAbsolute} р.{' '}
-                </Label>
-              ) : (
-                <Label
-                  ribbon
-                  color="orange"
-                  title={
-                    `Товар подешевел на ` +
-                    myBenefitAbsolute +
-                    ` р. с момента отслеживания вами этого товара, но его нет в наличии`
-                  }
-                >
-                  -{myBenefitAbsolute} р.{' '}
-                </Label>
-              )}
-            </>
-          ) : (
-            <>
-              {myBenefit < 0 && (
-                <Label
-                  ribbon
-                  color="red"
-                  title={
-                    `Товар подорожал на ` +
-                    myBenefitAbsolute +
-                    ` р. с момента отслеживания вами этого товара`
-                  }
-                >
-                  +{myBenefitAbsolute} р.
-                </Label>
-              )}
-            </>
-          )}
-        </>
+        <PriceLabel product={product} ribbon />
       </Table.Cell>
 
       <Table.Cell>
@@ -71,39 +26,17 @@ export default function Product({ product }) {
       <Table.Cell>{product.lowest_price_ever}</Table.Cell>
 
       <Table.Cell textAlign="center">
-        {product.in_stock ? (
-          <Icon color="green" name="checkmark" size="large" />
-        ) : (
-          <Icon color="red" name="close" size="large" title={product.status} />
-        )}
+        <InStock in_stock={product.in_stock} />
       </Table.Cell>
 
       <Table.Cell>
-        {product.favorited ? (
-          <Icon name="star" color="yellow" link />
-        ) : (
-          <Icon name="star outline" link />
-        )}
+        <FavoritedIcon favorited={product.favorited} />
       </Table.Cell>
 
       <Table.Cell>{formattedDate}</Table.Cell>
 
       <Table.Cell>
-        <Link href={product.url} passHref>
-          <a
-            target="_blank"
-            rel="noopener noreferrer"
-            title="Открыть страницу товара в магазине"
-          >
-            <Image
-              src={'/' + product.shop + '.ico'}
-              width={24}
-              height={24}
-              rounded
-              alt="Открыть страницу товара в магазине"
-            />
-          </a>
-        </Link>
+        <Shop product={product} />
       </Table.Cell>
     </Table.Row>
   )

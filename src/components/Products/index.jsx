@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react'
-import { Table, Input, Checkbox, Icon } from 'semantic-ui-react'
-import PaginationComponent from './Pagination'
+import { Button, Grid, Form, Segment, Icon } from 'semantic-ui-react'
 import ProductsTable from './ProductsTable'
+import ProductsCards from './ProductsCards'
+import PaginationComponent from './Pagination'
 
 export default function ProductsList({ products }) {
-  const recordsPerPage = 10
+  const [view, setView] = useState('table')
 
   const [filteredProducts, setFilteredProducts] = useState([])
 
+  const [recordsPerPage, setRecordsPerPage] = useState(10)
   const [currentPage, setCurrentPage] = useState(1)
   const [totalPages, setTotalPages] = useState(null)
   const [showPagination, setShowPagination] = useState(null)
@@ -52,6 +54,7 @@ export default function ProductsList({ products }) {
     setShowPagination(pagesCount > 1)
     setFilteredProducts(filtered.slice(startFrom, startFrom + recordsPerPage))
   }, [
+    recordsPerPage,
     products,
     search,
     displayWithDiscount,
@@ -83,65 +86,93 @@ export default function ProductsList({ products }) {
   }
 
   return (
-    <Table>
-      <Table.Header>
-        <Table.Row>
-          <Table.HeaderCell></Table.HeaderCell>
-          <Table.HeaderCell>Название</Table.HeaderCell>
-          <Table.HeaderCell>Цена</Table.HeaderCell>
-          <Table.HeaderCell>
-            <Icon
-              name="arrow alternate circle down"
-              title="Самая низкая цена с момента добавления товара в систему"
-            />
-          </Table.HeaderCell>
-          <Table.HeaderCell>Наличие</Table.HeaderCell>
-          <Table.HeaderCell>Избр.</Table.HeaderCell>
-          <Table.HeaderCell>Обновлено</Table.HeaderCell>
-          <Table.HeaderCell></Table.HeaderCell>
-        </Table.Row>
-        <Table.Row>
-          <Table.HeaderCell title="Показать только товары со скидкой">
-            <Checkbox toggle onClick={toggleDisplayWithDiscount} />
-          </Table.HeaderCell>
-          <Table.HeaderCell title="Поиск по любому совпадению в названии товара">
-            <Input
-              fluid
-              size="mini"
-              placeholder="Введите любую фразу или часть фразы для поиска..."
-              value={search}
-              onChange={handleSearchChange}
-            />
-          </Table.HeaderCell>
-          <Table.HeaderCell colSpan={2}></Table.HeaderCell>
-          <Table.HeaderCell title="Показать только товары в наличии">
-            <Checkbox toggle onClick={toggleDisplayInStock} />
-          </Table.HeaderCell>
-          <Table.HeaderCell title="Показать только избранные товары">
-            <Checkbox toggle onClick={toggleDisplayFavorited} />
-          </Table.HeaderCell>
-          <Table.HeaderCell></Table.HeaderCell>
-          <Table.HeaderCell></Table.HeaderCell>
-        </Table.Row>
-      </Table.Header>
-      <Table.Body>
-        {filteredProducts.length > 0 && (
-          <ProductsTable products={filteredProducts} />
-        )}
-      </Table.Body>
-      {showPagination && (
-        <Table.Footer>
-          <Table.Row>
-            <Table.HeaderCell colSpan={9}>
-              <PaginationComponent
-                showPagination={showPagination}
-                totalPages={totalPages}
-                changePage={changePage}
-              />
-            </Table.HeaderCell>
-          </Table.Row>
-        </Table.Footer>
+    <>
+      <Segment padded>
+        <Grid columns={2} stackable>
+          <Grid.Row verticalAlign="top">
+            <Grid.Column>
+              <Form>
+                <Form.Input
+                  fluid
+                  placeholder="Введите любую фразу или часть фразы для поиска..."
+                  value={search}
+                  onChange={handleSearchChange}
+                />
+
+                <Form.Group inline>
+                  <Form.Checkbox
+                    toggle
+                    onClick={toggleDisplayWithDiscount}
+                    label="Со скидкой"
+                  />
+
+                  <Form.Checkbox
+                    toggle
+                    onClick={toggleDisplayInStock}
+                    label="В наличии"
+                  />
+
+                  <Form.Checkbox
+                    toggle
+                    onClick={toggleDisplayFavorited}
+                    label="Избранные"
+                  />
+                </Form.Group>
+              </Form>
+            </Grid.Column>
+
+            <Grid.Column textAlign="right">
+              <Button.Group icon>
+                <Button
+                  onClick={() => {
+                    setView('table')
+                    setRecordsPerPage(10)
+                  }}
+                  primary={view === 'table'}
+                >
+                  <Icon name="table" title="Таблица" />
+                </Button>
+
+                <Button
+                  onClick={() => {
+                    setView('card')
+                    setRecordsPerPage(9)
+                  }}
+                  primary={view === 'card'}
+                >
+                  <Icon name="columns" title="Карточки" />
+                </Button>
+              </Button.Group>
+            </Grid.Column>
+          </Grid.Row>
+        </Grid>
+      </Segment>
+
+      {view === 'table' && (
+        <ProductsTable
+          products={filteredProducts}
+          showPagination={showPagination}
+          totalPages={totalPages}
+          changePage={changePage}
+        />
       )}
-    </Table>
+
+      {view === 'card' && (
+        <ProductsCards
+          products={filteredProducts}
+          showPagination={showPagination}
+          totalPages={totalPages}
+          changePage={changePage}
+        />
+      )}
+
+      {showPagination && (
+        <PaginationComponent
+          showPagination={showPagination}
+          totalPages={totalPages}
+          changePage={changePage}
+        />
+      )}
+    </>
   )
 }

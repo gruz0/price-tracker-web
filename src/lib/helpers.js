@@ -25,3 +25,11 @@ export const buildCleanURL = (string) => {
 export const calculateHash = (string) => {
   return crypto.createHash('sha256').update(string).digest('hex')
 }
+
+export const truncateString = (str, num) => {
+  if (str.length <= num) {
+    return str
+  }
+
+  return str.slice(0, num) + '...'
+}
