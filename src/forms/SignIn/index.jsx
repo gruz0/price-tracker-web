@@ -1,10 +1,9 @@
 import React, { useState } from 'react'
 import { useRouter } from 'next/router'
 import { Button, Form, Message, Segment } from 'semantic-ui-react'
+import { useAuth } from '../../hooks'
 
-import { useAuth } from '../hooks'
-
-export default function LoginForm() {
+export default function SignIn() {
   const { signIn, authenticate } = useAuth()
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
