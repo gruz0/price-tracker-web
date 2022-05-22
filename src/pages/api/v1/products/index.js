@@ -52,6 +52,8 @@ const handler = async (req, res) => {
   try {
     user = getUserByToken(token)
   } catch (err) {
+    console.error({ err })
+
     Sentry.withScope(function (scope) {
       scope.setContext('args', { token })
       scope.setTag('section', 'getUserByToken')
@@ -71,6 +73,8 @@ const handler = async (req, res) => {
     try {
       products = getUserProductsWithActualState(user.id)
     } catch (err) {
+      console.error({ err })
+
       Sentry.withScope(function (scope) {
         scope.setTag('section', 'getUserProductsWithActualState')
         scope.setUser({ user })
@@ -105,6 +109,8 @@ const handler = async (req, res) => {
   try {
     cleanURL = buildCleanURL(url)
   } catch (err) {
+    console.error({ err })
+
     Sentry.withScope(function (scope) {
       scope.setContext('args', { url })
       scope.setTag('section', 'buildCleanURL')
@@ -120,6 +126,8 @@ const handler = async (req, res) => {
   try {
     urlHash = calculateHash(cleanURL)
   } catch (err) {
+    console.error({ err })
+
     Sentry.withScope(function (scope) {
       scope.setContext('args', { cleanURL })
       scope.setTag('section', 'calculateHash')
@@ -135,6 +143,8 @@ const handler = async (req, res) => {
   try {
     product = findProductByURLHash(urlHash)
   } catch (err) {
+    console.error({ err })
+
     Sentry.withScope(function (scope) {
       scope.setContext('args', { urlHash })
       scope.setTag('section', 'findProductByURLHash')
@@ -155,6 +165,8 @@ const handler = async (req, res) => {
     try {
       addNewProductToQueue(newProductArgs)
     } catch (err) {
+      console.error({ err })
+
       Sentry.withScope(function (scope) {
         scope.setContext('args', { newProductArgs })
         scope.setTag('section', 'addNewProductToQueue')
@@ -173,6 +185,8 @@ const handler = async (req, res) => {
   try {
     productLatestPrice = getProductLatestValidPriceFromHistory(product.id)
   } catch (err) {
+    console.error({ err })
+
     Sentry.withScope(function (scope) {
       scope.setContext('args', { product })
       scope.setTag('section', 'getProductLatestValidPriceFromHistory')
@@ -192,6 +206,8 @@ const handler = async (req, res) => {
   try {
     addProductToUser(user.id, product.id, productLatestPrice)
   } catch (err) {
+    console.error({ err })
+
     Sentry.withScope(function (scope) {
       scope.setContext('args', { user, product })
       scope.setTag('section', 'addProductToUser')

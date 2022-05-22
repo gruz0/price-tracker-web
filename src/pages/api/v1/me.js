@@ -25,6 +25,8 @@ const handler = async (req, res) => {
   try {
     user = getUserByToken(token)
   } catch (err) {
+    console.error({ err })
+
     Sentry.withScope(function (scope) {
       scope.setContext('args', { token })
       scope.setTag('section', 'getUserByToken')

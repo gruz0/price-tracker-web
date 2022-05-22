@@ -66,6 +66,8 @@ const handler = async (req, res) => {
   try {
     crawler = getCrawlerByToken(token)
   } catch (err) {
+    console.error({ err })
+
     Sentry.withScope(function (scope) {
       scope.setContext('args', { token })
       scope.setTag('section', 'getCrawlerByToken')
@@ -91,6 +93,8 @@ const handler = async (req, res) => {
   try {
     addCrawlerLog(crawler, logArgs)
   } catch (err) {
+    console.error({ err })
+
     Sentry.withScope(function (scope) {
       scope.setContext('args', { crawler, logArgs })
       scope.setTag('section', 'addCrawlerLog')
@@ -107,6 +111,8 @@ const handler = async (req, res) => {
     try {
       products = getOutdatedProducts()
     } catch (err) {
+      console.error({ err })
+
       Sentry.withScope(function (scope) {
         scope.setTag('section', 'getOutdatedProducts')
         scope.setTag('crawler_id', crawlerId)
@@ -157,6 +163,8 @@ const handler = async (req, res) => {
     try {
       removeNewProductFromQueue(url_hash)
     } catch (err) {
+      console.error({ err })
+
       Sentry.withScope(function (scope) {
         scope.setContext('args', { url_hash })
         scope.setTag('section', 'removeNewProductFromQueue')
@@ -173,6 +181,8 @@ const handler = async (req, res) => {
     try {
       moveProductFromQueueToChangeLocation(url_hash)
     } catch (err) {
+      console.error({ err })
+
       Sentry.withScope(function (scope) {
         scope.setContext('args', { url_hash })
         scope.setTag('section', 'moveProductFromQueueToChangeLocation')
@@ -192,6 +202,8 @@ const handler = async (req, res) => {
   try {
     user = findUser(requested_by)
   } catch (err) {
+    console.error({ err })
+
     Sentry.withScope(function (scope) {
       scope.setContext('args', { requested_by })
       scope.setTag('section', 'findUser')
@@ -211,6 +223,8 @@ const handler = async (req, res) => {
   try {
     product = findProductByURLHash(url_hash)
   } catch (err) {
+    console.error({ err })
+
     Sentry.withScope(function (scope) {
       scope.setContext('args', { url_hash })
       scope.setTag('section', 'findProductByURLHash')
@@ -227,6 +241,8 @@ const handler = async (req, res) => {
     try {
       productLatestPrice = getProductLatestValidPriceFromHistory(product.id)
     } catch (err) {
+      console.error({ err })
+
       Sentry.withScope(function (scope) {
         scope.setContext('args', { product })
         scope.setTag('section', 'getProductLatestValidPriceFromHistory')
@@ -257,6 +273,8 @@ const handler = async (req, res) => {
     try {
       product = createProduct(productArgs)
     } catch (err) {
+      console.error({ err })
+
       Sentry.withScope(function (scope) {
         scope.setContext('args', productArgs)
         scope.setTag('section', 'createProduct')
@@ -271,6 +289,8 @@ const handler = async (req, res) => {
   try {
     removeNewProductFromQueue(url_hash)
   } catch (err) {
+    console.error({ err })
+
     Sentry.withScope(function (scope) {
       scope.setContext('args', { url_hash })
       scope.setTag('section', 'removeNewProductFromQueue')
@@ -286,6 +306,8 @@ const handler = async (req, res) => {
     try {
       addProductToUser(user.id, product.id, productLatestPrice)
     } catch (err) {
+      console.error({ err })
+
       Sentry.withScope(function (scope) {
         scope.setContext('args', { user, product })
         scope.setTag('section', 'addProductToUser')

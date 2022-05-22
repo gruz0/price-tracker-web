@@ -41,6 +41,7 @@ const handler = async (req, res) => {
     userByToken = getUserByToken(token)
   } catch (err) {
     console.error({ err })
+
     Sentry.withScope(function (scope) {
       scope.setTag('section', 'getUserByToken')
       Sentry.captureException(err)
@@ -87,6 +88,7 @@ const handler = async (req, res) => {
     user = findUserByLoginAndPassword(userByToken.login, current_password)
   } catch (err) {
     console.error({ err })
+
     Sentry.withScope(function (scope) {
       scope.setContext('args', { login: user.login })
       scope.setTag('section', 'findUserByLoginAndPassword')
@@ -104,6 +106,7 @@ const handler = async (req, res) => {
     user = updateUserPasswordAndToken(user.id, new_password)
   } catch (err) {
     console.error({ err })
+
     Sentry.withScope(function (scope) {
       scope.setContext('args', { user })
       scope.setTag('section', 'updateUserPasswordAndToken')
