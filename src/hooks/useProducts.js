@@ -2,7 +2,10 @@ import useSWR from 'swr'
 import { fetchWithToken } from '../lib/fetcher'
 
 export default function useProducts(token) {
-  const { data, error } = useSWR(['/api/v1/products', token], fetchWithToken)
+  const { data, error } = useSWR(
+    token ? ['/api/v1/products', token] : null,
+    fetchWithToken
+  )
 
   return {
     data,

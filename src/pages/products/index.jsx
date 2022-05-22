@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 
 import { Divider, Header, Message } from 'semantic-ui-react'
 
@@ -11,15 +11,14 @@ import AddNewProductForm from '../../components/AddNewProductForm'
 import useProducts from '../../hooks/useProducts'
 
 const ProductsPage = () => {
-  const { user, token, logout } = useAuth()
+  const { token, logout } = useAuth()
   const { data, isLoading, error } = useProducts(token)
 
-  // FIXME: Генерирует ошибку в консоли браузера:
-  // Warning: Functions are not valid as a React child. This may happen if you return a Component
-  // instead of <Component /> from render. Or maybe you meant to call this function rather than return it
-  if (!user) {
-    return logout
-  }
+  useEffect(() => {
+    if (error && error?.info?.status === 'forbidden') {
+      return logout()
+    }
+  }, [error])
 
   return (
     <>
@@ -60,7 +59,6 @@ const ProductsPage = () => {
 }
 
 ProductsPage.requiresAuth = true
-ProductsPage.redirectUnauthenticatedTo = '/sign_in'
 
 ProductsPage.getLayout = (page) => (
   <Layout

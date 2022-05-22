@@ -1,15 +1,19 @@
 import { withSentry } from '@sentry/nextjs'
 import * as Sentry from '@sentry/nextjs'
 
-import { findUserByLoginAndPassword } from '../../../services/auth'
+import {
+  findUserByLoginAndPassword,
+  updateUserToken,
+} from '../../../services/auth'
 import { isEmptyString } from '../../../lib/validators'
 
 import {
   METHOD_NOT_ALLOWED,
   MISSING_LOGIN,
   MISSING_PASSWORD,
-  UNHANDLED_ERROR,
+  UNABLE_TO_FIND_USER,
   INVALID_CREDENTIALS,
+  UNABLE_TO_UPDATE_USER_TOKEN,
 } from '../../../lib/messages'
 
 const handler = async (req, res) => {
@@ -38,11 +42,23 @@ const handler = async (req, res) => {
       Sentry.captureException(err)
     })
 
-    return res.status(400).json(UNHANDLED_ERROR)
+    return res.status(400).json(UNABLE_TO_FIND_USER)
   }
 
   if (!user) {
     return res.status(403).json(INVALID_CREDENTIALS)
+  }
+
+  try {
+    user = updateUserToken(user.id)
+  } catch (err) {
+    Sentry.withScope(function (scope) {
+      scope.setContext('args', { user })
+      scope.setTag('section', 'updateUserToken')
+      Sentry.captureException(err)
+    })
+
+    return res.status(400).json(UNABLE_TO_UPDATE_USER_TOKEN)
   }
 
   return res.status(200).json({

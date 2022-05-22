@@ -63,8 +63,12 @@ function AuthDetails() {
       <Menu.Menu position="right">
         <Dropdown item text={`Аккаунт (` + user.login + `)`}>
           <Dropdown.Menu>
+            <Link href="/settings" passHref>
+              <Dropdown.Item icon="user" text="Настройки" />
+            </Link>
+            <Dropdown.Divider />
             <Dropdown.Item
-              onClick={() => logout({ redirectLocation: '/sign_in' })}
+              onClick={() => logout()}
               icon="sign-out"
               text="Выход"
             />

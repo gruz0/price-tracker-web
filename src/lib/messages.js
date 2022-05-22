@@ -34,6 +34,36 @@ export const MISSING_PASSWORD = {
   message: 'Не заполнено поле password',
 }
 
+export const MISSING_CURRENT_PASSWORD = {
+  status: 'missing_current_password',
+  message: 'Не заполнен текущий пароль',
+}
+
+export const MISSING_NEW_PASSWORD = {
+  status: 'missing_new_password',
+  message: 'Не заполнен новый пароль',
+}
+
+export const MISSING_NEW_PASSWORD_CONFIRMATION = {
+  status: 'missing_new_password_confirmation',
+  message: 'Не заполнено подтверждение нового пароля',
+}
+
+export const NEW_PASSWORD_MUST_BE_DIFFERENT_FROM_CURRENT_PASSWORD = {
+  status: 'new_password_must_be_different_from_current_password',
+  message: 'Новый пароль не должен совпадать с текущим паролем',
+}
+
+export const PASSWORDS_DO_NOT_MATCH = {
+  status: 'passwords_do_not_match',
+  message: 'Новый пароль и подтверждение нового пароля не совпадают',
+}
+
+export const CURRENT_PASSWORD_IS_NOT_VALID = {
+  status: 'current_password_is_not_valid',
+  message: 'Неправильный текущий пароль',
+}
+
 export const PASSWORD_IS_TOO_SHORT = {
   status: 'password_is_too_short',
   message: 'Пароль должен быть не меньше 8 символов',
@@ -131,7 +161,7 @@ export const REDIRECT_TO_PRODUCT_PAGE = {
 
 export const FORBIDDEN = {
   status: 'forbidden',
-  message: 'Доступ ограничен',
+  message: 'Необходимо войти в систему',
 }
 
 export const PRODUCT_ADDED_TO_QUEUE = {
@@ -143,6 +173,11 @@ export const PRODUCT_ADDED_TO_QUEUE = {
 export const UNABLE_TO_GET_USER_BY_TOKEN = {
   status: 'unable_to_get_user_by_token',
   message: 'Не удалось найти пользователя по токену',
+}
+
+export const UNABLE_TO_UPDATE_USER_TOKEN = {
+  status: 'unable_to_update_user_token',
+  message: 'Не удалось обновить токен пользователя',
 }
 
 export const UNABLE_TO_GET_USER_PRODUCT = {
@@ -207,6 +242,11 @@ export const UNABLE_TO_CHECK_USER_EXISTENCE = {
 export const UNABLE_TO_CREATE_NEW_USER = {
   status: 'unable_to_create_new_user',
   message: 'Не удалось создать нового пользователя',
+}
+
+export const UNABLE_TO_UPDATE_USER_PASSWORD_AND_TOKEN = {
+  status: 'unable_to_update_user_password_and_token',
+  message: 'Не удалось обновить пароль пользователя и токен',
 }
 
 export const UNABLE_TO_CREATE_NEW_PRODUCT = {
