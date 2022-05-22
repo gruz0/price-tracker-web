@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react'
 
-import { Divider, Header, Message } from 'semantic-ui-react'
+import { Divider, Message } from 'semantic-ui-react'
 
 import Layout from '../../components/Layout'
 import Products from '../../components/Products'
@@ -22,8 +22,6 @@ const ProductsPage = () => {
 
   return (
     <>
-      <Header as="h1">Товары</Header>
-
       {error ? (
         <ErrorWrapper header="Не удалось загрузить товары" error={error} />
       ) : (

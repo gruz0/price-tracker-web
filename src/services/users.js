@@ -69,7 +69,7 @@ export const getUserProductsWithActualState = (userId) => {
 }
 
 const buildProductActualState = (product, userProduct, productHistory) => {
-  const { id, shop, url, title } = product
+  const { id, shop, url, title, image } = product
   const { price: myPrice, favorited, created_at } = userProduct
 
   if (!myPrice) {
@@ -120,6 +120,7 @@ const buildProductActualState = (product, userProduct, productHistory) => {
     shop,
     url,
     title,
+    image,
     last_price: lastPrice,
     in_stock: inStock,
     price_updated_at: priceUpdatedAt,
