@@ -1,9 +1,9 @@
 import React, { useState } from 'react'
 import Router from 'next/router'
 import { Form, Input, Message, Segment } from 'semantic-ui-react'
-import { addProduct } from '../lib/api'
+import { addProduct } from '../../lib/api'
 
-export default function AddNewProductForm({ token }) {
+export default function AddNewProduct({ token }) {
   const initialFields = { url: '' }
   const [fields, setFields] = useState(initialFields)
   const [errors, setErrors] = useState(undefined)
@@ -18,6 +18,7 @@ export default function AddNewProductForm({ token }) {
     setErrors(null)
     setMessage(null)
 
+    // FIXME: Это нужно отрефакторить как в форме Settings
     addProduct(token, fields.url)
       .then((response) => {
         setFields({ url: '' })

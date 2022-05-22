@@ -1,7 +1,7 @@
 import React from 'react'
 import { Grid, Header } from 'semantic-ui-react'
 import Layout from '../components/Layout'
-import LoginForm from '../components/LoginForm'
+import SignIn from '../forms/SignIn'
 
 const SignInPage = () => (
   <Grid textAlign="center" style={{ marginTop: '1em' }}>
@@ -10,7 +10,7 @@ const SignInPage = () => (
         Вход в систему
       </Header>
 
-      <LoginForm />
+      <SignIn />
     </Grid.Column>
   </Grid>
 )

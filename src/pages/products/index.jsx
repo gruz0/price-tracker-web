@@ -7,7 +7,7 @@ import Products from '../../components/Products'
 import ErrorWrapper from '../../components/ErrorWrapper'
 import JustOneSecond from '../../components/JustOneSecond'
 import { useAuth } from '../../hooks'
-import AddNewProductForm from '../../components/AddNewProductForm'
+import AddNewProduct from '../../forms/AddNewProduct'
 import useProducts from '../../hooks/useProducts'
 
 const ProductsPage = () => {
@@ -32,7 +32,7 @@ const ProductsPage = () => {
             <JustOneSecond />
           ) : (
             <>
-              <AddNewProductForm token={token} />
+              <AddNewProduct token={token} />
 
               <Divider hidden />
 
