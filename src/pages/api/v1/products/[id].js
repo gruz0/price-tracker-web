@@ -32,6 +32,8 @@ const handler = async (req, res) => {
   try {
     user = getUserByToken(token)
   } catch (err) {
+    console.error({ err })
+
     Sentry.withScope(function (scope) {
       scope.setTag('section', 'getUserByToken')
       Sentry.captureException(err)
@@ -51,6 +53,8 @@ const handler = async (req, res) => {
   try {
     exists = isProductExists(productId)
   } catch (err) {
+    console.error({ err })
+
     Sentry.withScope(function (scope) {
       scope.setContext('args', { productId })
       scope.setTag('section', 'isProductExists')
@@ -70,6 +74,8 @@ const handler = async (req, res) => {
   try {
     userProduct = getUserProduct(user.id, productId)
   } catch (err) {
+    console.error({ err })
+
     Sentry.withScope(function (scope) {
       scope.setContext('args', { user, productId })
       scope.setTag('section', 'getUserProduct')

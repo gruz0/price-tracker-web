@@ -39,6 +39,8 @@ const handler = async (req, res) => {
   try {
     crawler = getCrawlerByToken(token)
   } catch (err) {
+    console.error({ err })
+
     Sentry.withScope(function (scope) {
       scope.setContext('args', { token })
       scope.setTag('section', 'getCrawlerByToken')
@@ -64,6 +66,8 @@ const handler = async (req, res) => {
   try {
     addCrawlerLog(crawler, logArgs)
   } catch (err) {
+    console.error({ err })
+
     Sentry.withScope(function (scope) {
       scope.setContext('args', { crawler, logArgs })
       scope.setTag('section', 'addCrawlerLog')
@@ -79,6 +83,8 @@ const handler = async (req, res) => {
   try {
     products = getNewProductsQueue()
   } catch (err) {
+    console.error({ err })
+
     Sentry.withScope(function (scope) {
       scope.setTag('section', 'getNewProductsQueue')
       scope.setTag('crawler_id', crawlerId)

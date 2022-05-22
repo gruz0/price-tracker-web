@@ -47,6 +47,8 @@ const handler = async (req, res) => {
   try {
     userExists = isUserExists(cleanLogin)
   } catch (err) {
+    console.error({ err })
+
     Sentry.withScope(function (scope) {
       scope.setContext('args', { cleanLogin })
       scope.setTag('section', 'isUserExists')
@@ -65,6 +67,8 @@ const handler = async (req, res) => {
   try {
     user = createUser(cleanLogin, password)
   } catch (err) {
+    console.error({ err })
+
     Sentry.withScope(function (scope) {
       scope.setContext('args', { cleanLogin })
       scope.setTag('section', 'createUser')
