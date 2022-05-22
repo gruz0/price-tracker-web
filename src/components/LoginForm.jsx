@@ -62,6 +62,7 @@ export default function LoginForm() {
             iconPosition="left"
             placeholder="Логин"
             required
+            autoComplete="username"
             value={fields.login}
             onChange={handleInputChange}
           />
@@ -74,6 +75,7 @@ export default function LoginForm() {
             placeholder="Пароль"
             type="password"
             required
+            autoComplete="current-password"
             value={fields.password}
             onChange={handleInputChange}
           />

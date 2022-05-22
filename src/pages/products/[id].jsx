@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 
 import Layout from '../../components/Layout'
 import ErrorWrapper from '../../components/ErrorWrapper'
@@ -10,15 +10,14 @@ import ProductCard from '../../components/ProductCard'
 
 const ProductPage = () => {
   const router = useRouter()
-  const { user, token, logout } = useAuth()
+  const { token, logout } = useAuth()
   const { data, isLoading, error } = useProduct(router.query.id, token)
 
-  // FIXME: Генерирует ошибку в консоли браузера:
-  // Warning: Functions are not valid as a React child. This may happen if you return a Component
-  // instead of <Component /> from render. Or maybe you meant to call this function rather than return it
-  if (!user) {
-    return logout
-  }
+  useEffect(() => {
+    if (error && error?.info?.status === 'forbidden') {
+      return logout()
+    }
+  }, [error])
 
   return (
     <>
@@ -26,8 +25,11 @@ const ProductPage = () => {
         <ErrorWrapper header="Не удалось загрузить товар" error={error} />
       ) : (
         <>
-          {isLoading && <JustOneSecond />}
-          {data && <ProductCard product={data.product} />}
+          {isLoading ? (
+            <JustOneSecond />
+          ) : (
+            <ProductCard product={data.product} />
+          )}
         </>
       )}
     </>
@@ -35,7 +37,6 @@ const ProductPage = () => {
 }
 
 ProductPage.requiresAuth = true
-ProductPage.redirectUnauthenticatedTo = '/sign_in'
 
 ProductPage.getLayout = (page) => (
   <Layout

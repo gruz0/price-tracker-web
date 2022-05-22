@@ -25,16 +25,15 @@ const getUsers = () => {
 }
 
 export const getUserByToken = (token) => {
-  let user
   const users = getUsers()
 
-  users.forEach((u) => {
-    if (u.token === token) {
-      user = u
-
-      return
-    }
+  const user = users.find((u) => {
+    return u.token === token
   })
+
+  if (!user) {
+    return null
+  }
 
   return buildUser(user)
 }
@@ -63,18 +62,32 @@ export const isUserExists = (login) => {
 }
 
 export const findUser = (id) => {
-  let user
   const users = getUsers()
 
-  users.forEach((u) => {
-    if (u.id === id) {
-      user = u
-
-      return
-    }
+  const user = users.find((u) => {
+    return u.id === id
   })
 
+  if (!user) {
+    return null
+  }
+
   return buildUser(user)
+}
+
+// Используется только для того, чтобы получить хеш пароля.
+const findRawUser = (id) => {
+  const users = getUsers()
+
+  const user = users.find((u) => {
+    return u.id === id
+  })
+
+  if (!user) {
+    return null
+  }
+
+  return user
 }
 
 export const createUser = (login, password) => {
@@ -121,6 +134,64 @@ export const createUser = (login, password) => {
   )
 
   return buildUser(newUser)
+}
+
+export const updateUserPasswordAndToken = (userId, newPassword) => {
+  if (isEmptyString(userId)) {
+    throw new Error('ID пользователя пустой')
+  }
+
+  if (isEmptyString(newPassword)) {
+    throw new Error('Новый пароль пустой')
+  }
+
+  const user = findUser(userId)
+
+  if (!user) {
+    throw new Error('Пользователь по ID не найден')
+  }
+
+  const userAttributes = {
+    ...user,
+    token: uuid.v4(),
+    updated_at: new Date(),
+  }
+
+  const userPath = usersPath + '/' + userId + '.json'
+
+  fs.writeJsonSync(
+    userPath,
+    {
+      ...userAttributes,
+      password: encryptPassword(userId, user.login, newPassword),
+    },
+    { spaces: 2 }
+  )
+
+  return buildUser(userAttributes)
+}
+
+export const updateUserToken = (userId) => {
+  if (isEmptyString(userId)) {
+    throw new Error('ID пользователя пустой')
+  }
+
+  const user = findRawUser(userId)
+
+  if (!user) {
+    throw new Error('Пользователь по ID не найден')
+  }
+
+  const userAttributes = {
+    ...user,
+    token: uuid.v4(),
+  }
+
+  const userPath = usersPath + '/' + userId + '.json'
+
+  fs.writeJsonSync(userPath, userAttributes, { spaces: 2 })
+
+  return buildUser(userAttributes)
 }
 
 const buildUser = ({ id, login, token, created_at }) => {
