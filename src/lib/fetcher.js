@@ -73,3 +73,29 @@ export const postWithToken = async (url, token, body = {}) => {
 
   return res.json()
 }
+
+export const deleteWithToken = async (url, token) => {
+  const headers = {
+    'Content-Type': 'application/json',
+    Authorization: `Bearer ${token}`,
+  }
+
+  const payload = {
+    method: 'DELETE',
+    headers,
+  }
+
+  const res = await fetch(url, payload)
+
+  if (!res.ok) {
+    const error = new Error('Ошибка при отправке данных в API')
+
+    // Attach extra info to the error object.
+    error.info = await res.json()
+    error.status = res.status
+
+    throw error
+  }
+
+  return res.json()
+}

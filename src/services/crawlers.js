@@ -96,7 +96,11 @@ export const getOutdatedProducts = (
   const files = fs.readdirSync(productsPath)
 
   files.forEach((file) => {
-    if (file.endsWith('.json') && !file.includes('-history')) {
+    if (
+      file.endsWith('.json') &&
+      !file.includes('-history') &&
+      !file.includes('-subscriptions')
+    ) {
       const product = fs.readJsonSync(productsPath + '/' + file)
       const { id, url } = product
 
@@ -163,9 +167,7 @@ export const createProduct = ({
 export const removeNewProductFromQueue = (url_hash) => {
   try {
     fs.unlinkSync(productsQueuePath + '/' + url_hash + '.json')
-  } catch (err) {
-
-  }
+  } catch (err) {}
 }
 
 export const getNewProductsQueue = () => {

@@ -69,6 +69,16 @@ export const PASSWORD_IS_TOO_SHORT = {
   message: 'Пароль должен быть не меньше 8 символов',
 }
 
+export const MISSING_SUBSCRIPTION_TYPE = {
+  status: 'missing_subscription_type',
+  message: 'Не заполнено поле subscription_type',
+}
+
+export const SUBSCRIPTION_TYPE_IS_NOT_VALID = {
+  status: 'subscription_type_is_not_valid',
+  message: 'Неправильное значение для subscription_type',
+}
+
 export const MISSING_PRODUCT_ID = {
   status: 'missing_product_id',
   message: 'Отсутствует product_id в запросе',
@@ -122,6 +132,61 @@ export const USER_ALREADY_EXISTS = {
 export const USER_DOES_NOT_EXIST = {
   status: 'user_does_not_exist',
   message: 'Пользователь не существует',
+}
+
+export const USER_DOES_NOT_HAVE_LINKED_TELEGRAM_ACCOUNT = {
+  status: 'user_does_not_have_linked_telegram_account',
+  message: 'Пользователь не имеет связанного аккаунта Telegram',
+}
+
+export const USER_ALREADY_SUBSCRIBED_TO_SUBSCRIPTION_TYPE = {
+  status: 'user_already_subscribed_to_subscription_type',
+  message: 'Вы уже подписаны на этот тип события',
+}
+
+export const UNABLE_TO_GET_PRODUCT_SUBSCRIPTION = {
+  status: 'unable_to_get_product_subscription',
+  message: 'Не удалось получить подписку на товар',
+}
+
+export const UNABLE_TO_GET_PRODUCT_SUBSCRIPTIONS = {
+  status: 'unable_to_get_product_subscriptions',
+  message: 'Не удалось получить подписки на товар',
+}
+
+export const UNABLE_TO_GET_USER_PRODUCT_SUBSCRIPTION = {
+  status: 'unable_to_get_user_product_subscription',
+  message: 'Не удалось получить подписку пользователя на товар',
+}
+
+export const UNABLE_TO_GET_USER_PRODUCT_SUBSCRIPTIONS = {
+  status: 'unable_to_get_user_product_subscriptions',
+  message: 'Не удалось получить подписки пользователя на товар',
+}
+
+export const PRODUCT_SUBSCRIPTION_DOES_NOT_EXIST = {
+  status: 'product_subscription_does_not_exist',
+  message: 'Подписка на товар не существует',
+}
+
+export const USER_DOES_NOT_HAVE_PRODUCT_SUBSCRIPTION = {
+  status: 'user_does_not_have_product_subscription',
+  message: 'У пользователя нет подписки на этот товар',
+}
+
+export const UNABLE_TO_REMOVE_USER_SUBSCRIPTION_FROM_PRODUCT = {
+  status: 'unable_to_remove_user_subscription_from_product',
+  message: 'Не удалось удалить подписку пользователя на товар',
+}
+
+export const UNABLE_TO_GET_USER_SUBSCRIPTION_BY_TYPE = {
+  status: 'unable_to_get_user_subscription_by_type',
+  message: 'Не удалось получить информацию о подписке пользователя',
+}
+
+export const UNABLE_TO_ADD_USER_SUBSCRIPTION_TO_PRODUCT = {
+  status: 'unable_to_add_user_subscription_to_product',
+  message: 'Не удалось добавить подписку пользователя на событие товара',
 }
 
 export const PRODUCT_DOES_NOT_EXIST = {

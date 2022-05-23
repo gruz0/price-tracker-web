@@ -45,6 +45,7 @@ const handler = async (req, res) => {
     user: {
       id: user.id,
       login: user.login,
+      telegram_account: user.telegram_account,
     },
   })
 }

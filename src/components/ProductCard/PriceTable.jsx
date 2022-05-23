@@ -1,6 +1,12 @@
 import { Table, Icon } from 'semantic-ui-react'
 import { formatDateTime } from '../../lib/formatDate'
 
+const statuses = {
+  ok: 'Всё хорошо',
+  not_found: 'Товар не существует',
+  required_to_change_location: 'Товар не доставляется',
+}
+
 export default function PriceTable({ history }) {
   const orderedByDateDescending = [...history].sort(
     (a, b) => new Date(b.created_at) - new Date(a.created_at)
@@ -14,6 +20,7 @@ export default function PriceTable({ history }) {
           <Table.HeaderCell>Цена со скидкой</Table.HeaderCell>
           <Table.HeaderCell>Цена без скидки</Table.HeaderCell>
           <Table.HeaderCell>Наличие</Table.HeaderCell>
+          <Table.HeaderCell>Результат проверки</Table.HeaderCell>
         </Table.Row>
       </Table.Header>
       <Table.Body>
@@ -31,6 +38,7 @@ export default function PriceTable({ history }) {
                 <Icon color="red" name="close" size="large" />
               )}
             </Table.Cell>
+            <Table.Cell>{statuses[history.status] || 'Неизвестен'}</Table.Cell>
           </Table.Row>
         ))}
       </Table.Body>

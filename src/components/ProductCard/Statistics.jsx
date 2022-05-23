@@ -6,15 +6,15 @@ export default function Statistics({ product }) {
   return (
     <Statistic.Group size="small" widths={6}>
       <Statistic>
-        <Statistic.Value>{product.last_price}</Statistic.Value>
+        <Statistic.Value>{product.last_price || 'Нет'}</Statistic.Value>
         <Statistic.Label>Последняя цена, руб.</Statistic.Label>
       </Statistic>
       <Statistic>
-        <Statistic.Value>{product.lowest_price_ever}</Statistic.Value>
+        <Statistic.Value>{product.lowest_price_ever || 'Нет'}</Statistic.Value>
         <Statistic.Label>Самая низкая, руб.</Statistic.Label>
       </Statistic>
       <Statistic>
-        <Statistic.Value>{product.highest_price_ever}</Statistic.Value>
+        <Statistic.Value>{product.highest_price_ever || 'Нет'}</Statistic.Value>
         <Statistic.Label>Самая высокая, руб.</Statistic.Label>
       </Statistic>
       <Statistic>
