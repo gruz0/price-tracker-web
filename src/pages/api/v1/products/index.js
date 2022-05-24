@@ -1,11 +1,11 @@
 import { withSentry } from '@sentry/nextjs'
 import * as Sentry from '@sentry/nextjs'
 
-import { checkToken } from '../../../../lib/auth'
 import {
   isValidUrl,
   buildCleanURL,
   calculateHash,
+  responseJSON,
 } from '../../../../lib/helpers'
 
 import {
@@ -21,6 +21,9 @@ import {
 
 import {
   METHOD_NOT_ALLOWED,
+  MISSING_AUTHORIZATION_HEADER,
+  MISSING_BEARER_KEY,
+  MISSING_TOKEN,
   FORBIDDEN,
   REDIRECT_TO_PRODUCT_PAGE,
   UNABLE_TO_GET_USER_BY_TOKEN,
@@ -38,13 +41,23 @@ import {
 
 const handler = async (req, res) => {
   if (!['POST', 'GET'].includes(req.method)) {
-    return res.status(405).json(METHOD_NOT_ALLOWED)
+    return responseJSON(res, 405, METHOD_NOT_ALLOWED)
   }
 
-  const token = checkToken(req, res)
+  const { authorization } = req.headers
 
-  if (!token) {
-    return
+  if (!authorization) {
+    return responseJSON(res, 401, MISSING_AUTHORIZATION_HEADER)
+  }
+
+  if (!authorization.startsWith('Bearer ')) {
+    return responseJSON(res, 401, MISSING_BEARER_KEY)
+  }
+
+  const token = authorization.replace(/^Bearer /, '').trim()
+
+  if (token.length === 0) {
+    return responseJSON(res, 401, MISSING_TOKEN)
   }
 
   let user
@@ -60,11 +73,11 @@ const handler = async (req, res) => {
       Sentry.captureException(err)
     })
 
-    return res.status(500).json(UNABLE_TO_GET_USER_BY_TOKEN)
+    return responseJSON(res, 500, UNABLE_TO_GET_USER_BY_TOKEN)
   }
 
   if (!user) {
-    return res.status(403).json(FORBIDDEN)
+    return responseJSON(res, 403, FORBIDDEN)
   }
 
   if (req.method === 'GET') {
@@ -81,10 +94,10 @@ const handler = async (req, res) => {
         Sentry.captureException(err)
       })
 
-      return res.status(500).json(UNABLE_TO_GET_USER_PRODUCTS_WITH_PRICES)
+      return responseJSON(res, 500, UNABLE_TO_GET_USER_PRODUCTS_WITH_PRICES)
     }
 
-    return res.status(200).json({ products: products })
+    return responseJSON(res, 200, { products: products })
   }
 
   const { url } = req.body
@@ -101,7 +114,7 @@ const handler = async (req, res) => {
       )
     })
 
-    return res.status(422).json(INVALID_URL)
+    return responseJSON(res, 422, INVALID_URL)
   }
 
   let cleanURL
@@ -118,7 +131,7 @@ const handler = async (req, res) => {
       Sentry.captureException(err)
     })
 
-    return res.status(500).json(UNABLE_TO_CLEAN_URL)
+    return responseJSON(res, 500, UNABLE_TO_CLEAN_URL)
   }
 
   let urlHash
@@ -135,7 +148,7 @@ const handler = async (req, res) => {
       Sentry.captureException(err)
     })
 
-    return res.status(500).json(UNABLE_TO_CALCULATE_URL_HASH)
+    return responseJSON(res, 500, UNABLE_TO_CALCULATE_URL_HASH)
   }
 
   let product
@@ -152,7 +165,7 @@ const handler = async (req, res) => {
       Sentry.captureException(err)
     })
 
-    return res.status(500).json(UNABLE_TO_FIND_PRODUCT_BY_URL_HASH)
+    return responseJSON(res, 500, UNABLE_TO_FIND_PRODUCT_BY_URL_HASH)
   }
 
   if (!product) {
@@ -174,10 +187,10 @@ const handler = async (req, res) => {
         Sentry.captureException(err)
       })
 
-      return res.status(500).json(UNABLE_TO_ADD_NEW_PRODUCT_TO_QUEUE)
+      return responseJSON(res, 500, UNABLE_TO_ADD_NEW_PRODUCT_TO_QUEUE)
     }
 
-    return res.status(201).json(PRODUCT_ADDED_TO_QUEUE)
+    return responseJSON(res, 201, PRODUCT_ADDED_TO_QUEUE)
   }
 
   let productLatestPrice = null
@@ -194,13 +207,19 @@ const handler = async (req, res) => {
       Sentry.captureException(err)
     })
 
-    return res.status(500).json(UNABLE_TO_GET_PRODUCT_LATEST_PRICE_FROM_HISTORY)
+    return responseJSON(
+      res,
+      500,
+      UNABLE_TO_GET_PRODUCT_LATEST_PRICE_FROM_HISTORY
+    )
   }
 
   if (!productLatestPrice || productLatestPrice === 0) {
-    return res
-      .status(400)
-      .json(UNABLE_TO_ADD_PRODUCT_TO_USER_RIGHT_NOW_BECAUSE_OF_MISSING_PRICE)
+    return responseJSON(
+      res,
+      400,
+      UNABLE_TO_ADD_PRODUCT_TO_USER_RIGHT_NOW_BECAUSE_OF_MISSING_PRICE
+    )
   }
 
   try {
@@ -215,10 +234,11 @@ const handler = async (req, res) => {
       Sentry.captureException(err)
     })
 
-    return res.status(500).json(UNABLE_TO_ADD_EXISTING_PRODUCT_TO_USER)
+    return responseJSON(res, 500, UNABLE_TO_ADD_EXISTING_PRODUCT_TO_USER)
   }
 
-  return res.status(201).json({
+  // TODO: Возможно тут надо сделать редирект через 302 или 303
+  return responseJSON(res, 201, {
     ...REDIRECT_TO_PRODUCT_PAGE,
     location: '/products/' + product.id,
   })

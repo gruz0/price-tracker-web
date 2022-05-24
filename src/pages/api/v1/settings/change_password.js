@@ -1,7 +1,6 @@
 import { withSentry } from '@sentry/nextjs'
 import * as Sentry from '@sentry/nextjs'
 
-import { checkToken } from '../../../../lib/auth'
 import {
   getUserByToken,
   findUserByLoginAndPassword,
@@ -10,9 +9,12 @@ import {
 import { isEmptyString } from '../../../../lib/validators'
 
 import {
+  METHOD_NOT_ALLOWED,
+  MISSING_AUTHORIZATION_HEADER,
+  MISSING_BEARER_KEY,
+  MISSING_TOKEN,
   CURRENT_PASSWORD_IS_NOT_VALID,
   FORBIDDEN,
-  METHOD_NOT_ALLOWED,
   MISSING_CURRENT_PASSWORD,
   MISSING_NEW_PASSWORD,
   MISSING_NEW_PASSWORD_CONFIRMATION,
@@ -23,16 +25,27 @@ import {
   UNABLE_TO_GET_USER_BY_TOKEN,
   UNABLE_TO_UPDATE_USER_PASSWORD_AND_TOKEN,
 } from '../../../../lib/messages'
+import { responseJSON } from '../../../../lib/helpers'
 
 const handler = async (req, res) => {
   if (req.method !== 'POST') {
-    return res.status(405).json(METHOD_NOT_ALLOWED)
+    return responseJSON(res, 405, METHOD_NOT_ALLOWED)
   }
 
-  const token = checkToken(req, res)
+  const { authorization } = req.headers
 
-  if (!token) {
-    return
+  if (!authorization) {
+    return responseJSON(res, 401, MISSING_AUTHORIZATION_HEADER)
+  }
+
+  if (!authorization.startsWith('Bearer ')) {
+    return responseJSON(res, 401, MISSING_BEARER_KEY)
+  }
+
+  const token = authorization.replace(/^Bearer /, '').trim()
+
+  if (token.length === 0) {
+    return responseJSON(res, 401, MISSING_TOKEN)
   }
 
   let userByToken
@@ -47,39 +60,41 @@ const handler = async (req, res) => {
       Sentry.captureException(err)
     })
 
-    return res.status(500).json(UNABLE_TO_GET_USER_BY_TOKEN)
+    return responseJSON(res, 500, UNABLE_TO_GET_USER_BY_TOKEN)
   }
 
   if (!userByToken) {
-    return res.status(403).json(FORBIDDEN)
+    return responseJSON(res, 403, FORBIDDEN)
   }
 
   const { current_password, new_password, new_password_confirmation } = req.body
 
   if (isEmptyString(current_password)) {
-    return res.status(400).json(MISSING_CURRENT_PASSWORD)
+    return responseJSON(res, 400, MISSING_CURRENT_PASSWORD)
   }
 
   if (isEmptyString(new_password)) {
-    return res.status(400).json(MISSING_NEW_PASSWORD)
+    return responseJSON(res, 400, MISSING_NEW_PASSWORD)
   }
 
   if (isEmptyString(new_password_confirmation)) {
-    return res.status(400).json(MISSING_NEW_PASSWORD_CONFIRMATION)
+    return responseJSON(res, 400, MISSING_NEW_PASSWORD_CONFIRMATION)
   }
 
   if (new_password !== new_password_confirmation) {
-    return res.status(422).json(PASSWORDS_DO_NOT_MATCH)
+    return responseJSON(res, 422, PASSWORDS_DO_NOT_MATCH)
   }
 
   if (new_password.toString().length < 8) {
-    return res.status(422).json(PASSWORD_IS_TOO_SHORT)
+    return responseJSON(res, 422, PASSWORD_IS_TOO_SHORT)
   }
 
   if (new_password === current_password) {
-    return res
-      .status(422)
-      .json(NEW_PASSWORD_MUST_BE_DIFFERENT_FROM_CURRENT_PASSWORD)
+    return responseJSON(
+      res,
+      422,
+      NEW_PASSWORD_MUST_BE_DIFFERENT_FROM_CURRENT_PASSWORD
+    )
   }
 
   let user
@@ -95,11 +110,11 @@ const handler = async (req, res) => {
       Sentry.captureException(err)
     })
 
-    return res.status(500).json(UNABLE_TO_FIND_USER)
+    return responseJSON(res, 500, UNABLE_TO_FIND_USER)
   }
 
   if (!user) {
-    return res.status(403).json(CURRENT_PASSWORD_IS_NOT_VALID)
+    return responseJSON(res, 403, CURRENT_PASSWORD_IS_NOT_VALID)
   }
 
   try {
@@ -113,10 +128,10 @@ const handler = async (req, res) => {
       Sentry.captureException(err)
     })
 
-    return res.status(500).json(UNABLE_TO_UPDATE_USER_PASSWORD_AND_TOKEN)
+    return responseJSON(res, 500, UNABLE_TO_UPDATE_USER_PASSWORD_AND_TOKEN)
   }
 
-  return res.status(200).json({
+  return responseJSON(res, 200, {
     token: user.token,
     user: {
       id: user.id,

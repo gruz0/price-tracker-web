@@ -1,13 +1,16 @@
 import { withSentry } from '@sentry/nextjs'
 import * as Sentry from '@sentry/nextjs'
 
-import { checkToken } from '../../../../lib/auth'
 import { getUserByToken } from '../../../../services/auth'
 import { isProductExists } from '../../../../services/products'
 import { getUserProduct } from '../../../../services/users'
+import { responseJSON } from '../../../../lib/helpers'
 
 import {
   METHOD_NOT_ALLOWED,
+  MISSING_AUTHORIZATION_HEADER,
+  MISSING_BEARER_KEY,
+  MISSING_TOKEN,
   UNABLE_TO_GET_USER_BY_TOKEN,
   FORBIDDEN,
   UNABLE_TO_GET_PRODUCT_BY_ID,
@@ -18,13 +21,23 @@ import {
 
 const handler = async (req, res) => {
   if (req.method !== 'GET') {
-    return res.status(405).json(METHOD_NOT_ALLOWED)
+    return responseJSON(res, 405, METHOD_NOT_ALLOWED)
   }
 
-  const token = checkToken(req, res)
+  const { authorization } = req.headers
 
-  if (!token) {
-    return
+  if (!authorization) {
+    return responseJSON(res, 401, MISSING_AUTHORIZATION_HEADER)
+  }
+
+  if (!authorization.startsWith('Bearer ')) {
+    return responseJSON(res, 401, MISSING_BEARER_KEY)
+  }
+
+  const token = authorization.replace(/^Bearer /, '').trim()
+
+  if (token.length === 0) {
+    return responseJSON(res, 401, MISSING_TOKEN)
   }
 
   let user
@@ -39,11 +52,11 @@ const handler = async (req, res) => {
       Sentry.captureException(err)
     })
 
-    return res.status(500).json(UNABLE_TO_GET_USER_BY_TOKEN)
+    return responseJSON(res, 500, UNABLE_TO_GET_USER_BY_TOKEN)
   }
 
   if (!user) {
-    return res.status(403).json(FORBIDDEN)
+    return responseJSON(res, 403, FORBIDDEN)
   }
 
   const productId = req.query.id
@@ -62,11 +75,11 @@ const handler = async (req, res) => {
       Sentry.captureException(err)
     })
 
-    return res.status(500).json(UNABLE_TO_GET_PRODUCT_BY_ID)
+    return responseJSON(res, 500, UNABLE_TO_GET_PRODUCT_BY_ID)
   }
 
   if (!exists) {
-    return res.status(404).json(PRODUCT_DOES_NOT_EXIST)
+    return responseJSON(res, 404, PRODUCT_DOES_NOT_EXIST)
   }
 
   let userProduct
@@ -83,14 +96,14 @@ const handler = async (req, res) => {
       Sentry.captureException(err)
     })
 
-    return res.status(500).json(UNABLE_TO_GET_USER_PRODUCT)
+    return responseJSON(res, 500, UNABLE_TO_GET_USER_PRODUCT)
   }
 
   if (!userProduct) {
-    return res.status(404).json(USER_DOES_NOT_HAVE_PRODUCT)
+    return responseJSON(res, 404, USER_DOES_NOT_HAVE_PRODUCT)
   }
 
-  return res.status(200).json({ product: userProduct })
+  return responseJSON(res, 200, { product: userProduct })
 }
 
 export default withSentry(handler)

@@ -2,22 +2,35 @@ import { withSentry } from '@sentry/nextjs'
 import * as Sentry from '@sentry/nextjs'
 
 import { getUserByToken } from '../../../services/auth'
-import { checkToken } from '../../../lib/auth'
 import {
   METHOD_NOT_ALLOWED,
+  MISSING_AUTHORIZATION_HEADER,
+  MISSING_BEARER_KEY,
+  MISSING_TOKEN,
   UNABLE_TO_GET_USER_BY_TOKEN,
   FORBIDDEN,
 } from '../../../lib/messages'
+import { responseJSON } from '../../../lib/helpers'
 
 const handler = async (req, res) => {
   if (req.method !== 'GET') {
-    return res.status(405).json(METHOD_NOT_ALLOWED)
+    return responseJSON(res, 405, METHOD_NOT_ALLOWED)
   }
 
-  const token = checkToken(req, res)
+  const { authorization } = req.headers
 
-  if (!token) {
-    return
+  if (!authorization) {
+    return responseJSON(res, 401, MISSING_AUTHORIZATION_HEADER)
+  }
+
+  if (!authorization.startsWith('Bearer ')) {
+    return responseJSON(res, 401, MISSING_BEARER_KEY)
+  }
+
+  const token = authorization.replace(/^Bearer /, '').trim()
+
+  if (token.length === 0) {
+    return responseJSON(res, 401, MISSING_TOKEN)
   }
 
   let user
@@ -33,14 +46,14 @@ const handler = async (req, res) => {
       Sentry.captureException(err)
     })
 
-    return res.status(500).json(UNABLE_TO_GET_USER_BY_TOKEN)
+    return responseJSON(res, 500, UNABLE_TO_GET_USER_BY_TOKEN)
   }
 
   if (!user) {
-    return res.status(403).json(FORBIDDEN)
+    return responseJSON(res, 403, FORBIDDEN)
   }
 
-  return res.status(200).json({
+  return responseJSON(res, 200, {
     token: user.token,
     user: {
       id: user.id,

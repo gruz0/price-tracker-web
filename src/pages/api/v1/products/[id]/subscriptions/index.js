@@ -1,11 +1,10 @@
 import { withSentry } from '@sentry/nextjs'
 import * as Sentry from '@sentry/nextjs'
 
-import { checkToken } from '../../../../../../lib/auth'
-
 import { getUserByToken } from '../../../../../../services/auth'
 import { getProduct } from '../../../../../../services/products'
 import { getUserProduct } from '../../../../../../services/users'
+import { responseJSON } from '../../../../../../lib/helpers'
 import {
   addProductSubscription,
   getUserProductSubscriptions,
@@ -13,6 +12,9 @@ import {
 } from '../../../../../../services/products'
 import {
   METHOD_NOT_ALLOWED,
+  MISSING_AUTHORIZATION_HEADER,
+  MISSING_BEARER_KEY,
+  MISSING_TOKEN,
   UNABLE_TO_GET_USER_BY_TOKEN,
   FORBIDDEN,
   UNABLE_TO_GET_PRODUCT_BY_ID,
@@ -31,13 +33,23 @@ import { isEmptyString } from '../../../../../../lib/validators'
 
 const handler = async (req, res) => {
   if (!['POST', 'GET'].includes(req.method)) {
-    return res.status(405).json(METHOD_NOT_ALLOWED)
+    return responseJSON(res, 405, METHOD_NOT_ALLOWED)
   }
 
-  const token = checkToken(req, res)
+  const { authorization } = req.headers
 
-  if (!token) {
-    return
+  if (!authorization) {
+    return responseJSON(res, 401, MISSING_AUTHORIZATION_HEADER)
+  }
+
+  if (!authorization.startsWith('Bearer ')) {
+    return responseJSON(res, 401, MISSING_BEARER_KEY)
+  }
+
+  const token = authorization.replace(/^Bearer /, '').trim()
+
+  if (token.length === 0) {
+    return responseJSON(res, 401, MISSING_TOKEN)
   }
 
   let user
@@ -52,11 +64,11 @@ const handler = async (req, res) => {
       Sentry.captureException(err)
     })
 
-    return res.status(500).json(UNABLE_TO_GET_USER_BY_TOKEN)
+    return responseJSON(res, 500, UNABLE_TO_GET_USER_BY_TOKEN)
   }
 
   if (!user) {
-    return res.status(403).json(FORBIDDEN)
+    return responseJSON(res, 403, FORBIDDEN)
   }
 
   const productId = req.query.id
@@ -75,11 +87,11 @@ const handler = async (req, res) => {
       Sentry.captureException(err)
     })
 
-    return res.status(500).json(UNABLE_TO_GET_PRODUCT_BY_ID)
+    return responseJSON(res, 500, UNABLE_TO_GET_PRODUCT_BY_ID)
   }
 
   if (!product) {
-    return res.status(404).json(PRODUCT_DOES_NOT_EXIST)
+    return responseJSON(res, 404, PRODUCT_DOES_NOT_EXIST)
   }
 
   let userProduct
@@ -96,11 +108,11 @@ const handler = async (req, res) => {
       Sentry.captureException(err)
     })
 
-    return res.status(500).json(UNABLE_TO_GET_USER_PRODUCT)
+    return responseJSON(res, 500, UNABLE_TO_GET_USER_PRODUCT)
   }
 
   if (!userProduct) {
-    return res.status(404).json(USER_DOES_NOT_HAVE_PRODUCT)
+    return responseJSON(res, 404, USER_DOES_NOT_HAVE_PRODUCT)
   }
 
   // FIXME: До этого момента сверху всё копипаста из src/pages/products/[id].jsx
@@ -124,7 +136,7 @@ const handler = async (req, res) => {
         Sentry.captureException(err)
       })
 
-      return res.status(500).json(UNABLE_TO_GET_USER_PRODUCT_SUBSCRIPTIONS)
+      return responseJSON(res, 500, UNABLE_TO_GET_USER_PRODUCT_SUBSCRIPTIONS)
     }
 
     if (userProductSubscriptions.length !== 0) {
@@ -139,23 +151,23 @@ const handler = async (req, res) => {
       })
     }
 
-    return res.status(200).json(subscriptions)
+    return responseJSON(res, 200, subscriptions)
   }
 
   if (!user.telegram_account || isEmptyString(user.telegram_account)) {
-    return res.status(400).json(USER_DOES_NOT_HAVE_LINKED_TELEGRAM_ACCOUNT)
+    return responseJSON(res, 400, USER_DOES_NOT_HAVE_LINKED_TELEGRAM_ACCOUNT)
   }
 
   const { subscription_type, payload } = req.body
 
   if (isEmptyString(subscription_type)) {
-    return res.status(400).json(MISSING_SUBSCRIPTION_TYPE)
+    return responseJSON(res, 400, MISSING_SUBSCRIPTION_TYPE)
   }
 
   const subscriptionType = subscription_type.toLowerCase()
 
   if (subscriptionType !== 'on_change_status_to_in_stock') {
-    return res.status(422).json(SUBSCRIPTION_TYPE_IS_NOT_VALID)
+    return responseJSON(res, 422, SUBSCRIPTION_TYPE_IS_NOT_VALID)
   }
 
   let userSubscription
@@ -176,11 +188,11 @@ const handler = async (req, res) => {
       Sentry.captureException(err)
     })
 
-    return res.status(500).json(UNABLE_TO_GET_USER_SUBSCRIPTION_BY_TYPE)
+    return responseJSON(res, 500, UNABLE_TO_GET_USER_SUBSCRIPTION_BY_TYPE)
   }
 
   if (userSubscription) {
-    return res.status(200).json(USER_ALREADY_SUBSCRIBED_TO_SUBSCRIPTION_TYPE)
+    return responseJSON(res, 200, USER_ALREADY_SUBSCRIBED_TO_SUBSCRIPTION_TYPE)
   }
 
   try {
@@ -205,10 +217,10 @@ const handler = async (req, res) => {
       Sentry.captureException(err)
     })
 
-    return res.status(500).json(UNABLE_TO_ADD_USER_SUBSCRIPTION_TO_PRODUCT)
+    return responseJSON(res, 500, UNABLE_TO_ADD_USER_SUBSCRIPTION_TO_PRODUCT)
   }
 
-  return res.status(201).json(userSubscription)
+  return responseJSON(res, 201, userSubscription)
 }
 
 export default withSentry(handler)

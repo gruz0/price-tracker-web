@@ -1,9 +1,16 @@
 const fs = require('fs-extra')
 const uuid = require('uuid')
+import crypto from 'crypto'
 
-import { encryptPassword } from '../lib/auth'
 import { usersPath } from './const'
 import { isEmptyString } from '../lib/validators'
+
+const encryptPassword = (userId, login, password) => {
+  return crypto
+    .createHash('sha256')
+    .update(`${userId}${login}${password}`)
+    .digest('hex')
+}
 
 const getUsers = () => {
   let users = []
