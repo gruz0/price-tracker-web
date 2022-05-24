@@ -24,6 +24,14 @@ const getUsers = () => {
   return users
 }
 
+export const getUsersById = (ids) => {
+  const users = getUsers()
+
+  const matchedUsers = users.filter((user) => ids.includes(user.id))
+
+  return matchedUsers.map((user) => buildUser(user))
+}
+
 export const getUserByToken = (token) => {
   const users = getUsers()
 

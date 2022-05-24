@@ -18,6 +18,10 @@ import {
 } from '../../../../services/crawlers'
 
 const handler = async (req, res) => {
+  if (req.method !== 'GET') {
+    return res.status(405).end()
+  }
+
   const { authorization } = req.headers
 
   if (isEmptyString(authorization)) {

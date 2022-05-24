@@ -33,3 +33,9 @@ export const truncateString = (str, num) => {
 
   return str.slice(0, num) + '...'
 }
+
+export const responseJSON = (res, status, json) => {
+  res.status(status)
+  res.json(json)
+  return res.end()
+}

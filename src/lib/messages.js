@@ -121,7 +121,7 @@ export const INVALID_CREDENTIALS = {
 
 export const METHOD_NOT_ALLOWED = {
   status: 'method_not_allowed',
-  message: 'Method Not Allowed',
+  message: 'Метод не поддерживается',
 }
 
 export const USER_ALREADY_EXISTS = {
