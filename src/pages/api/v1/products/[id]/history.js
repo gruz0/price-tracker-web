@@ -43,7 +43,7 @@ const handler = async (req, res) => {
       Sentry.captureException(err)
     })
 
-    return res.status(400).json(UNABLE_TO_GET_USER_BY_TOKEN)
+    return res.status(500).json(UNABLE_TO_GET_USER_BY_TOKEN)
   }
 
   if (!user) {
@@ -66,7 +66,7 @@ const handler = async (req, res) => {
       Sentry.captureException(err)
     })
 
-    return res.status(400).json(UNABLE_TO_GET_PRODUCT_BY_ID)
+    return res.status(500).json(UNABLE_TO_GET_PRODUCT_BY_ID)
   }
 
   if (!product) {
@@ -87,7 +87,7 @@ const handler = async (req, res) => {
       Sentry.captureException(err)
     })
 
-    return res.status(400).json(UNABLE_TO_GET_USER_PRODUCT)
+    return res.status(500).json(UNABLE_TO_GET_USER_PRODUCT)
   }
 
   if (!userProduct) {
@@ -113,7 +113,7 @@ const handler = async (req, res) => {
       Sentry.captureException(err)
     })
 
-    return res.status(400).json(UNABLE_TO_GET_PRODUCT_HISTORY)
+    return res.status(500).json(UNABLE_TO_GET_PRODUCT_HISTORY)
   }
 
   return res.status(200).json({

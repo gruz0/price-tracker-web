@@ -39,26 +39,27 @@ import {
   getProductLatestValidPriceFromHistory,
 } from '../../../../../services/products'
 import { addProductToUser } from '../../../../../services/users'
+import { responseJSON } from '../../../../../lib/helpers'
 
 const handler = async (req, res) => {
   if (!['POST', 'GET'].includes(req.method)) {
-    return res.status(405).json(METHOD_NOT_ALLOWED)
+    return responseJSON(res, 405, METHOD_NOT_ALLOWED)
   }
 
   const { authorization } = req.headers
 
   if (isEmptyString(authorization)) {
-    return res.status(401).json(MISSING_AUTHORIZATION_HEADER)
+    return responseJSON(res, 401, MISSING_AUTHORIZATION_HEADER)
   }
 
   if (!authorization.startsWith('Bearer ')) {
-    return res.status(401).json(MISSING_BEARER_KEY)
+    return responseJSON(res, 401, MISSING_BEARER_KEY)
   }
 
   const token = authorization.replace(/^Bearer/, '').trim()
 
   if (token.length === 0) {
-    return res.status(401).json(MISSING_TOKEN)
+    return responseJSON(res, 401, MISSING_TOKEN)
   }
 
   let crawler
@@ -74,11 +75,11 @@ const handler = async (req, res) => {
       Sentry.captureException(err)
     })
 
-    return res.status(400).json(UNABLE_TO_GET_CRAWLER_BY_TOKEN)
+    return responseJSON(res, 500, UNABLE_TO_GET_CRAWLER_BY_TOKEN)
   }
 
   if (!crawler) {
-    return res.status(403).json(CRAWLER_DOES_NOT_EXIST)
+    return responseJSON(res, 404, CRAWLER_DOES_NOT_EXIST)
   }
 
   const crawlerId = crawler.id
@@ -102,7 +103,7 @@ const handler = async (req, res) => {
       Sentry.captureException(err)
     })
 
-    return res.status(400).json(UNABLE_TO_ADD_CRAWLER_LOG)
+    return responseJSON(res, 500, UNABLE_TO_ADD_CRAWLER_LOG)
   }
 
   if (req.method === 'GET') {
@@ -119,10 +120,10 @@ const handler = async (req, res) => {
         Sentry.captureException(err)
       })
 
-      return res.status(400).json(UNABLE_TO_GET_PRODUCTS_WITH_OUTDATED_PRICE)
+      return responseJSON(res, 500, UNABLE_TO_GET_PRODUCTS_WITH_OUTDATED_PRICE)
     }
 
-    return res.status(200).json({ products: products })
+    return responseJSON(res, 200, { products: products })
   }
 
   const {
@@ -138,24 +139,28 @@ const handler = async (req, res) => {
   } = req.body
 
   if (isEmptyString(requested_by)) {
-    return res.status(422).json(MISSING_REQUESTED_BY)
+    return responseJSON(res, 400, MISSING_REQUESTED_BY)
   }
 
   if (isEmptyString(url_hash)) {
-    return res.status(422).json(MISSING_URL_HASH)
+    return responseJSON(res, 400, MISSING_URL_HASH)
   }
 
   if (isEmptyString(shop)) {
-    return res.status(422).json(MISSING_SHOP)
+    return responseJSON(res, 400, MISSING_SHOP)
   }
 
+  // TODO: Добавить проверку, что присланный магазин поддерживается (ozon, wildberries, etc.)
+
   if (isEmptyString(url)) {
-    return res.status(422).json(MISSING_URL)
+    return responseJSON(res, 400, MISSING_URL)
   }
 
   if (isEmptyString(status)) {
-    return res.status(422).json(MISSING_STATUS)
+    return responseJSON(res, 400, MISSING_STATUS)
   }
+
+  // TODO: Добавить проверку на поддерживаемость конкретных статусов (ok, not_found, etc.)
 
   // Мы не будем обрабатывать товары, ссылки которых не открываются
   // на момент добавления в систему.
@@ -172,9 +177,10 @@ const handler = async (req, res) => {
         Sentry.captureException(err)
       })
 
-      return res.status(400).json(UNABLE_TO_REMOVE_PRODUCT_FROM_QUEUE)
+      return responseJSON(res, 500, UNABLE_TO_REMOVE_PRODUCT_FROM_QUEUE)
     }
-    return res.status(200).json({})
+
+    return responseJSON(res, 200, {})
   }
 
   if (status === 'required_to_change_location') {
@@ -190,11 +196,14 @@ const handler = async (req, res) => {
         Sentry.captureException(err)
       })
 
-      return res
-        .status(400)
-        .json(UNABLE_TO_MOVE_PRODUCT_FROM_QUEUE_TO_CHANGE_LOCATION)
+      return responseJSON(
+        res,
+        500,
+        UNABLE_TO_MOVE_PRODUCT_FROM_QUEUE_TO_CHANGE_LOCATION
+      )
     }
-    return res.status(200).json({})
+
+    return responseJSON(res, 200, {})
   }
 
   let user
@@ -211,11 +220,11 @@ const handler = async (req, res) => {
       Sentry.captureException(err)
     })
 
-    return res.status(400).json(UNABLE_TO_FIND_USER)
+    return responseJSON(res, 500, UNABLE_TO_FIND_USER)
   }
 
   if (!user) {
-    return res.status(422).json(USER_DOES_NOT_EXIST)
+    return responseJSON(res, 404, USER_DOES_NOT_EXIST)
   }
 
   let product
@@ -232,7 +241,7 @@ const handler = async (req, res) => {
       Sentry.captureException(err)
     })
 
-    return res.status(400).json(UNABLE_TO_FIND_PRODUCT_BY_URL_HASH)
+    return responseJSON(res, 500, UNABLE_TO_FIND_PRODUCT_BY_URL_HASH)
   }
 
   let productLatestPrice = null
@@ -250,9 +259,11 @@ const handler = async (req, res) => {
         Sentry.captureException(err)
       })
 
-      return res
-        .status(400)
-        .json(UNABLE_TO_GET_PRODUCT_LATEST_PRICE_FROM_HISTORY)
+      return responseJSON(
+        res,
+        500,
+        UNABLE_TO_GET_PRODUCT_LATEST_PRICE_FROM_HISTORY
+      )
     }
   } else {
     // Маловероятно, что будет ситуация, когда один и тот же товар решат добавить одновременно два человека.
@@ -282,7 +293,7 @@ const handler = async (req, res) => {
         Sentry.captureException(err)
       })
 
-      return res.status(400).json(UNABLE_TO_CREATE_NEW_PRODUCT)
+      return responseJSON(res, 500, UNABLE_TO_CREATE_NEW_PRODUCT)
     }
   }
 
@@ -298,7 +309,7 @@ const handler = async (req, res) => {
       Sentry.captureException(err)
     })
 
-    return res.status(400).json(UNABLE_TO_REMOVE_PRODUCT_FROM_QUEUE)
+    return responseJSON(res, 500, UNABLE_TO_REMOVE_PRODUCT_FROM_QUEUE)
   }
 
   // Если нет никакой цены, то просто не добавлять его пользователю.
@@ -309,17 +320,17 @@ const handler = async (req, res) => {
       console.error({ err })
 
       Sentry.withScope(function (scope) {
-        scope.setContext('args', { user, product })
+        scope.setContext('args', { user, product, productLatestPrice })
         scope.setTag('section', 'addProductToUser')
         scope.setTag('crawler_id', crawlerId)
         Sentry.captureException(err)
       })
 
-      return res.status(400).json(UNABLE_TO_ADD_EXISTING_PRODUCT_TO_USER)
+      return responseJSON(res, 500, UNABLE_TO_ADD_EXISTING_PRODUCT_TO_USER)
     }
   }
 
-  return res.status(200).json(product)
+  return responseJSON(res, 200, product)
 }
 
 export default withSentry(handler)

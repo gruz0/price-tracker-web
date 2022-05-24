@@ -52,7 +52,7 @@ const handler = async (req, res) => {
       Sentry.captureException(err)
     })
 
-    return res.status(400).json(UNABLE_TO_GET_USER_BY_TOKEN)
+    return res.status(500).json(UNABLE_TO_GET_USER_BY_TOKEN)
   }
 
   if (!user) {
@@ -75,7 +75,7 @@ const handler = async (req, res) => {
       Sentry.captureException(err)
     })
 
-    return res.status(400).json(UNABLE_TO_GET_PRODUCT_BY_ID)
+    return res.status(500).json(UNABLE_TO_GET_PRODUCT_BY_ID)
   }
 
   if (!product) {
@@ -96,7 +96,7 @@ const handler = async (req, res) => {
       Sentry.captureException(err)
     })
 
-    return res.status(400).json(UNABLE_TO_GET_USER_PRODUCT)
+    return res.status(500).json(UNABLE_TO_GET_USER_PRODUCT)
   }
 
   if (!userProduct) {
@@ -124,7 +124,7 @@ const handler = async (req, res) => {
         Sentry.captureException(err)
       })
 
-      return res.status(400).json(UNABLE_TO_GET_USER_PRODUCT_SUBSCRIPTIONS)
+      return res.status(500).json(UNABLE_TO_GET_USER_PRODUCT_SUBSCRIPTIONS)
     }
 
     if (userProductSubscriptions.length !== 0) {
@@ -149,7 +149,7 @@ const handler = async (req, res) => {
   const { subscription_type, payload } = req.body
 
   if (isEmptyString(subscription_type)) {
-    return res.status(422).json(MISSING_SUBSCRIPTION_TYPE)
+    return res.status(400).json(MISSING_SUBSCRIPTION_TYPE)
   }
 
   const subscriptionType = subscription_type.toLowerCase()
@@ -176,7 +176,7 @@ const handler = async (req, res) => {
       Sentry.captureException(err)
     })
 
-    return res.status(400).json(UNABLE_TO_GET_USER_SUBSCRIPTION_BY_TYPE)
+    return res.status(500).json(UNABLE_TO_GET_USER_SUBSCRIPTION_BY_TYPE)
   }
 
   if (userSubscription) {
@@ -198,13 +198,14 @@ const handler = async (req, res) => {
         user,
         product,
         subscriptionType,
+        payload,
       })
       scope.setTag('section', 'addProductSubscription')
       scope.setUser({ user })
       Sentry.captureException(err)
     })
 
-    return res.status(400).json(UNABLE_TO_ADD_USER_SUBSCRIPTION_TO_PRODUCT)
+    return res.status(500).json(UNABLE_TO_ADD_USER_SUBSCRIPTION_TO_PRODUCT)
   }
 
   return res.status(201).json(userSubscription)
