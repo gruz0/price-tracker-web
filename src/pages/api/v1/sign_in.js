@@ -15,20 +15,21 @@ import {
   INVALID_CREDENTIALS,
   UNABLE_TO_UPDATE_USER_TOKEN,
 } from '../../../lib/messages'
+import { responseJSON } from '../../../lib/helpers'
 
 const handler = async (req, res) => {
   if (req.method !== 'POST') {
-    return res.status(405).json(METHOD_NOT_ALLOWED)
+    return responseJSON(res, 405, METHOD_NOT_ALLOWED)
   }
 
   const { login, password } = req.body
 
   if (isEmptyString(login)) {
-    return res.status(400).json(MISSING_LOGIN)
+    return responseJSON(res, 400, MISSING_LOGIN)
   }
 
   if (isEmptyString(password)) {
-    return res.status(400).json(MISSING_PASSWORD)
+    return responseJSON(res, 400, MISSING_PASSWORD)
   }
 
   let user
@@ -44,11 +45,11 @@ const handler = async (req, res) => {
       Sentry.captureException(err)
     })
 
-    return res.status(500).json(UNABLE_TO_FIND_USER)
+    return responseJSON(res, 500, UNABLE_TO_FIND_USER)
   }
 
   if (!user) {
-    return res.status(403).json(INVALID_CREDENTIALS)
+    return responseJSON(res, 403, INVALID_CREDENTIALS)
   }
 
   try {
@@ -62,10 +63,10 @@ const handler = async (req, res) => {
       Sentry.captureException(err)
     })
 
-    return res.status(500).json(UNABLE_TO_UPDATE_USER_TOKEN)
+    return responseJSON(res, 500, UNABLE_TO_UPDATE_USER_TOKEN)
   }
 
-  return res.status(200).json({
+  return responseJSON(res, 200, {
     token: user.token,
     user: {
       id: user.id,

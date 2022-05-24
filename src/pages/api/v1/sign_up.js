@@ -14,32 +14,33 @@ import {
   UNABLE_TO_CREATE_NEW_USER,
   USER_ALREADY_EXISTS,
 } from '../../../lib/messages'
+import { responseJSON } from '../../../lib/helpers'
 
 const handler = async (req, res) => {
   if (req.method !== 'POST') {
-    return res.status(405).json(METHOD_NOT_ALLOWED)
+    return responseJSON(res, 405, METHOD_NOT_ALLOWED)
   }
 
   const { login, password } = req.body
 
   if (isEmptyString(login)) {
-    return res.status(400).json(MISSING_LOGIN)
+    return responseJSON(res, 400, MISSING_LOGIN)
   }
 
   if (isNotDefined(password)) {
-    return res.status(400).json(MISSING_PASSWORD)
+    return responseJSON(res, 400, MISSING_PASSWORD)
   }
 
   const cleanLogin = login.toLowerCase().trim()
 
   if (!cleanLogin.match(/^[a-z0-9\-_]+$/i)) {
-    return res.status(422).json(LOGIN_IS_INVALID)
+    return responseJSON(res, 422, LOGIN_IS_INVALID)
   }
 
   // TODO: Добавить проверку сложности пароля
   // TODO: Добавить проверку в haveibeenpwned: https://github.com/mxschmitt/react-have-i-been-pwned/blob/master/index.js
   if (password.toString().length < 8) {
-    return res.status(422).json(PASSWORD_IS_TOO_SHORT)
+    return responseJSON(res, 422, PASSWORD_IS_TOO_SHORT)
   }
 
   let userExists
@@ -55,11 +56,11 @@ const handler = async (req, res) => {
       Sentry.captureException(err)
     })
 
-    return res.status(500).json(UNABLE_TO_CHECK_USER_EXISTENCE)
+    return responseJSON(res, 500, UNABLE_TO_CHECK_USER_EXISTENCE)
   }
 
   if (userExists) {
-    return res.status(409).json(USER_ALREADY_EXISTS)
+    return responseJSON(res, 409, USER_ALREADY_EXISTS)
   }
 
   let user
@@ -75,10 +76,10 @@ const handler = async (req, res) => {
       Sentry.captureException(err)
     })
 
-    return res.status(500).json(UNABLE_TO_CREATE_NEW_USER)
+    return responseJSON(res, 500, UNABLE_TO_CREATE_NEW_USER)
   }
 
-  return res.status(200).json({
+  return responseJSON(res, 200, {
     token: user.token,
     user: {
       id: user.id,
