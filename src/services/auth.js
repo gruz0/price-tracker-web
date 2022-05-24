@@ -11,17 +11,25 @@ const getUsers = () => {
 
   files.forEach((file) => {
     if (file.endsWith('.json')) {
-      const { id, login, password, token } = fs.readJsonSync(
+      const { id, login, password, token, telegram_account } = fs.readJsonSync(
         usersPath + '/' + file
       )
 
-      users.push({ id, login, password, token })
+      users.push({ id, login, password, token, telegram_account })
 
       return
     }
   })
 
   return users
+}
+
+export const getUsersById = (ids) => {
+  const users = getUsers()
+
+  const matchedUsers = users.filter((user) => ids.includes(user.id))
+
+  return matchedUsers.map((user) => buildUser(user))
 }
 
 export const getUserByToken = (token) => {
@@ -194,11 +202,12 @@ export const updateUserToken = (userId) => {
   return buildUser(userAttributes)
 }
 
-const buildUser = ({ id, login, token, created_at }) => {
+const buildUser = ({ id, login, token, created_at, telegram_account }) => {
   return {
     id,
     login: login.toLowerCase().trim(),
     token,
     created_at,
+    telegram_account,
   }
 }

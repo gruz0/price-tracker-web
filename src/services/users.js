@@ -3,7 +3,6 @@ const fs = require('fs-extra')
 import {
   getProduct,
   getProductHistory,
-  getSuccessProductHistory,
   getProductDiscountPriceOrOriginalPrice,
 } from './products'
 import { usersPath } from './const'
@@ -24,11 +23,9 @@ export const getUserProductWithActualStateAndHistory = (
     productHistory
   )
 
-  const successProductHistory = getSuccessProductHistory(productHistory)
-
   return {
     product: productActualState,
-    history: successProductHistory,
+    history: productHistory,
   }
 }
 
@@ -82,28 +79,18 @@ const buildProductActualState = (product, userProduct, productHistory) => {
     )
   }
 
-  const successProductHistory = getSuccessProductHistory(productHistory)
-
   let inStock = false
   let priceUpdatedAt = product.created_at
   let lastPrice = userProduct.price
   let lowestProductPrice = 0
   let highestProductPrice = 0
 
-  if (successProductHistory.length > 0) {
-    const lastProductHistory = successProductHistory[0]
+  if (productHistory.length > 0) {
+    const lastProductHistory = productHistory[0]
 
     inStock = lastProductHistory.in_stock
     priceUpdatedAt = lastProductHistory.created_at
     lastPrice = getProductDiscountPriceOrOriginalPrice(lastProductHistory)
-
-    if (!lastPrice) {
-      console.error({ lastProductHistory })
-
-      throw new Error(
-        `Ошибка при обработке актуальной цены из истории товара ${product.id}`
-      )
-    }
 
     lowestProductPrice = buildProductLowestPriceFromHistory(
       product.id,
@@ -130,7 +117,7 @@ const buildProductActualState = (product, userProduct, productHistory) => {
     favorited: favorited,
     my_price: myPrice,
     my_benefit: myPrice - lastPrice,
-    has_discount: myPrice > lastPrice,
+    has_discount: inStock && myPrice > lastPrice,
   }
 }
 

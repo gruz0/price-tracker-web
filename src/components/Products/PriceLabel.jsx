@@ -8,7 +8,7 @@ export default function PriceLabel({ product, attached, ribbon, tag }) {
     <>
       {product.has_discount ? (
         <>
-          {product.in_stock ? (
+          {product.in_stock && (
             <Label
               attached={attached}
               ribbon={ribbon}
@@ -18,20 +18,6 @@ export default function PriceLabel({ product, attached, ribbon, tag }) {
                 `Товар подешевел на ` +
                 myBenefitAbsolute +
                 ` р. с момента отслеживания вами этого товара`
-              }
-            >
-              -{myBenefitAbsolute} р.{' '}
-            </Label>
-          ) : (
-            <Label
-              attached={attached}
-              ribbon={ribbon}
-              tag={tag}
-              color="orange"
-              title={
-                `Товар подешевел на ` +
-                myBenefitAbsolute +
-                ` р. с момента отслеживания вами этого товара, но его нет в наличии`
               }
             >
               -{myBenefitAbsolute} р.{' '}

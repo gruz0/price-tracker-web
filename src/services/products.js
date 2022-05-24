@@ -1,4 +1,5 @@
 const fs = require('fs-extra')
+const uuid = require('uuid')
 
 import { productsPath, productsQueuePath } from './const'
 
@@ -24,6 +25,122 @@ export const getProductHistory = (productId) => {
   )
 
   return history
+}
+
+export const getProductSubscriptions = (productId) => {
+  const productSubscriptionsPath =
+    productsPath + '/' + productId + '-subscriptions.json'
+
+  let productSubscriptions = []
+
+  try {
+    productSubscriptions = fs.readJsonSync(productSubscriptionsPath)
+  } catch (err) {
+    return []
+  }
+
+  return productSubscriptions
+}
+
+export const getUserProductSubscriptions = (userId, productId) => {
+  const productSubscriptions = getProductSubscriptions(productId)
+
+  return productSubscriptions.filter(
+    (subscription) => subscription.user_id === userId
+  )
+}
+
+export const getUserProductSubscription = (
+  userId,
+  productId,
+  subscriptionId
+) => {
+  const userProductSubscriptions = getUserProductSubscriptions(
+    userId,
+    productId
+  )
+
+  return userProductSubscriptions.find(
+    (userProductSubscription) => userProductSubscription.id === subscriptionId
+  )
+}
+
+export const getUserProductSubscriptionByType = (
+  userId,
+  productId,
+  subscriptionType
+) => {
+  const userProductSubscriptions = getUserProductSubscriptions(
+    userId,
+    productId
+  )
+
+  return userProductSubscriptions.find(
+    (subscription) => subscription.subscription_type === subscriptionType
+  )
+}
+
+export const removeUserProductSubscription = (
+  userId,
+  productId,
+  subscriptionId
+) => {
+  let userProductSubscription
+
+  let productSubscriptions = getProductSubscriptions(productId)
+
+  for (let idx = 0; idx < productSubscriptions.length; idx++) {
+    if (
+      productSubscriptions[idx].user_id === userId &&
+      productSubscriptions[idx].id === subscriptionId
+    ) {
+      userProductSubscription = productSubscriptions.splice(idx, 1)
+    }
+  }
+
+  if (!userProductSubscription) {
+    throw new Error(
+      `Не удалось найти подписку ${subscriptionId} у товара ${productId} для пользователя ${userId}`
+    )
+  }
+
+  const productSubscriptionsPath =
+    productsPath + '/' + productId + '-subscriptions.json'
+
+  fs.writeJsonSync(productSubscriptionsPath, productSubscriptions, {
+    spaces: 2,
+  })
+
+  return userProductSubscription
+}
+
+export const addProductSubscription = (
+  productId,
+  userId,
+  subscriptionType,
+  payload = {}
+) => {
+  let productSubscriptions = getProductSubscriptions(productId)
+
+  const userSubscription = {
+    id: uuid.v4(),
+    product_id: productId,
+    user_id: userId,
+    subscription_type: subscriptionType,
+    payload: payload,
+    created_at: new Date(),
+  }
+
+  productSubscriptions.push(userSubscription)
+
+  const productSubscriptionsPath =
+    productsPath + '/' + productId + '-subscriptions.json'
+
+  fs.writeJsonSync(productSubscriptionsPath, productSubscriptions, {
+    spaces: 2,
+  })
+
+  return userSubscription
 }
 
 export const getSuccessProductHistory = (productHistory) => {
@@ -70,7 +187,11 @@ const getProducts = () => {
   const files = fs.readdirSync(productsPath)
 
   files.forEach((file) => {
-    if (file.endsWith('.json') && !file.includes('-history')) {
+    if (
+      file.endsWith('.json') &&
+      !file.includes('-history') &&
+      !file.includes('-subscriptions')
+    ) {
       products.push(fs.readJsonSync(productsPath + '/' + file))
     }
   })
