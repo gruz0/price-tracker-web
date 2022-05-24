@@ -60,11 +60,11 @@ const handler = async (req, res) => {
       Sentry.captureException(err)
     })
 
-    return responseJSON(res, 400, UNABLE_TO_GET_CRAWLER_BY_TOKEN)
+    return responseJSON(res, 500, UNABLE_TO_GET_CRAWLER_BY_TOKEN)
   }
 
   if (!crawler) {
-    return responseJSON(res, 403, CRAWLER_DOES_NOT_EXIST)
+    return responseJSON(res, 404, CRAWLER_DOES_NOT_EXIST)
   }
 
   const crawlerId = crawler.id
@@ -88,13 +88,13 @@ const handler = async (req, res) => {
       Sentry.captureException(err)
     })
 
-    return responseJSON(res, 400, UNABLE_TO_ADD_CRAWLER_LOG)
+    return responseJSON(res, 500, UNABLE_TO_ADD_CRAWLER_LOG)
   }
 
   const { product_id: productId } = req.query
 
   if (isEmptyString(productId)) {
-    return responseJSON(res, 422, MISSING_PRODUCT_ID)
+    return responseJSON(res, 400, MISSING_PRODUCT_ID)
   }
 
   let product
@@ -111,7 +111,7 @@ const handler = async (req, res) => {
       Sentry.captureException(err)
     })
 
-    return responseJSON(res, 400, UNABLE_TO_GET_PRODUCT_BY_ID)
+    return responseJSON(res, 500, UNABLE_TO_GET_PRODUCT_BY_ID)
   }
 
   if (!product) {
@@ -121,11 +121,13 @@ const handler = async (req, res) => {
   const { original_price, discount_price, title, in_stock, status } = req.body
 
   if (isEmptyString(status)) {
-    return responseJSON(res, 422, MISSING_STATUS)
+    return responseJSON(res, 400, MISSING_STATUS)
   }
 
+  // TODO: Check only supported statuses (ok, not_found, required_to_change_location, etc.)
+
   if (isNotDefined(in_stock)) {
-    return responseJSON(res, 422, MISSING_IN_STOCK)
+    return responseJSON(res, 400, MISSING_IN_STOCK)
   }
 
   const telegramArgs = {
@@ -174,7 +176,7 @@ const handler = async (req, res) => {
       Sentry.captureException(err)
     })
 
-    return responseJSON(res, 400, UNABLE_TO_ADD_PRODUCT_HISTORY)
+    return responseJSON(res, 500, UNABLE_TO_ADD_PRODUCT_HISTORY)
   }
 
   return responseJSON(res, 201, history)

@@ -60,7 +60,7 @@ const handler = async (req, res) => {
       Sentry.captureException(err)
     })
 
-    return res.status(400).json(UNABLE_TO_GET_USER_BY_TOKEN)
+    return res.status(500).json(UNABLE_TO_GET_USER_BY_TOKEN)
   }
 
   if (!user) {
@@ -81,7 +81,7 @@ const handler = async (req, res) => {
         Sentry.captureException(err)
       })
 
-      return res.status(400).json(UNABLE_TO_GET_USER_PRODUCTS_WITH_PRICES)
+      return res.status(500).json(UNABLE_TO_GET_USER_PRODUCTS_WITH_PRICES)
     }
 
     return res.status(200).json({ products: products })
@@ -118,7 +118,7 @@ const handler = async (req, res) => {
       Sentry.captureException(err)
     })
 
-    return res.status(400).json(UNABLE_TO_CLEAN_URL)
+    return res.status(500).json(UNABLE_TO_CLEAN_URL)
   }
 
   let urlHash
@@ -135,7 +135,7 @@ const handler = async (req, res) => {
       Sentry.captureException(err)
     })
 
-    return res.status(400).json(UNABLE_TO_CALCULATE_URL_HASH)
+    return res.status(500).json(UNABLE_TO_CALCULATE_URL_HASH)
   }
 
   let product
@@ -152,7 +152,7 @@ const handler = async (req, res) => {
       Sentry.captureException(err)
     })
 
-    return res.status(400).json(UNABLE_TO_FIND_PRODUCT_BY_URL_HASH)
+    return res.status(500).json(UNABLE_TO_FIND_PRODUCT_BY_URL_HASH)
   }
 
   if (!product) {
@@ -174,7 +174,7 @@ const handler = async (req, res) => {
         Sentry.captureException(err)
       })
 
-      return res.status(400).json(UNABLE_TO_ADD_NEW_PRODUCT_TO_QUEUE)
+      return res.status(500).json(UNABLE_TO_ADD_NEW_PRODUCT_TO_QUEUE)
     }
 
     return res.status(201).json(PRODUCT_ADDED_TO_QUEUE)
@@ -194,7 +194,7 @@ const handler = async (req, res) => {
       Sentry.captureException(err)
     })
 
-    return res.status(400).json(UNABLE_TO_GET_PRODUCT_LATEST_PRICE_FROM_HISTORY)
+    return res.status(500).json(UNABLE_TO_GET_PRODUCT_LATEST_PRICE_FROM_HISTORY)
   }
 
   if (!productLatestPrice || productLatestPrice === 0) {
@@ -215,7 +215,7 @@ const handler = async (req, res) => {
       Sentry.captureException(err)
     })
 
-    return res.status(400).json(UNABLE_TO_ADD_EXISTING_PRODUCT_TO_USER)
+    return res.status(500).json(UNABLE_TO_ADD_EXISTING_PRODUCT_TO_USER)
   }
 
   return res.status(201).json({

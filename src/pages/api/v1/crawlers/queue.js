@@ -3,6 +3,7 @@ import * as Sentry from '@sentry/nextjs'
 
 import { isEmptyString } from '../../../../lib/validators'
 import {
+  METHOD_NOT_ALLOWED,
   CRAWLER_DOES_NOT_EXIST,
   MISSING_AUTHORIZATION_HEADER,
   MISSING_BEARER_KEY,
@@ -16,26 +17,27 @@ import {
   getCrawlerByToken,
   getNewProductsQueue,
 } from '../../../../services/crawlers'
+import { responseJSON } from '../../../../lib/helpers'
 
 const handler = async (req, res) => {
   if (req.method !== 'GET') {
-    return res.status(405).end()
+    return responseJSON(res, 405, METHOD_NOT_ALLOWED)
   }
 
   const { authorization } = req.headers
 
   if (isEmptyString(authorization)) {
-    return res.status(401).json(MISSING_AUTHORIZATION_HEADER)
+    return responseJSON(res, 401, MISSING_AUTHORIZATION_HEADER)
   }
 
   if (!authorization.startsWith('Bearer ')) {
-    return res.status(401).json(MISSING_BEARER_KEY)
+    return responseJSON(res, 401, MISSING_BEARER_KEY)
   }
 
   const token = authorization.replace(/^Bearer/, '').trim()
 
   if (token.length === 0) {
-    return res.status(401).json(MISSING_TOKEN)
+    return responseJSON(res, 401, MISSING_TOKEN)
   }
 
   let crawler
@@ -51,11 +53,11 @@ const handler = async (req, res) => {
       Sentry.captureException(err)
     })
 
-    return res.status(400).json(UNABLE_TO_GET_CRAWLER_BY_TOKEN)
+    return responseJSON(res, 500, UNABLE_TO_GET_CRAWLER_BY_TOKEN)
   }
 
   if (!crawler) {
-    return res.status(403).json(CRAWLER_DOES_NOT_EXIST)
+    return responseJSON(res, 404, CRAWLER_DOES_NOT_EXIST)
   }
 
   const crawlerId = crawler.id
@@ -79,7 +81,7 @@ const handler = async (req, res) => {
       Sentry.captureException(err)
     })
 
-    return res.status(400).json(UNABLE_TO_ADD_CRAWLER_LOG)
+    return responseJSON(res, 500, UNABLE_TO_ADD_CRAWLER_LOG)
   }
 
   let products
@@ -95,10 +97,10 @@ const handler = async (req, res) => {
       Sentry.captureException(err)
     })
 
-    return res.status(400).json(UNABLE_TO_GET_NEW_PRODUCTS_REQUESTS)
+    return responseJSON(res, 500, UNABLE_TO_GET_NEW_PRODUCTS_REQUESTS)
   }
 
-  return res.status(200).json({ products: products })
+  return responseJSON(res, 200, { products: products })
 }
 
 export default withSentry(handler)

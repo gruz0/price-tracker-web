@@ -33,7 +33,7 @@ const handler = async (req, res) => {
       Sentry.captureException(err)
     })
 
-    return res.status(400).json(UNABLE_TO_GET_USER_BY_TOKEN)
+    return res.status(500).json(UNABLE_TO_GET_USER_BY_TOKEN)
   }
 
   if (!user) {

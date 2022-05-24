@@ -47,7 +47,7 @@ const handler = async (req, res) => {
       Sentry.captureException(err)
     })
 
-    return res.status(400).json(UNABLE_TO_GET_USER_BY_TOKEN)
+    return res.status(500).json(UNABLE_TO_GET_USER_BY_TOKEN)
   }
 
   if (!userByToken) {
@@ -57,15 +57,15 @@ const handler = async (req, res) => {
   const { current_password, new_password, new_password_confirmation } = req.body
 
   if (isEmptyString(current_password)) {
-    return res.status(422).json(MISSING_CURRENT_PASSWORD)
+    return res.status(400).json(MISSING_CURRENT_PASSWORD)
   }
 
   if (isEmptyString(new_password)) {
-    return res.status(422).json(MISSING_NEW_PASSWORD)
+    return res.status(400).json(MISSING_NEW_PASSWORD)
   }
 
   if (isEmptyString(new_password_confirmation)) {
-    return res.status(422).json(MISSING_NEW_PASSWORD_CONFIRMATION)
+    return res.status(400).json(MISSING_NEW_PASSWORD_CONFIRMATION)
   }
 
   if (new_password !== new_password_confirmation) {
@@ -95,11 +95,11 @@ const handler = async (req, res) => {
       Sentry.captureException(err)
     })
 
-    return res.status(400).json(UNABLE_TO_FIND_USER)
+    return res.status(500).json(UNABLE_TO_FIND_USER)
   }
 
   if (!user) {
-    return res.status(422).json(CURRENT_PASSWORD_IS_NOT_VALID)
+    return res.status(403).json(CURRENT_PASSWORD_IS_NOT_VALID)
   }
 
   try {
@@ -113,7 +113,7 @@ const handler = async (req, res) => {
       Sentry.captureException(err)
     })
 
-    return res.status(400).json(UNABLE_TO_UPDATE_USER_PASSWORD_AND_TOKEN)
+    return res.status(500).json(UNABLE_TO_UPDATE_USER_PASSWORD_AND_TOKEN)
   }
 
   return res.status(200).json({

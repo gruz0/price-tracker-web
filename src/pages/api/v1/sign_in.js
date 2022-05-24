@@ -24,11 +24,11 @@ const handler = async (req, res) => {
   const { login, password } = req.body
 
   if (isEmptyString(login)) {
-    return res.status(422).json(MISSING_LOGIN)
+    return res.status(400).json(MISSING_LOGIN)
   }
 
   if (isEmptyString(password)) {
-    return res.status(422).json(MISSING_PASSWORD)
+    return res.status(400).json(MISSING_PASSWORD)
   }
 
   let user
@@ -44,7 +44,7 @@ const handler = async (req, res) => {
       Sentry.captureException(err)
     })
 
-    return res.status(400).json(UNABLE_TO_FIND_USER)
+    return res.status(500).json(UNABLE_TO_FIND_USER)
   }
 
   if (!user) {
@@ -62,7 +62,7 @@ const handler = async (req, res) => {
       Sentry.captureException(err)
     })
 
-    return res.status(400).json(UNABLE_TO_UPDATE_USER_TOKEN)
+    return res.status(500).json(UNABLE_TO_UPDATE_USER_TOKEN)
   }
 
   return res.status(200).json({

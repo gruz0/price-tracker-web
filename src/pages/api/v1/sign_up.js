@@ -23,11 +23,11 @@ const handler = async (req, res) => {
   const { login, password } = req.body
 
   if (isEmptyString(login)) {
-    return res.status(422).json(MISSING_LOGIN)
+    return res.status(400).json(MISSING_LOGIN)
   }
 
   if (isNotDefined(password)) {
-    return res.status(422).json(MISSING_PASSWORD)
+    return res.status(400).json(MISSING_PASSWORD)
   }
 
   const cleanLogin = login.toLowerCase().trim()
@@ -55,11 +55,11 @@ const handler = async (req, res) => {
       Sentry.captureException(err)
     })
 
-    return res.status(400).json(UNABLE_TO_CHECK_USER_EXISTENCE)
+    return res.status(500).json(UNABLE_TO_CHECK_USER_EXISTENCE)
   }
 
   if (userExists) {
-    return res.status(422).json(USER_ALREADY_EXISTS)
+    return res.status(409).json(USER_ALREADY_EXISTS)
   }
 
   let user
@@ -75,7 +75,7 @@ const handler = async (req, res) => {
       Sentry.captureException(err)
     })
 
-    return res.status(400).json(UNABLE_TO_CREATE_NEW_USER)
+    return res.status(500).json(UNABLE_TO_CREATE_NEW_USER)
   }
 
   return res.status(200).json({
