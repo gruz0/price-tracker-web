@@ -2,11 +2,7 @@ import getConfig from 'next/config'
 import { getProductHistory, getProductSubscriptions } from './products'
 import { getUsersById } from './auth'
 
-const { serverRuntimeConfig } = getConfig()
 const TelegramBot = require('node-telegram-bot-api')
-const telegram_bot_token = serverRuntimeConfig.telegram_bot_token
-const service_products_url = serverRuntimeConfig.service_products_url
-const bot = new TelegramBot(telegram_bot_token)
 
 // TODO: Добавить сюда проверки, что сообщение доставлено в Telegram
 export const sendMessageToTelegramThatProductIsInStock = ({
@@ -49,6 +45,11 @@ export const sendMessageToTelegramThatProductIsInStock = ({
   const telegramAccounts = users.map((u) => u.telegram_account)
 
   if (telegramAccounts.length === 0) return
+
+  const { serverRuntimeConfig } = getConfig()
+  const telegram_bot_token = serverRuntimeConfig.telegram_bot_token
+  const service_products_url = serverRuntimeConfig.service_products_url
+  const bot = new TelegramBot(telegram_bot_token)
 
   telegramAccounts.forEach((telegramAccount) => {
     bot.sendMessage(
