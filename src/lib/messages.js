@@ -319,6 +319,13 @@ export const UNABLE_TO_CREATE_NEW_PRODUCT = {
   message: 'Не удалось создать новый товар',
 }
 
+export const SHOP_IS_NOT_SUPPORTED_YET = {
+  status: 'shop_is_not_supported_yet',
+  message:
+    'В данный момент ссылки из этого магазина не поддерживаются. ' +
+    'Мы посмотрим количество запросов по этому сайту от других пользователей и, возможно, добавим этот магазин. Спасибо!',
+}
+
 export const UNABLE_TO_ADD_NEW_PRODUCT_TO_QUEUE = {
   status: 'unable_to_add_new_product_to_queue',
   message: 'Не удалось добавить новый товар в очередь',
