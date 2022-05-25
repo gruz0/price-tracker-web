@@ -2,41 +2,39 @@ import React, { useState } from 'react'
 import Router from 'next/router'
 import { Form, Input, Message, Segment } from 'semantic-ui-react'
 import { addProduct } from '../../lib/api'
+import ErrorWrapper from '../../components/ErrorWrapper'
 
 export default function AddNewProduct({ token }) {
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
   const initialFields = { url: '' }
   const [fields, setFields] = useState(initialFields)
-  const [errors, setErrors] = useState(undefined)
+  const [error, setError] = useState(undefined)
   const [message, setMessage] = useState(undefined)
-  const [isLoading, setIsLoading] = useState(false)
 
-  const handleAddProduct = (e) => {
-    setIsLoading(true)
-
+  const handleAddProduct = async (e) => {
     e.preventDefault()
 
-    setErrors(null)
+    setError(null)
     setMessage(null)
 
-    // FIXME: Это нужно отрефакторить как в форме Settings
-    addProduct(token, fields.url)
-      .then((response) => {
-        setFields({ url: '' })
+    try {
+      const response = await addProduct(token, fields.url)
 
-        if (response?.message) {
-          setMessage(response.message)
-        }
+      setFields({ url: '' })
 
-        if (response?.location) {
-          Router.push(response.location)
-        }
-      })
-      .catch((err) => {
-        setErrors(err?.info?.message || err.message)
-      })
-      .finally(() => {
-        setIsLoading(false)
-      })
+      if (response?.message) {
+        setMessage(response.message)
+      }
+
+      if (response?.location) {
+        Router.push(response.location)
+      }
+    } catch (error) {
+      setError(error)
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   const handleInputChange = (e) => {
@@ -44,13 +42,9 @@ export default function AddNewProduct({ token }) {
   }
 
   return (
-    <Segment loading={isLoading} padded>
-      {errors && (
-        <Message
-          error
-          header="Ошибки при добавлении товара"
-          list={Array.isArray(errors) ? errors : [errors]}
-        />
+    <Segment loading={isSubmitting} padded>
+      {error && (
+        <ErrorWrapper header="Ошибки при добавлении товара" error={error} />
       )}
 
       {message && <Message positive header={message} />}
@@ -58,7 +52,7 @@ export default function AddNewProduct({ token }) {
       <Form onSubmit={handleAddProduct}>
         <Input
           id="url"
-          action={{ type: 'submit', content: 'Добавить товар', primary: true }}
+          action={{ type: 'submit', content: 'Добавить', primary: true }}
           placeholder="Вставьте ссылку на товар, цену которого хотите отслеживать"
           value={fields.url}
           onChange={handleInputChange}

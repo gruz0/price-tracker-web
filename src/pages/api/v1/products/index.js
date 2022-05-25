@@ -37,6 +37,7 @@ import {
   UNABLE_TO_ADD_EXISTING_PRODUCT_TO_USER,
   UNABLE_TO_GET_PRODUCT_LATEST_PRICE_FROM_HISTORY,
   UNABLE_TO_ADD_PRODUCT_TO_USER_RIGHT_NOW_BECAUSE_OF_MISSING_PRICE,
+  SHOP_IS_NOT_SUPPORTED_YET,
 } from '../../../../lib/messages'
 
 const handler = async (req, res) => {
@@ -173,6 +174,20 @@ const handler = async (req, res) => {
       url_hash: urlHash,
       url: cleanURL,
       requested_by: user.id,
+    }
+
+    if (!cleanURL.match(/ozon\.ru/) || cleanURL.match(/wildberries\.ru/)) {
+      Sentry.withScope(function (scope) {
+        scope.setContext('args', { newProductArgs })
+        scope.setUser({ user })
+        Sentry.captureException(
+          new Error(
+            'Пользователь отправил ссылку на неподдерживаемый магазин через форму добавления товара'
+          )
+        )
+      })
+
+      return responseJSON(res, 200, SHOP_IS_NOT_SUPPORTED_YET)
     }
 
     try {
