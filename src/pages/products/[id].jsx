@@ -1,52 +1,18 @@
-import React, { useEffect } from 'react'
+import React from 'react'
+import UsersLayout from '../../layouts/Users'
+import ProductScreen from '../../screens/users/products/show'
 
-import Layout from '../../components/Layout'
-import ErrorWrapper from '../../components/ErrorWrapper'
-import JustOneSecond from '../../components/JustOneSecond'
-import { useAuth } from '../../hooks'
-import useProduct from '../../hooks/useProduct'
-import { useRouter } from 'next/router'
-import ProductCard from '../../components/ProductCard'
-
-const ProductPage = () => {
-  const router = useRouter()
-  const { token, logout } = useAuth()
-  const { data, isLoading, error } = useProduct(router.query.id, token)
-
-  useEffect(() => {
-    if (error && error?.info?.status === 'forbidden') {
-      return logout()
-    }
-  }, [error])
-
-  return (
-    <>
-      {error ? (
-        <ErrorWrapper header="Не удалось загрузить товар" error={error} />
-      ) : (
-        <>
-          {isLoading ? (
-            <JustOneSecond />
-          ) : (
-            <ProductCard product={data.product} />
-          )}
-        </>
-      )}
-    </>
-  )
-}
-
-ProductPage.requiresAuth = true
-
-ProductPage.getLayout = (page) => (
-  <Layout
+const Page = () => (
+  <UsersLayout
     meta={{
       title: 'Карточка товара | Трекер цен',
       description: 'Покупайте вовремя!',
     }}
   >
-    {page}
-  </Layout>
+    <ProductScreen />
+  </UsersLayout>
 )
 
-export default ProductPage
+Page.requiresAuth = true
+
+export default Page

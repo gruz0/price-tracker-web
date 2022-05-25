@@ -88,9 +88,9 @@ export default function ProductsList({ products }) {
   return (
     <>
       <Segment padded>
-        <Grid columns={2} stackable>
+        <Grid>
           <Grid.Row verticalAlign="top">
-            <Grid.Column>
+            <Grid.Column width={13}>
               <Form>
                 <Form.Input
                   fluid
@@ -121,7 +121,7 @@ export default function ProductsList({ products }) {
               </Form>
             </Grid.Column>
 
-            <Grid.Column textAlign="right">
+            <Grid.Column width={3} textAlign="right">
               <Button.Group icon>
                 <Button
                   onClick={() => {

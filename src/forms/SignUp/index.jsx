@@ -61,6 +61,7 @@ export default function SignUp() {
             iconPosition="left"
             placeholder="Логин"
             required
+            autoComplete="username"
             value={fields.login}
             onChange={handleInputChange}
           />
@@ -73,6 +74,7 @@ export default function SignUp() {
             placeholder="Пароль"
             type="password"
             required
+            autoComplete="new-password"
             value={fields.password}
             onChange={handleInputChange}
           />
