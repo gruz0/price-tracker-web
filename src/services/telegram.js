@@ -1,8 +1,10 @@
-import getConfig from 'next/config'
 import { getProductHistory, getProductSubscriptions } from './products'
 import { getUsersById } from './auth'
 
+const telegram_bot_token = process.env.TELEGRAM_BOT_TOKEN
+const service_products_url = process.env.SERVICE_PRODUCTS_URL
 const TelegramBot = require('node-telegram-bot-api')
+const bot = new TelegramBot(telegram_bot_token)
 
 // TODO: Добавить сюда проверки, что сообщение доставлено в Telegram
 export const sendMessageToTelegramThatProductIsInStock = ({
@@ -46,17 +48,12 @@ export const sendMessageToTelegramThatProductIsInStock = ({
 
   if (telegramAccounts.length === 0) return
 
-  const { serverRuntimeConfig } = getConfig()
-  const telegram_bot_token = serverRuntimeConfig.telegram_bot_token
-  const service_products_url = serverRuntimeConfig.service_products_url
-  const bot = new TelegramBot(telegram_bot_token)
-
   telegramAccounts.forEach((telegramAccount) => {
     bot.sendMessage(
       telegramAccount,
       `Добавленный вами товар [${product.title}](${product.url}) появился в наличии!\n\n` +
         `Текущая цена товара: ${price}.\n` +
-        `[Карточка товара в GetPrice](${service_products_url}/${product.url}).`,
+        `[Открыть карточку товара](${service_products_url}/${product.url}).`,
       {
         parse_mode: 'markdown',
       }

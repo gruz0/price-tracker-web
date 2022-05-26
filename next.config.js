@@ -16,11 +16,6 @@ const nextConfig = {
     outputStandalone: true,
   },
 
-  serverRuntimeConfig: {
-    telegram_bot_token: process.env.TELEGRAM_BOT_TOKEN,
-    service_products_url: process.env.SERVICE_PRODUCTS_URL,
-  },
-
   sentry: {
     disableServerWebpackPlugin: true,
     disableClientWebpackPlugin: true,
