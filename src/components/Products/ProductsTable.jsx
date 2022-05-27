@@ -16,7 +16,9 @@ export default function ProductsTable({ products }) {
             />
           </Table.HeaderCell>
           <Table.HeaderCell>Наличие</Table.HeaderCell>
+          {/*
           <Table.HeaderCell>Избр.</Table.HeaderCell>
+          */}
           <Table.HeaderCell>Обновлено</Table.HeaderCell>
           <Table.HeaderCell></Table.HeaderCell>
         </Table.Row>

@@ -1,5 +1,13 @@
 import React, { useState, useEffect } from 'react'
-import { Header, Segment, Message, Checkbox, Icon } from 'semantic-ui-react'
+import {
+  Divider,
+  Label,
+  Header,
+  Segment,
+  Message,
+  Checkbox,
+  Icon,
+} from 'semantic-ui-react'
 import { useRouter } from 'next/router'
 import Statistics from './Statistics'
 import Chart from './Chart'
@@ -15,7 +23,7 @@ import {
   unsubscribeUserFromProductEvent,
 } from '../../lib/subscriptions'
 
-export default function ProductCard({ product }) {
+export default function ProductCard({ product, isSmallScreen }) {
   const router = useRouter()
   const { user, token, logout } = useAuth()
   const { data, isLoading, error } = useProductHistory(product.id, token)
@@ -79,7 +87,9 @@ export default function ProductCard({ product }) {
 
   return (
     <>
-      <Header as="h1">{product.title}</Header>
+      {!isSmallScreen && <Divider hidden fitted />}
+
+      <Header as={isSmallScreen ? 'h2' : 'h1'}>{product.title}</Header>
 
       {error ? (
         <ErrorWrapper
@@ -96,7 +106,7 @@ export default function ProductCard({ product }) {
                 <>
                   {!data.history[0].in_stock && (
                     <Segment
-                      padded
+                      padded={!isSmallScreen}
                       loading={isSubmitting || areSubscriptionsLoading}
                     >
                       {subscriptionError && (
@@ -138,9 +148,21 @@ export default function ProductCard({ product }) {
                       )}
                     </Segment>
                   )}
+                  <Segment padded={!isSmallScreen}>
+                    <Label
+                      as="a"
+                      href={data.product.url}
+                      target="_blank"
+                      rel="noreferrer noopener"
+                      content="Перейти в магазин"
+                      attached="bottom"
+                      icon="linkify"
+                    />
 
-                  <Segment padded>
-                    <Statistics product={data.product} />
+                    <Statistics
+                      product={data.product}
+                      isSmallScreen={isSmallScreen}
+                    />
                   </Segment>
 
                   <Header as="h3">Динамика цен</Header>
@@ -151,7 +173,19 @@ export default function ProductCard({ product }) {
 
                   <Header as="h3">Таблица цен</Header>
 
-                  <PriceTable history={data.history} />
+                  {isSmallScreen ? (
+                    <Message>
+                      <Message.Header>
+                        Не доступно в мобильной версии
+                      </Message.Header>
+                      <p>
+                        В мобильной версии таблица цен не отображается.
+                        Воспользуйтесь десктопной версией, пожалуйста.
+                      </p>
+                    </Message>
+                  ) : (
+                    <PriceTable history={data.history} />
+                  )}
                 </>
               ) : (
                 <Message info>

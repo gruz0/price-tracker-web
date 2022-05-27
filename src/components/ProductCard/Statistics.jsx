@@ -1,10 +1,14 @@
-import Link from 'next/link'
-import { Image, Icon, Statistic } from 'semantic-ui-react'
+import React from 'react'
+import { Icon, Statistic } from 'semantic-ui-react'
 import { formatTime } from '../../lib/formatDate'
 
-export default function Statistics({ product }) {
+export default function Statistics({ product, isSmallScreen }) {
   return (
-    <Statistic.Group size="small" widths={6}>
+    <Statistic.Group
+      size="small"
+      widths={isSmallScreen ? 1 : 5}
+      horizontal={isSmallScreen}
+    >
       <Statistic>
         <Statistic.Value>{product.last_price || 'Нет'}</Statistic.Value>
         <Statistic.Label>Последняя цена, руб.</Statistic.Label>
@@ -31,28 +35,9 @@ export default function Statistics({ product }) {
             <Icon color="red" name="close" />
           )}
         </Statistic.Value>
-        <Statistic.Label>Наличие</Statistic.Label>
-      </Statistic>
-      <Statistic>
-        <Statistic.Value>
-          <Link href={product.url} passHref>
-            <a
-              target="_blank"
-              rel="noopener noreferrer"
-              title="Перейти в магазин"
-            >
-              <Image
-                src={'/' + product.shop + '.ico'}
-                width={48}
-                height={48}
-                rounded
-                centered
-                alt="Перейти в магазин"
-              />
-            </a>
-          </Link>
-        </Statistic.Value>
-        <Statistic.Label>Магазин</Statistic.Label>
+        <Statistic.Label>
+          {product.in_stock ? 'В наличии' : 'Нет в наличии'}
+        </Statistic.Label>
       </Statistic>
     </Statistic.Group>
   )

@@ -61,7 +61,7 @@ function AuthDetails() {
       </Menu.Item>
 
       <Menu.Menu position="right">
-        <Dropdown item text={`Аккаунт (` + user.login + `)`}>
+        <Dropdown item text="Аккаунт">
           <Dropdown.Menu>
             <Link href="/settings" passHref>
               <Dropdown.Item icon="user" text="Настройки" />

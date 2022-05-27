@@ -1,22 +1,22 @@
 import React, { useState, useEffect } from 'react'
-import { Button, Grid, Form, Segment, Icon } from 'semantic-ui-react'
+import { Button, Grid, Divider, Form, Segment, Icon } from 'semantic-ui-react'
 import ProductsTable from './ProductsTable'
 import ProductsCards from './ProductsCards'
 import PaginationComponent from './Pagination'
 
-export default function ProductsList({ products }) {
-  const [view, setView] = useState('table')
+export default function ProductsList({ products, isSmallScreen }) {
+  const [view, setView] = useState(isSmallScreen ? 'card' : 'table')
 
   const [filteredProducts, setFilteredProducts] = useState([])
 
-  const [recordsPerPage, setRecordsPerPage] = useState(10)
+  const [recordsPerPage, setRecordsPerPage] = useState(isSmallScreen ? 9 : 10)
   const [currentPage, setCurrentPage] = useState(1)
   const [totalPages, setTotalPages] = useState(null)
   const [showPagination, setShowPagination] = useState(null)
 
   const [search, setSearch] = useState('')
   const [displayWithDiscount, setDisplayWithDiscount] = useState(false)
-  const [displayFavorited, setDisplayFavorited] = useState(false)
+  // const [displayFavorited, setDisplayFavorited] = useState(false)
   const [displayInStock, setDisplayInStock] = useState(false)
 
   useEffect(() => {
@@ -33,9 +33,11 @@ export default function ProductsList({ products }) {
       ? filtered.filter((product) => product.has_discount)
       : filtered
 
+    /*
     filtered = displayFavorited
       ? filtered.filter((product) => product.favorited)
       : filtered
+    */
 
     filtered = displayInStock
       ? filtered.filter((product) => product.in_stock)
@@ -58,7 +60,9 @@ export default function ProductsList({ products }) {
     products,
     search,
     displayWithDiscount,
+    /*
     displayFavorited,
+    */
     displayInStock,
     currentPage,
     totalPages,
@@ -73,9 +77,11 @@ export default function ProductsList({ products }) {
     setDisplayWithDiscount(!displayWithDiscount)
   }
 
+  /*
   const toggleDisplayFavorited = () => {
     setDisplayFavorited(!displayFavorited)
   }
+  */
 
   const toggleDisplayInStock = () => {
     setDisplayInStock(!displayInStock)
@@ -87,10 +93,10 @@ export default function ProductsList({ products }) {
 
   return (
     <>
-      <Segment padded>
+      <Segment padded={!isSmallScreen}>
         <Grid>
           <Grid.Row verticalAlign="top">
-            <Grid.Column width={13}>
+            <Grid.Column width={isSmallScreen ? null : 13}>
               <Form>
                 <Form.Input
                   fluid
@@ -99,7 +105,7 @@ export default function ProductsList({ products }) {
                   onChange={handleSearchChange}
                 />
 
-                <Form.Group inline>
+                <Form.Group inline={!isSmallScreen} unstackable={isSmallScreen}>
                   <Form.Checkbox
                     toggle
                     onClick={toggleDisplayWithDiscount}
@@ -112,41 +118,47 @@ export default function ProductsList({ products }) {
                     label="В наличии"
                   />
 
+                  {/*
                   <Form.Checkbox
                     toggle
                     onClick={toggleDisplayFavorited}
                     label="Избранные"
                   />
+                  */}
                 </Form.Group>
               </Form>
             </Grid.Column>
 
-            <Grid.Column width={3} textAlign="right">
-              <Button.Group icon>
-                <Button
-                  onClick={() => {
-                    setView('table')
-                    setRecordsPerPage(10)
-                  }}
-                  primary={view === 'table'}
-                >
-                  <Icon name="table" title="Таблица" />
-                </Button>
+            {!isSmallScreen && (
+              <Grid.Column width={3} textAlign="right">
+                <Button.Group icon>
+                  <Button
+                    onClick={() => {
+                      setView('table')
+                      setRecordsPerPage(10)
+                    }}
+                    primary={view === 'table'}
+                  >
+                    <Icon name="table" title="Таблица" />
+                  </Button>
 
-                <Button
-                  onClick={() => {
-                    setView('card')
-                    setRecordsPerPage(9)
-                  }}
-                  primary={view === 'card'}
-                >
-                  <Icon name="columns" title="Карточки" />
-                </Button>
-              </Button.Group>
-            </Grid.Column>
+                  <Button
+                    onClick={() => {
+                      setView('card')
+                      setRecordsPerPage(9)
+                    }}
+                    primary={view === 'card'}
+                  >
+                    <Icon name="columns" title="Карточки" />
+                  </Button>
+                </Button.Group>
+              </Grid.Column>
+            )}
           </Grid.Row>
         </Grid>
       </Segment>
+
+      {!isSmallScreen && <Divider hidden />}
 
       {view === 'table' && (
         <ProductsTable
@@ -167,11 +179,16 @@ export default function ProductsList({ products }) {
       )}
 
       {showPagination && (
-        <PaginationComponent
-          showPagination={showPagination}
-          totalPages={totalPages}
-          changePage={changePage}
-        />
+        <>
+          <Divider hidden />
+
+          <PaginationComponent
+            showPagination={showPagination}
+            totalPages={totalPages}
+            changePage={changePage}
+            isSmallScreen={isSmallScreen}
+          />
+        </>
       )}
     </>
   )
