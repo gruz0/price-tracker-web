@@ -61,6 +61,17 @@ function AuthDetails() {
       </Menu.Item>
 
       <Menu.Menu position="right">
+        <Menu.Item icon>
+          <a
+            href="https://t.me/chartik_ru"
+            target="_blank"
+            rel="noopener noreferrer"
+            title="Открыть канал в Telegram"
+          >
+            <Icon name="telegram" size="large" />
+          </a>
+        </Menu.Item>
+
         <Dropdown item text="Аккаунт">
           <Dropdown.Menu>
             <Link href="/settings" passHref>
