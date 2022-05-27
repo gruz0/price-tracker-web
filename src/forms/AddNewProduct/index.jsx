@@ -1,10 +1,10 @@
 import React, { useState } from 'react'
 import Router from 'next/router'
-import { Form, Input, Message, Segment } from 'semantic-ui-react'
+import { Form, Divider, Input, Message, Segment } from 'semantic-ui-react'
 import { addProduct } from '../../lib/api'
 import ErrorWrapper from '../../components/ErrorWrapper'
 
-export default function AddNewProduct({ token }) {
+export default function AddNewProduct({ token, isSmallScreen }) {
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const initialFields = { url: '' }
@@ -42,25 +42,29 @@ export default function AddNewProduct({ token }) {
   }
 
   return (
-    <Segment loading={isSubmitting} padded>
-      {error && (
-        <ErrorWrapper header="Ошибки при добавлении товара" error={error} />
-      )}
+    <>
+      {!isSmallScreen && <Divider fitted hidden />}
 
-      {message && <Message positive header={message} />}
+      <Segment loading={isSubmitting} padded={!isSmallScreen}>
+        {error && (
+          <ErrorWrapper header="Ошибки при добавлении товара" error={error} />
+        )}
 
-      <Form onSubmit={handleAddProduct}>
-        <Input
-          id="url"
-          action={{ type: 'submit', content: 'Добавить', primary: true }}
-          placeholder="Вставьте ссылку на товар, цену которого хотите отслеживать"
-          value={fields.url}
-          onChange={handleInputChange}
-          required
-          fluid
-          float="right"
-        />
-      </Form>
-    </Segment>
+        {message && <Message positive header={message} />}
+
+        <Form onSubmit={handleAddProduct}>
+          <Input
+            id="url"
+            action={{ type: 'submit', content: 'Добавить', primary: true }}
+            placeholder="Вставьте ссылку на товар, цену которого хотите отслеживать"
+            value={fields.url}
+            onChange={handleInputChange}
+            required
+            fluid
+            float="right"
+          />
+        </Form>
+      </Segment>
+    </>
   )
 }

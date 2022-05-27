@@ -4,7 +4,7 @@ import { Header } from 'semantic-ui-react'
 import { useAuth } from '../../../hooks'
 import ChangePassword from '../../../forms/ChangePassword'
 
-const SecurityPage = () => {
+const Screen = () => {
   const { token, authenticate } = useAuth()
 
   // FIXME: Здесь надо разобраться, почему не происходит логаут при заходе из другого браузера.
@@ -21,4 +21,4 @@ const SecurityPage = () => {
   )
 }
 
-export default SecurityPage
+export default Screen

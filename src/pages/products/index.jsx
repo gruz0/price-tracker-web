@@ -1,12 +1,19 @@
-import React from 'react'
+import React, { useEffect, useContext } from 'react'
+import DisplayContext from '../../context/display-context'
 import UsersLayout from '../../layouts/Users'
 import ProductsScreen from '../../screens/users/products/index'
 
 const Page = () => {
+  const { setSmallScreen } = useContext(DisplayContext)
+
+  useEffect(() => {
+    setSmallScreen(window.matchMedia('(max-width: 700px)').matches)
+  }, [])
+
   return (
     <UsersLayout
       meta={{
-        title: 'Товары | Трекер цен',
+        title: 'Товары | Chartik',
         description: 'Покупайте вовремя!',
       }}
     >

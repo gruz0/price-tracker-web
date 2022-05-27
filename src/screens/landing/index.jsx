@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useContext } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import {
@@ -18,34 +18,57 @@ import addNewProductImage from '../../../public/landing/add-new-product.png'
 import productCardImage from '../../../public/landing/product-card.png'
 import productSubscriptionImage from '../../../public/landing/product-subscription.png'
 import productsFilteringImage from '../../../public/landing/products-filtering.png'
-import productsTableView from '../../../public/landing/products-table-view.png'
+import productsTableViewImage from '../../../public/landing/products-table-view.png'
+import DisplayContext from '../../context/display-context'
 
 const Screen = () => {
+  const { isSmallScreen } = useContext(DisplayContext)
+
+  const MyH3 = ({ children }) => (
+    <Header as="h3" style={{ fontSize: isSmallScreen ? '1.5em' : '2em' }}>
+      {children}
+    </Header>
+  )
+
+  const MyDivider = () => (
+    <Divider
+      style={{ marginTop: isSmallScreen ? '1em' : '3em' }}
+      hidden={!isSmallScreen}
+    />
+  )
+
+  const ClickableImage = ({ src, alt }) => (
+    <a href={src.src} target="_blank" rel="noreferrer">
+      <Image src={src} alt={alt} />
+    </a>
+  )
+
   return (
     <>
       <Container textAlign="center" fluid>
         <Header
           as="h1"
-          content="GetPrice — Ваш трекер цен"
           style={{
-            fontSize: '4em',
-            fontWeight: 'normal',
+            fontSize: isSmallScreen ? '3.5em' : '5em',
+            fontWeight: 'bold',
             marginBottom: 0,
-            marginTop: '0.7em',
+            marginTop: isSmallScreen ? null : '0.7em',
           }}
-        />
+        >
+          Chartik
+        </Header>
 
         <Header
           as="h2"
           content="Узнавайте об изменении цен и наличии любимых товаров быстрее всех!"
           style={{
-            fontSize: '1.8em',
+            fontSize: isSmallScreen ? '1.3em' : '1.8em',
             fontWeight: 'normal',
-            marginTop: '1.5em',
+            marginTop: isSmallScreen ? '1em' : '1.5em',
           }}
         />
 
-        <Divider style={{ marginTop: '3em' }} hidden />
+        <Divider style={{ marginTop: isSmallScreen ? '1em' : '3em' }} hidden />
 
         <Link href="/sign_up" passHref>
           <Button primary size="huge">
@@ -55,13 +78,11 @@ const Screen = () => {
         </Link>
       </Container>
 
-      <Divider style={{ marginTop: '5em' }} />
+      <Divider style={{ marginTop: isSmallScreen ? '2em' : '5em' }} />
 
-      <Segment style={{ padding: '5em 0em' }} vertical>
-        <Container text>
-          <Header as="h3" style={{ fontSize: '2em' }}>
-            Зачем всё это нужно?
-          </Header>
+      <Segment basic style={{ padding: isSmallScreen ? '2em 0em' : '5em 0em' }}>
+        <Container text={!isSmallScreen}>
+          <MyH3>Зачем всё это нужно?</MyH3>
 
           <p style={{ fontSize: '1.33em' }}>
             Никто не хочет переплачивать за товары, цены на которые скачут
@@ -86,7 +107,7 @@ const Screen = () => {
             периоды, чтобы вовремя купить и сэкономить денег? Пока никак.
           </p>
 
-          <Image src={catsFoodImage} alt="Цены растут" />
+          <ClickableImage src={catsFoodImage} alt="Цены растут" />
 
           <Divider hidden />
 
@@ -100,29 +121,27 @@ const Screen = () => {
             <strong>Товар закончился!</strong>
           </p>
 
-          <Image src={gamepadIsOutOfStockImage} alt="Он закончился!" />
+          <ClickableImage src={gamepadIsOutOfStockImage} alt="Он закончился!" />
 
           <Divider hidden />
 
           <p style={{ fontSize: '1.33em' }}>
             Поэтому мы решили сделать этот сервис по отслеживанию цен и
             состоянию наличия товаров в интернет-магазинах –{' '}
-            <strong>GetPrice!</strong>
+            <strong>Chartik!</strong>
           </p>
 
-          <Divider style={{ marginTop: '3em' }} hidden />
+          <MyDivider />
 
-          <Header as="h3" style={{ fontSize: '2em' }}>
-            Но ведь магазины рассылают письма…
-          </Header>
+          <MyH3>Но ведь магазины рассылают письма…</MyH3>
 
           <p style={{ fontSize: '1.33em' }}>
             Да, это очень удобно и спасибо, что такая возможность существует.
           </p>
 
-          <Image src={ozonEmailImage} alt="Письмо из Озон" />
+          <ClickableImage src={ozonEmailImage} alt="Письмо из Озон" />
 
-          <Divider style={{ marginTop: '3em' }} hidden />
+          <MyDivider />
 
           <p style={{ fontSize: '1.33em' }}>
             Но личном мне (Саше) не очень нравится видеть письма на товары,
@@ -134,11 +153,9 @@ const Screen = () => {
             <strong>А ещё мы умеем рассылать уведомления в Telegram...</strong>
           </p>
 
-          <Divider style={{ marginTop: '3em' }} hidden />
+          <MyDivider />
 
-          <Header as="h3" style={{ fontSize: '2em' }}>
-            Магазины показывают графики цен
-          </Header>
+          <MyH3>Магазины показывают графики цен</MyH3>
 
           <p style={{ fontSize: '1.33em' }}>Да, но не все.</p>
 
@@ -148,11 +165,9 @@ const Screen = () => {
             покупать.
           </p>
 
-          <Divider style={{ marginTop: '3em' }} hidden />
+          <MyDivider />
 
-          <Header as="h3" style={{ fontSize: '2em' }}>
-            Какие магазины поддерживаются?
-          </Header>
+          <MyH3>Какие магазины поддерживаются?</MyH3>
 
           <p style={{ fontSize: '1.33em' }}>
             На этапе бета-тестирования мы сделали поддержку двух популярных
@@ -164,17 +179,16 @@ const Screen = () => {
             пользователей и технических возможностей с нашей стороны.
           </p>
 
-          <Divider style={{ marginTop: '3em' }} hidden />
+          <MyDivider />
 
-          <Header as="h3" style={{ fontSize: '2em' }}>
-            Сколько стоит использование сервиса?
-          </Header>
+          <MyH3>Сколько стоит использование сервиса?</MyH3>
 
           <p style={{ fontSize: '1.33em' }}>
-            До момента публичного запуска использование{' '}
-            <strong>GetPrice</strong> абсолютно бесплатно. Дальше будет
-            вводиться небольшая ежемесячная плата, чтобы покрыть расходы на
-            техническое обеспечение работы продукта.
+            До момента публичного запуска использование
+            <strong> Chartik </strong>
+            абсолютно бесплатно. Дальше будет вводиться небольшая ежемесячная
+            плата, чтобы покрыть расходы на техническое обеспечение работы
+            продукта.
           </p>
 
           <p style={{ fontSize: '1.33em' }}>
@@ -189,39 +203,38 @@ const Screen = () => {
 
           <Link href="/sign_up" passHref>
             <Button as="a" primary size="large">
-              Начать пользоваться GetPrice!
+              Начать пользоваться Chartik!
               <Icon name="right arrow" />
             </Button>
           </Link>
 
-          <Divider style={{ marginTop: '3em' }} hidden />
+          <MyDivider />
 
-          <Header as="h3" style={{ fontSize: '2em' }}>
-            Когда публичный запуск GetPrice?
-          </Header>
+          <MyH3>Когда публичный запуск Chartik?</MyH3>
 
           <p style={{ fontSize: '1.33em' }}>
             Мы планируем завершить бета-тестирование к 1 августа 2022 года.
           </p>
 
-          <Divider style={{ marginTop: '3em' }} hidden />
+          <MyDivider />
 
-          <Header as="h3" style={{ fontSize: '2em' }}>
-            Как это работает изнутри?
-          </Header>
+          <MyH3>Как это работает изнутри?</MyH3>
 
           <p style={{ fontSize: '1.33em' }}>
             Позвольте рассказать простым языком о технических нюансах работы{' '}
-            <strong>GetPrice</strong>, чтобы вам был понятен механизм работы.
+            <strong>Chartik</strong>, чтобы вам был понятен механизм работы.
           </p>
 
           <Header as="h4" style={{ fontSize: '1.3em' }}>
             Шаг 1. Вы добавляете ссылки на интересующие вас товары
           </Header>
 
-          <Image src={addNewProductImage} alt="Добавление нового товара" />
+          <ClickableImage
+            src={addNewProductImage}
+            alt="Добавление нового товара"
+          />
 
-          <Divider style={{ marginTop: '3em' }} hidden />
+          <Divider hidden />
 
           <p style={{ fontSize: '1.33em' }}>
             На этом этапе мы проверяем товар в нашей базе и если он уже был
@@ -229,9 +242,9 @@ const Screen = () => {
             за всё прошлое время.
           </p>
 
-          <Image src={productCardImage} alt="Карточка товара" />
+          <ClickableImage src={productCardImage} alt="Карточка товара" />
 
-          <Divider style={{ marginTop: '3em' }} hidden />
+          <Divider hidden />
 
           <p style={{ fontSize: '1.33em' }}>
             Если же это новый товар в системе, то мы добавляем его в список на
@@ -266,12 +279,12 @@ const Screen = () => {
             бота, когда этот товар появится в магазине и по какой цене.
           </p>
 
-          <Image
+          <ClickableImage
             src={productSubscriptionImage}
             alt="Подписка на наличие товара"
           />
 
-          <Divider style={{ marginTop: '3em' }} hidden />
+          <Divider hidden />
 
           <p style={{ fontSize: '1.33em' }}>
             Как только товар появится в магазине, наш бот пришлёт вам сообщение
@@ -286,11 +299,9 @@ const Screen = () => {
             </Button>
           </Link>
 
-          <Divider style={{ marginTop: '3em' }} hidden />
+          <MyDivider />
 
-          <Header as="h3" style={{ fontSize: '2em' }}>
-            Вопросы и ответы
-          </Header>
+          <MyH3>Вопросы и ответы</MyH3>
 
           <Header as="h4" style={{ fontSize: '1.3em' }}>
             Как искать товары в системе?
@@ -300,7 +311,7 @@ const Screen = () => {
             Для этого у нас есть удобные фильтры по всем вашим товарам
           </p>
 
-          <Image
+          <ClickableImage
             src={productsFilteringImage}
             alt="Фильтры для поиска товаров"
           />
@@ -315,8 +326,8 @@ const Screen = () => {
             для себя способ отображения товаров.
           </p>
 
-          <Image
-            src={productsTableView}
+          <ClickableImage
+            src={productsTableViewImage}
             alt="Табличное представление товаров"
           />
 

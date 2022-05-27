@@ -1,10 +1,9 @@
 import React from 'react'
-import { Card, Label, List, Divider, Image } from 'semantic-ui-react'
+import { Card, List, Divider, Image } from 'semantic-ui-react'
 import Link from 'next/link'
 import { formatDateTime } from '../../lib/formatDate'
 import { truncateString } from '../../lib/helpers'
 import PriceLabel from './PriceLabel'
-import FavoritedIcon from './FavoritedIcon'
 import InStock from './InStockIcon'
 import Shop from './Shop'
 
@@ -29,9 +28,11 @@ export default function ProductCard({ product }) {
       )}
 
       <Card.Content style={{ borderTop: '0' }}>
+        {/*
         <Label corner="right" as="a">
           <FavoritedIcon favorited={product.favorited} />
         </Label>
+        */}
 
         <Card.Header style={{ marginBottom: '10px' }}>
           <Link href="/products/[id]" as={`/products/${product.id}`}>

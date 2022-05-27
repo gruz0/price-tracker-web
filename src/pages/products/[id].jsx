@@ -1,17 +1,26 @@
-import React from 'react'
+import React, { useEffect, useContext } from 'react'
+import DisplayContext from '../../context/display-context'
 import UsersLayout from '../../layouts/Users'
 import ProductScreen from '../../screens/users/products/show'
 
-const Page = () => (
-  <UsersLayout
-    meta={{
-      title: 'Карточка товара | Трекер цен',
-      description: 'Покупайте вовремя!',
-    }}
-  >
-    <ProductScreen />
-  </UsersLayout>
-)
+const Page = () => {
+  const { setSmallScreen } = useContext(DisplayContext)
+
+  useEffect(() => {
+    setSmallScreen(window.matchMedia('(max-width: 700px)').matches)
+  }, [])
+
+  return (
+    <UsersLayout
+      meta={{
+        title: 'Карточка товара | Chartik',
+        description: 'Покупайте вовремя!',
+      }}
+    >
+      <ProductScreen />
+    </UsersLayout>
+  )
+}
 
 Page.requiresAuth = true
 

@@ -3,7 +3,6 @@ import { Table } from 'semantic-ui-react'
 import Link from 'next/link'
 import { formatDateTime } from '../../lib/formatDate'
 import PriceLabel from './PriceLabel'
-import FavoritedIcon from './FavoritedIcon'
 import InStock from './InStockIcon'
 import Shop from './Shop'
 
@@ -29,9 +28,11 @@ export default function Product({ product }) {
         <InStock in_stock={product.in_stock} />
       </Table.Cell>
 
+      {/*
       <Table.Cell>
         <FavoritedIcon favorited={product.favorited} />
       </Table.Cell>
+      */}
 
       <Table.Cell>{formattedDate}</Table.Cell>
 

@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useContext } from 'react'
 import { useRouter } from 'next/router'
 
 import ErrorWrapper from '../../../../components/ErrorWrapper'
@@ -6,11 +6,13 @@ import JustOneSecond from '../../../../components/JustOneSecond'
 import { useAuth } from '../../../../hooks'
 import useProduct from '../../../../hooks/useProduct'
 import ProductCard from '../../../../components/ProductCard'
+import DisplayContext from '../../../../context/display-context'
 
-const ProductPage = () => {
+const Screen = () => {
   const router = useRouter()
   const { token, logout } = useAuth()
   const { data, isLoading, error } = useProduct(router.query.id, token)
+  const { isSmallScreen } = useContext(DisplayContext)
 
   useEffect(() => {
     if (error && error?.info?.status === 'forbidden') {
@@ -27,7 +29,7 @@ const ProductPage = () => {
           {isLoading ? (
             <JustOneSecond />
           ) : (
-            <ProductCard product={data.product} />
+            <ProductCard product={data.product} isSmallScreen={isSmallScreen} />
           )}
         </>
       )}
@@ -35,4 +37,4 @@ const ProductPage = () => {
   )
 }
 
-export default ProductPage
+export default Screen

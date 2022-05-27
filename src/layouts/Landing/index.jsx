@@ -14,6 +14,7 @@ const LandingLayout = ({ children, meta = {} }) => {
       <Head>
         <title>{title || 'Default'}</title>
         <meta name="description" content={description || 'Default'} />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
         {/*
           Add Open Graph
@@ -24,11 +25,7 @@ const LandingLayout = ({ children, meta = {} }) => {
         <Header />
 
         <Segment basic vertical size="large">
-          <Grid container verticalAlign="top">
-            <Grid.Row>
-              <Grid.Column>{children}</Grid.Column>
-            </Grid.Row>
-          </Grid>
+          {children}
         </Segment>
 
         <Footer />

@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useContext } from 'react'
 
 import { Divider, Message } from 'semantic-ui-react'
 
@@ -8,10 +8,12 @@ import JustOneSecond from '../../../../components/JustOneSecond'
 import { useAuth } from '../../../../hooks'
 import AddNewProduct from '../../../../forms/AddNewProduct'
 import useProducts from '../../../../hooks/useProducts'
+import DisplayContext from '../../../../context/display-context'
 
 const Screen = () => {
   const { token, logout } = useAuth()
   const { data, isLoading, error } = useProducts(token)
+  const { isSmallScreen } = useContext(DisplayContext)
 
   useEffect(() => {
     if (error && error?.info?.status === 'forbidden') {
@@ -29,12 +31,15 @@ const Screen = () => {
             <JustOneSecond />
           ) : (
             <>
-              <AddNewProduct token={token} />
+              <AddNewProduct token={token} isSmallScreen={isSmallScreen} />
 
-              <Divider hidden />
+              {!isSmallScreen && <Divider hidden />}
 
               {data?.products && data.products.length > 0 ? (
-                <Products products={data.products} />
+                <Products
+                  products={data.products}
+                  isSmallScreen={isSmallScreen}
+                />
               ) : (
                 <Message info>
                   <Message.Header>

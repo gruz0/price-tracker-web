@@ -1,5 +1,6 @@
 import React from 'react'
 import { AuthProvider } from '../hooks'
+import { DisplayProvider } from '../context/display-context'
 import Head from 'next/head'
 
 function MyApp({ Component, pageProps }) {
@@ -20,7 +21,9 @@ function MyApp({ Component, pageProps }) {
       )}
 
       <AuthProvider>
-        <Component {...pageProps} />
+        <DisplayProvider>
+          <Component {...pageProps} />
+        </DisplayProvider>
       </AuthProvider>
     </>
   )

@@ -1,6 +1,6 @@
 import React from 'react'
 import Head from 'next/head'
-import { Container, Grid, Segment, Message } from 'semantic-ui-react'
+import { Container, Segment, Grid, Message } from 'semantic-ui-react'
 import Header from '../../components/Header'
 import Footer from '../../components/Footer'
 
@@ -14,36 +14,14 @@ const UsersLayout = ({ children, meta = {} }) => {
       <Head>
         <title>{title || 'Default'}</title>
         <meta name="description" content={description || 'Default'} />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       </Head>
 
       <Container>
         <Header />
 
-        <Grid>
-          <Grid.Row only="mobile">
-            <Grid.Column>
-              <Message negative>
-                <Message.Header>
-                  В данный момент интерфейс не оптимизирован для мобильных
-                  устройств
-                </Message.Header>
-                <p>
-                  Воспользуйтесь браузерной версией, пожалуйста.
-                  <br />
-                  Мы работаем над улучшением интерфейса и скоро всё будет
-                  хорошо.
-                </p>
-              </Message>
-            </Grid.Column>
-          </Grid.Row>
-        </Grid>
-
-        <Segment basic vertical padded size="large">
-          <Grid container verticalAlign="top">
-            <Grid.Row>
-              <Grid.Column>{children}</Grid.Column>
-            </Grid.Row>
-          </Grid>
+        <Segment basic vertical padded>
+          <Grid.Column>{children}</Grid.Column>
         </Segment>
 
         <Footer />

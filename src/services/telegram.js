@@ -53,7 +53,7 @@ export const sendMessageToTelegramThatProductIsInStock = ({
       telegramAccount,
       `Добавленный вами товар [${product.title}](${product.url}) появился в наличии!\n\n` +
         `Текущая цена товара: ${price}.\n` +
-        `[Открыть карточку товара](${service_products_url}/${product.url}).`,
+        `[Карточка товара в Chartik](${service_products_url}/${product.url}).`,
       {
         parse_mode: 'markdown',
       }
