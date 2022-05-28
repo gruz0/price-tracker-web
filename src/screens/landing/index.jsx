@@ -17,6 +17,7 @@ import ozonEmailImage from '../../../public/landing/ozon-email.png'
 import addNewProductImage from '../../../public/landing/add-new-product.png'
 import productCardImage from '../../../public/landing/product-card.png'
 import productSubscriptionImage from '../../../public/landing/product-subscription.png'
+import telegramMessageImage from '../../../public/landing/telegram-message.jpg'
 import productsFilteringImage from '../../../public/landing/products-filtering.png'
 import productsTableViewImage from '../../../public/landing/products-table-view.png'
 import DisplayContext from '../../context/display-context'
@@ -37,10 +38,19 @@ const Screen = () => {
     />
   )
 
-  const ClickableImage = ({ src, alt }) => (
-    <a href={src.src} target="_blank" rel="noreferrer">
-      <Image src={src} alt={alt} />
-    </a>
+  const ClickableImage = ({ src, alt, width, height }) => (
+    <div
+      style={{
+        padding: '1em',
+        border: '1px solid #eee',
+        width: width,
+        height: height,
+      }}
+    >
+      <a href={src.src} target="_blank" rel="noreferrer">
+        <Image src={src} alt={alt} layout="responsive" loading="lazy" />
+      </a>
+    </div>
   )
 
   return (
@@ -291,6 +301,13 @@ const Screen = () => {
             со ссылкой на магазин и вы прямо из Телеграма сможете перейти в
             магазин и купить нужную вам позицию.
           </p>
+
+          <ClickableImage
+            src={telegramMessageImage}
+            alt="Уведомление в Telegram при появлении товара"
+          />
+
+          <Divider hidden />
 
           <Link href="/sign_up" passHref>
             <Button as="a" primary size="large">
