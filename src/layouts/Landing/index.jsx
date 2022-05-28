@@ -80,7 +80,7 @@ const LandingLayout = ({ children, meta = {} }) => {
       <Container>
         <Header />
 
-        <Segment basic vertical size="large">
+        <Segment basic size="large">
           {children}
         </Segment>
 
