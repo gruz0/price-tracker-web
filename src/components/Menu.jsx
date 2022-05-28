@@ -5,8 +5,6 @@ import ClientOnly from './ClientOnly'
 import { useAuth } from '../hooks'
 import { useRouter } from 'next/router'
 
-const telegram_bot_account = process.env.NEXT_PUBLIC_TELEGRAM_BOT_ACCOUNT
-
 const MenuComponent = () => {
   const router = useRouter()
 
@@ -65,7 +63,7 @@ function AuthDetails() {
       <Menu.Menu position="right">
         <Menu.Item icon>
           <a
-            href={`https://t.me/${telegram_bot_account}?start=${user.id}`}
+            href={`https://t.me/chartik_ru_bot?start=${user.id}`}
             target="_blank"
             rel="noopener noreferrer"
             title="Наш бот в Telegram"
