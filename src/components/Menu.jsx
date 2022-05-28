@@ -63,12 +63,12 @@ function AuthDetails() {
       <Menu.Menu position="right">
         <Menu.Item icon>
           <a
-            href="https://t.me/chartik_ru"
+            href={`https://t.me/chartik_ru_bot?start=${user.id}`}
             target="_blank"
             rel="noopener noreferrer"
-            title="Открыть канал в Telegram"
+            title="Наш бот в Telegram"
           >
-            <Icon name="telegram" size="large" />
+            <Icon name="telegram" />
           </a>
         </Menu.Item>
 
@@ -77,6 +77,11 @@ function AuthDetails() {
             <Link href="/settings" passHref>
               <Dropdown.Item icon="user" text="Настройки" />
             </Link>
+
+            <Link href="/help" passHref>
+              <Dropdown.Item icon="help" text="Помощь" />
+            </Link>
+
             <Dropdown.Divider />
             <Dropdown.Item
               onClick={() => logout()}
