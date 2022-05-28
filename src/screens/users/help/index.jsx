@@ -15,6 +15,8 @@ import iPhoneCopyLinkImage from '../../../../public/images/help/iphone-copy-link
 import productHasBeenAddedImage from '../../../../public/images/help/product-has-been-added.jpg'
 import telegramMessageImage from '../../../../public/images/help/telegram-message.jpg'
 
+const telegram_bot_account = process.env.NEXT_PUBLIC_TELEGRAM_BOT_ACCOUNT
+
 const Screen = () => {
   const { user } = useAuth()
   const [activeIndex, setActiveIndex] = useState(-1)
@@ -249,7 +251,7 @@ const Screen = () => {
             <br />
             Для этого необходимо отправить боту{' '}
             <a
-              href={`https://t.me/chartik_ru_bot?start=${user.id}`}
+              href={`https://t.me/${telegram_bot_account}?start=${user.id}`}
               target="_blank"
               rel="noopener noreferrer"
               title="Наш бот в Telegram"
