@@ -1,5 +1,10 @@
 import crypto from 'crypto'
 
+export const detectURL = (string) => {
+  var urlRegex = /(((https?:\/\/)|(www\.))[^\s]+)/g
+  return string.match(urlRegex)
+}
+
 export const isValidUrl = (string) => {
   if (typeof string === 'undefined' || string.toString().trim().length === 0) {
     return false

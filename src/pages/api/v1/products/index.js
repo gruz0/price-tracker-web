@@ -6,6 +6,7 @@ import {
   buildCleanURL,
   calculateHash,
   responseJSON,
+  detectURL,
 } from '../../../../lib/helpers'
 
 import {
@@ -103,9 +104,28 @@ const handler = async (req, res) => {
 
   const { url } = req.body
 
-  if (!isValidUrl(url)) {
+  const detectedURLs = detectURL(url)
+
+  if (detectedURLs.length === 0) {
     Sentry.withScope(function (scope) {
-      scope.setContext('args', { url })
+      scope.setContext('args', { url, detectedURLs })
+      scope.setTag('section', 'detectURL')
+      scope.setUser({ user })
+      Sentry.captureException(
+        new Error(
+          'Пользователь отправил некорректный URL через форму добавления товара'
+        )
+      )
+    })
+
+    return responseJSON(res, 422, INVALID_URL)
+  }
+
+  const detectedURL = detectedURLs[0]
+
+  if (!isValidUrl(detectedURL)) {
+    Sentry.withScope(function (scope) {
+      scope.setContext('args', { detectedURL })
       scope.setTag('section', 'isValidUrl')
       scope.setUser({ user })
       Sentry.captureException(
@@ -121,12 +141,12 @@ const handler = async (req, res) => {
   let cleanURL
 
   try {
-    cleanURL = buildCleanURL(url)
+    cleanURL = buildCleanURL(detectedURL)
   } catch (err) {
     console.error({ err })
 
     Sentry.withScope(function (scope) {
-      scope.setContext('args', { url })
+      scope.setContext('args', { detectedURL })
       scope.setTag('section', 'buildCleanURL')
       scope.setUser({ user })
       Sentry.captureException(err)
