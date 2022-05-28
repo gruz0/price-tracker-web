@@ -8,6 +8,10 @@ import Footer from '../../components/Footer'
 import 'semantic-ui-css/semantic.min.css'
 
 const LandingLayout = ({ children, meta = {} }) => {
+  console.log('NODE_ENV', process.env.NODE_ENV)
+  console.log('Metrika', process.env.NEXT_PUBLIC_YANDEX_METRIKA)
+  console.log('Google', process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS)
+
   const { title, description } = meta
 
   const defaultDescription =
