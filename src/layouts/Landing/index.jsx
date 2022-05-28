@@ -7,11 +7,10 @@ import Footer from '../../components/Footer'
 
 import 'semantic-ui-css/semantic.min.css'
 
-const LandingLayout = ({ children, meta = {} }) => {
-  console.log('NODE_ENV', process.env.NODE_ENV)
-  console.log('Metrika', process.env.NEXT_PUBLIC_YANDEX_METRIKA)
-  console.log('Google', process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS)
+const yandexMetrika = '88919188'
+const googleAnalytics = 'G-FY73JCKE1R'
 
+const LandingLayout = ({ children, meta = {} }) => {
   const { title, description } = meta
 
   const defaultDescription =
@@ -54,7 +53,7 @@ const LandingLayout = ({ children, meta = {} }) => {
                m[i].l=1*new Date();k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)})
                (window, document, "script", "https://mc.yandex.ru/metrika/tag.js", "ym");
 
-               ym(${process.env.NEXT_PUBLIC_YANDEX_METRIKA}, "init", {
+               ym(${yandexMetrika}, "init", {
                     clickmap:true,
                     trackLinks:true,
                     accurateTrackBounce:true,
@@ -65,14 +64,14 @@ const LandingLayout = ({ children, meta = {} }) => {
 
           <Script
             strategy="lazyOnload"
-            src={`https://www.googletagmanager.com/gtag/js?id=${process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS}`}
+            src={`https://www.googletagmanager.com/gtag/js?id=${googleAnalytics}`}
           />
           <Script id="google-analytics" strategy="lazyOnload">
             {`
               window.dataLayer = window.dataLayer || [];
               function gtag(){dataLayer.push(arguments);}
               gtag('js', new Date());
-              gtag('config', '${process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS}');
+              gtag('config', '${googleAnalytics}');
             `}
           </Script>
         </>
