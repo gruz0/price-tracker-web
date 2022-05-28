@@ -386,6 +386,21 @@ const Screen = () => {
         <Accordion.Content active={activeIndex === 9}>
           <p>Напишем позже.</p>
         </Accordion.Content>
+
+        <Accordion.Title
+          active={activeIndex === 10}
+          index={10}
+          onClick={handleClick}
+        >
+          <Icon name="dropdown" />
+          Как связать товары из двух магазинов в одну карточку
+        </Accordion.Title>
+        <Accordion.Content active={activeIndex === 10}>
+          <p>
+            Эта функция на обсуждении и если к ней будет интерес — мы реализуем
+            её после внедрения основной функциональности.
+          </p>
+        </Accordion.Content>
       </Accordion>
     </>
   )
