@@ -11,6 +11,8 @@ import AddNewProduct from '../../../../forms/AddNewProduct'
 import useProducts from '../../../../hooks/useProducts'
 import DisplayContext from '../../../../context/display-context'
 
+const telegram_bot_account = process.env.NEXT_PUBLIC_TELEGRAM_BOT_ACCOUNT
+
 const Screen = () => {
   const { user, token, logout } = useAuth()
   const { data, isLoading, error } = useProducts(token)
@@ -84,7 +86,7 @@ const Screen = () => {
                     <List.Item>
                       Перейдите по{' '}
                       <a
-                        href={`https://t.me/chartik_ru_bot?start=${user.id}`}
+                        href={`https://t.me/${telegram_bot_account}?start=${user.id}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         title="Наш бот в Telegram"
