@@ -1,6 +1,6 @@
 import React from 'react'
 import Head from 'next/head'
-import { Container, Segment, Grid, Message } from 'semantic-ui-react'
+import { Container, Segment, Grid } from 'semantic-ui-react'
 import Header from '../../components/Header'
 import Footer from '../../components/Footer'
 
@@ -12,9 +12,10 @@ const UsersLayout = ({ children, meta = {} }) => {
   return (
     <>
       <Head>
-        <title>{title || 'Default'}</title>
-        <meta name="description" content={description || 'Default'} />
+        <title>{title || 'Chartik'}</title>
+        <meta name="description" content={description} />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <link rel="icon" href="/favicon.png"></link>
       </Head>
 
       <Container>
