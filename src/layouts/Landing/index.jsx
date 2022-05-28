@@ -19,13 +19,24 @@ const LandingLayout = ({ children, meta = {} }) => {
         <title>{title || 'Chartik'}</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <meta name="description" content={description || defaultDescription} />
+
         <meta property="og:title" content={title} />
         <meta property="og:description" content={description} />
+        <meta property="og:url" content="https://chartik.ru/" />
+        <meta property="og:type" content="website" />
         <meta property="og:image" content="https://chartik.ru/chartik.png" />
         <meta property="og:image:type" content="image/png" />
         <meta property="og:image:width" content="1600" />
         <meta property="og:image:height" content="900" />
         <meta property="og:image:alt" content={`${title} | ${description}`} />
+
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta property="twitter:domain" content="chartik.ru" />
+        <meta property="twitter:url" content="https://chartik.ru/" />
+        <meta name="twitter:title" content={title} />
+        <meta name="twitter:description" content={description} />
+        <meta name="twitter:image" content="https://chartik.ru/chartik.png" />
+
         <link rel="icon" type="image/png" href="/favicon.png"></link>
 
         <meta name="yandex-verification" content="e7bca108c76eb418" />
