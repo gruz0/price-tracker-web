@@ -176,7 +176,7 @@ const handler = async (req, res) => {
       requested_by: user.id,
     }
 
-    if (!cleanURL.match(/ozon\.ru/) || cleanURL.match(/wildberries\.ru/)) {
+    if (!cleanURL.match(/ozon\.ru/) && !cleanURL.match(/wildberries\.ru/)) {
       Sentry.withScope(function (scope) {
         scope.setContext('args', { newProductArgs })
         scope.setUser({ user })
