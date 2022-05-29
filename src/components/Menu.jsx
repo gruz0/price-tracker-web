@@ -62,14 +62,25 @@ function AuthDetails() {
 
       <Menu.Menu position="right">
         <Menu.Item icon>
-          <a
-            href={`https://t.me/chartik_ru_bot?start=${user.id}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            title="Наш бот в Telegram"
-          >
-            <Icon name="telegram" />
-          </a>
+          {user.telegram_account && user.telegram_account !== '' ? (
+            <a
+              href="https://t.me/chartik_ru"
+              target="_blank"
+              rel="noopener noreferrer"
+              title="Наш канал в Telegram"
+            >
+              <Icon name="telegram plane" size="large" />
+            </a>
+          ) : (
+            <a
+              href={`https://t.me/chartik_ru_bot?start=${user.id}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              title="Наш бот в Telegram"
+            >
+              <Icon name="telegram" size="large" />
+            </a>
+          )}
         </Menu.Item>
 
         <Dropdown item text="Аккаунт">
