@@ -15,6 +15,7 @@ import {
   USER_ALREADY_EXISTS,
 } from '../../../lib/messages'
 import { responseJSON } from '../../../lib/helpers'
+import { newUserRegistration } from '../../../services/telegram'
 
 const handler = async (req, res) => {
   if (req.method !== 'POST') {
@@ -77,6 +78,18 @@ const handler = async (req, res) => {
     })
 
     return responseJSON(res, 500, UNABLE_TO_CREATE_NEW_USER)
+  }
+
+  try {
+    newUserRegistration(user.id, user.login)
+  } catch (err) {
+    console.error({ err })
+
+    Sentry.withScope(function (scope) {
+      scope.setContext('args', { user })
+      scope.setTag('section', 'newUserRegistration')
+      Sentry.captureException(err)
+    })
   }
 
   return responseJSON(res, 200, {

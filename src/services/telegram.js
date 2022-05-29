@@ -3,6 +3,8 @@ import { getUsersById } from './auth'
 
 const telegram_bot_token = process.env.TELEGRAM_BOT_TOKEN
 const service_products_url = process.env.SERVICE_PRODUCTS_URL
+const telegram_tech_group_id = process.env.TELEGRAM_TECH_GROUP_ID
+
 const TelegramBot = require('node-telegram-bot-api')
 const bot = new TelegramBot(telegram_bot_token)
 
@@ -59,4 +61,16 @@ export const sendMessageToTelegramThatProductIsInStock = ({
       }
     )
   })
+}
+
+export const newUserRegistration = (userId, userLogin) => {
+  bot.sendMessage(
+    telegram_tech_group_id,
+    `***Зарегистрирован новый пользователь!***\n` +
+      `Login: ${userLogin}***\n` +
+      `ID: ${userId}`,
+    {
+      parse_mode: 'markdown',
+    }
+  )
 }
