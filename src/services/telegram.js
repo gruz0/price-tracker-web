@@ -67,7 +67,7 @@ export const newUserRegistration = (userId, userLogin) => {
   bot.sendMessage(
     telegram_tech_group_id,
     `***Зарегистрирован новый пользователь!***\n` +
-      `Login: ${userLogin}***\n` +
+      `Login: ${userLogin}\n` +
       `ID: ${userId}`,
     {
       parse_mode: 'markdown',
