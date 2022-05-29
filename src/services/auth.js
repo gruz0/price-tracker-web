@@ -76,6 +76,26 @@ export const isUserExists = (login) => {
   return users.find((u) => u.login.toLowerCase() === login.toLowerCase())
 }
 
+export const findUserByTelegramAccount = (telegram_account) => {
+  if (isEmptyString(telegram_account)) {
+    throw new Error(`Не заполнен telegram_account`)
+  }
+
+  const users = getUsers()
+
+  const usersWithTelegramAccounts = users.filter(
+    (u) => !isEmptyString(u.telegram_account)
+  )
+
+  if (usersWithTelegramAccounts.length === 0) {
+    return null
+  }
+
+  return usersWithTelegramAccounts.find(
+    (u) => u.telegram_account.toString().trim() === telegram_account.trim()
+  )
+}
+
 export const findUser = (id) => {
   const users = getUsers()
 
@@ -123,6 +143,7 @@ export const createUser = (login, password) => {
     login: lowercasedLogin,
     token: userToken,
     created_at: new Date(),
+    updated_at: new Date(),
   })
 
   const userPath = usersPath + '/' + userId + '.json'
@@ -200,6 +221,7 @@ export const updateUserToken = (userId) => {
   const userAttributes = {
     ...user,
     token: uuid.v4(),
+    updated_at: new Date(),
   }
 
   const userPath = usersPath + '/' + userId + '.json'
@@ -209,12 +231,44 @@ export const updateUserToken = (userId) => {
   return buildUser(userAttributes)
 }
 
-const buildUser = ({ id, login, token, created_at, telegram_account }) => {
+export const updateUserTelegramAccount = (userId, telegramAccount) => {
+  if (isEmptyString(userId)) {
+    throw new Error('ID пользователя пустой')
+  }
+
+  const user = findRawUser(userId)
+
+  if (!user) {
+    throw new Error('Пользователь по ID не найден')
+  }
+
+  const userAttributes = {
+    ...user,
+    telegram_account: telegramAccount,
+    updated_at: new Date(),
+  }
+
+  const userPath = usersPath + '/' + userId + '.json'
+
+  fs.writeJsonSync(userPath, userAttributes, { spaces: 2 })
+
+  return buildUser(userAttributes)
+}
+
+const buildUser = ({
+  id,
+  login,
+  token,
+  created_at,
+  updated_at,
+  telegram_account,
+}) => {
   return {
     id,
     login: login.toLowerCase().trim(),
     token,
     created_at,
+    updated_at,
     telegram_account,
   }
 }

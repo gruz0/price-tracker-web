@@ -69,6 +69,11 @@ export const PASSWORD_IS_TOO_SHORT = {
   message: 'Пароль должен быть не меньше 8 символов',
 }
 
+export const MISSING_TELEGRAM_ACCOUNT = {
+  status: 'missing_telegram_account',
+  message: 'Не заполнено поле telegram_account',
+}
+
 export const MISSING_SUBSCRIPTION_TYPE = {
   status: 'missing_subscription_type',
   message: 'Не заполнено поле subscription_type',
@@ -189,9 +194,34 @@ export const UNABLE_TO_ADD_USER_SUBSCRIPTION_TO_PRODUCT = {
   message: 'Не удалось добавить подписку пользователя на событие товара',
 }
 
+export const USER_ALREADY_HAS_TELEGRAM_ACCOUNT = {
+  status: 'user_already_has_telegram_account',
+  message: 'Пользователь уже имеет привязанный аккаунт Telegram',
+}
+
+export const USER_WITH_TELEGRAM_ACCOUNT_ALREADY_EXISTS = {
+  status: 'user_with_telegram_account_already_exists',
+  message: 'Пользователь с таким аккаунтом Telegram уже существует',
+}
+
 export const PRODUCT_DOES_NOT_EXIST = {
   status: 'product_does_not_exist',
   message: 'Товар не существует',
+}
+
+export const UNABLE_TO_GET_BOT_BY_TOKEN = {
+  status: 'unable_to_get_bot_by_token',
+  message: 'Не удалось получить бота по токену',
+}
+
+export const BOT_DOES_NOT_EXIST = {
+  status: 'bot_does_not_exist',
+  message: 'Бот не существует',
+}
+
+export const UNABLE_TO_ADD_BOT_LOG = {
+  status: 'unable_to_add_bot_log',
+  message: 'Не удалось записать событие бота',
 }
 
 export const UNABLE_TO_GET_CRAWLER_BY_TOKEN = {
@@ -245,6 +275,11 @@ export const UNABLE_TO_UPDATE_USER_TOKEN = {
   message: 'Не удалось обновить токен пользователя',
 }
 
+export const UNABLE_TO_UPDATE_USER_TELEGRAM_ACCOUNT = {
+  status: 'unable_to_update_user_telegram_account',
+  message: 'Не удалось обновить аккаунт Telegram пользователя',
+}
+
 export const UNABLE_TO_GET_USER_PRODUCT = {
   status: 'unable_to_get_user_product',
   message: 'Не удалось получить товар пользователя',
@@ -292,6 +327,11 @@ export const UNABLE_TO_CALCULATE_URL_HASH = {
 export const UNABLE_TO_FIND_USER = {
   status: 'unable_to_find_user',
   message: 'Не удалось найти пользователя',
+}
+
+export const UNABLE_TO_FIND_USER_BY_TELEGRAM_ACCOUNT = {
+  status: 'unable_to_find_user_by_telegram_account',
+  message: 'Не удалось найти пользователя по аккаунту Telegram',
 }
 
 export const UNABLE_TO_FIND_PRODUCT_BY_URL_HASH = {
