@@ -18,6 +18,11 @@ export const MISSING_TOKEN = {
   message: 'Отсутствует токен',
 }
 
+export const MISSING_USER_ID = {
+  status: 'missing_user_id',
+  message: 'Отсутствует ID пользователя',
+}
+
 export const MISSING_LOGIN = {
   status: 'missing_login',
   message: 'Не заполнено поле login',
