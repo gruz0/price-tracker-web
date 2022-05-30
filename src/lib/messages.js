@@ -254,6 +254,11 @@ export const REDIRECT_TO_PRODUCT_PAGE = {
   message: 'Переадресуем на карточку товара',
 }
 
+export const PRODUCT_ADDED_TO_USER = {
+  status: 'product_added_to_user',
+  message: 'Товар уже есть в системе и мы добавили его к вам для отслеживания',
+}
+
 export const FORBIDDEN = {
   status: 'forbidden',
   message: 'Необходимо войти в систему',

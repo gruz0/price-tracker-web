@@ -6,7 +6,11 @@ export const detectURL = (string) => {
 }
 
 export const isValidUrl = (string) => {
-  if (typeof string === 'undefined' || string.toString().trim().length === 0) {
+  if (
+    !string ||
+    typeof string === 'undefined' ||
+    string.toString().trim().length === 0
+  ) {
     return false
   }
 
@@ -43,4 +47,10 @@ export const responseJSON = (res, status, json) => {
   res.status(status)
   res.json(json)
   return res.end()
+}
+
+export const isShopSupported = (url) => {
+  const cleanURL = url.trim().toLowerCase()
+
+  return cleanURL.match(/ozon\.ru/) || cleanURL.match(/wildberries\.ru/)
 }
