@@ -37,8 +37,26 @@ const Screen = () => {
             <JustOneSecond />
           ) : (
             <>
-              {(!user.telegram_account || user.telegram_account === '') && (
+              {!user.telegram_account || user.telegram_account === '' ? (
                 <Brief user={user} />
+              ) : (
+                <Message>
+                  <Message.Header>
+                    Если вы ещё не заполнили наш простой опросник, уделите 5
+                    минут времени, пожалуйста
+                  </Message.Header>
+                  <p>
+                    Воспользуйтесь формой{' '}
+                    <a
+                      href="https://forms.gle/Vojfs8t1hNAhKc5q8"
+                      target="_blank"
+                      rel="noreferrer noopener"
+                    >
+                      по этой ссылке{' '}
+                    </a>
+                    и на основании ответов мы улучшим сервис для вас :-)
+                  </p>
+                </Message>
               )}
 
               <AddNewProduct token={token} isSmallScreen={isSmallScreen} />
