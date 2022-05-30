@@ -1,57 +1,61 @@
 import { withSentry } from '@sentry/nextjs'
 import * as Sentry from '@sentry/nextjs'
 
-import {
-  isValidUrl,
-  buildCleanURL,
-  calculateHash,
-  responseJSON,
-  detectURL,
-  isShopSupported,
-} from '../../../../lib/helpers'
-
-import {
-  findProductByURLHash,
-  addNewProductToQueue,
-  getProductLatestValidPriceFromHistory,
-} from '../../../../services/products'
-import { getUserByToken } from '../../../../services/auth'
-import {
-  addProductToUser,
-  getUserProductsWithActualState,
-} from '../../../../services/users'
-
+import { findUserByTelegramAccount } from '../../../../../../services/auth'
+import { isEmptyString } from '../../../../../../lib/validators'
 import {
   METHOD_NOT_ALLOWED,
   MISSING_AUTHORIZATION_HEADER,
   MISSING_BEARER_KEY,
   MISSING_TOKEN,
-  FORBIDDEN,
-  REDIRECT_TO_PRODUCT_PAGE,
-  UNABLE_TO_GET_USER_BY_TOKEN,
-  UNABLE_TO_GET_USER_PRODUCTS_WITH_PRICES,
+  UNABLE_TO_GET_BOT_BY_TOKEN,
+  BOT_DOES_NOT_EXIST,
+  UNABLE_TO_ADD_BOT_LOG,
+  MISSING_TELEGRAM_ACCOUNT,
+  UNABLE_TO_FIND_USER_BY_TELEGRAM_ACCOUNT,
   INVALID_URL,
   UNABLE_TO_CLEAN_URL,
   UNABLE_TO_CALCULATE_URL_HASH,
+  MISSING_URL,
+  SHOP_IS_NOT_SUPPORTED_YET,
   UNABLE_TO_FIND_PRODUCT_BY_URL_HASH,
-  PRODUCT_ADDED_TO_QUEUE,
   UNABLE_TO_ADD_NEW_PRODUCT_TO_QUEUE,
-  UNABLE_TO_ADD_EXISTING_PRODUCT_TO_USER,
+  PRODUCT_ADDED_TO_QUEUE,
   UNABLE_TO_GET_PRODUCT_LATEST_PRICE_FROM_HISTORY,
   UNABLE_TO_ADD_PRODUCT_TO_USER_RIGHT_NOW_BECAUSE_OF_MISSING_PRICE,
-  SHOP_IS_NOT_SUPPORTED_YET,
-  MISSING_URL,
-} from '../../../../lib/messages'
-import { isEmptyString } from '../../../../lib/validators'
+  UNABLE_TO_ADD_EXISTING_PRODUCT_TO_USER,
+  REDIRECT_TO_PRODUCT_PAGE,
+  UNABLE_TO_GET_USER_PRODUCT,
+  PRODUCT_ADDED_TO_USER,
+  USER_DOES_NOT_EXIST,
+} from '../../../../../../lib/messages'
+import { getBotByToken, addBotLog } from '../../../../../../services/bots'
+import {
+  buildCleanURL,
+  calculateHash,
+  detectURL,
+  isShopSupported,
+  isValidUrl,
+  responseJSON,
+} from '../../../../../../lib/helpers'
+import {
+  addNewProductToQueue,
+  findProductByURLHash,
+  getProductLatestValidPriceFromHistory,
+} from '../../../../../../services/products'
+import {
+  addProductToUser,
+  getUserProduct,
+} from '../../../../../../services/users'
 
 const handler = async (req, res) => {
-  if (!['POST', 'GET'].includes(req.method)) {
+  if (req.method !== 'POST') {
     return responseJSON(res, 405, METHOD_NOT_ALLOWED)
   }
 
   const { authorization } = req.headers
 
-  if (!authorization) {
+  if (isEmptyString(authorization)) {
     return responseJSON(res, 401, MISSING_AUTHORIZATION_HEADER)
   }
 
@@ -59,50 +63,83 @@ const handler = async (req, res) => {
     return responseJSON(res, 401, MISSING_BEARER_KEY)
   }
 
-  const token = authorization.replace(/^Bearer /, '').trim()
+  const token = authorization.replace(/^Bearer/, '').trim()
 
   if (token.length === 0) {
     return responseJSON(res, 401, MISSING_TOKEN)
   }
 
-  let user
+  let bot
 
   try {
-    user = getUserByToken(token)
+    bot = getBotByToken(token)
   } catch (err) {
     console.error({ err })
 
     Sentry.withScope(function (scope) {
       scope.setContext('args', { token })
-      scope.setTag('section', 'getUserByToken')
+      scope.setTag('section', 'getBotByToken')
       Sentry.captureException(err)
     })
 
-    return responseJSON(res, 500, UNABLE_TO_GET_USER_BY_TOKEN)
+    return responseJSON(res, 500, UNABLE_TO_GET_BOT_BY_TOKEN)
+  }
+
+  if (!bot) {
+    return responseJSON(res, 404, BOT_DOES_NOT_EXIST)
+  }
+
+  const botId = bot.id
+
+  const logArgs = {
+    method: req.method,
+    url: req.url,
+    body: req.body,
+    headers: req.headers,
+  }
+
+  try {
+    addBotLog(bot, logArgs)
+  } catch (err) {
+    console.error({ err })
+
+    Sentry.withScope(function (scope) {
+      scope.setContext('args', { bot, logArgs })
+      scope.setTag('section', 'addBotLog')
+      scope.setTag('bot_id', botId)
+      Sentry.captureException(err)
+    })
+
+    return responseJSON(res, 500, UNABLE_TO_ADD_BOT_LOG)
+  }
+
+  const { telegram_account: telegramAccount } = req.query
+
+  if (isEmptyString(telegramAccount)) {
+    return responseJSON(res, 400, MISSING_TELEGRAM_ACCOUNT)
+  }
+
+  const clearTelegramAccount = telegramAccount.toString().trim().toLowerCase()
+
+  let user
+
+  try {
+    user = findUserByTelegramAccount(clearTelegramAccount)
+  } catch (err) {
+    console.error({ err })
+
+    Sentry.withScope(function (scope) {
+      scope.setContext('args', { clearTelegramAccount })
+      scope.setTag('section', 'findUserByTelegramAccount')
+      scope.setTag('bot_id', botId)
+      Sentry.captureException(err)
+    })
+
+    return responseJSON(res, 500, UNABLE_TO_FIND_USER_BY_TELEGRAM_ACCOUNT)
   }
 
   if (!user) {
-    return responseJSON(res, 403, FORBIDDEN)
-  }
-
-  if (req.method === 'GET') {
-    let products
-
-    try {
-      products = getUserProductsWithActualState(user.id)
-    } catch (err) {
-      console.error({ err })
-
-      Sentry.withScope(function (scope) {
-        scope.setTag('section', 'getUserProductsWithActualState')
-        scope.setUser({ user })
-        Sentry.captureException(err)
-      })
-
-      return responseJSON(res, 500, UNABLE_TO_GET_USER_PRODUCTS_WITH_PRICES)
-    }
-
-    return responseJSON(res, 200, { products: products })
+    return responseJSON(res, 404, USER_DOES_NOT_EXIST)
   }
 
   const { url } = req.body
@@ -117,6 +154,7 @@ const handler = async (req, res) => {
     Sentry.withScope(function (scope) {
       scope.setContext('args', { url, detectedURLs })
       scope.setTag('section', 'detectURL')
+      scope.setTag('bot_id', botId)
       scope.setUser({ user })
       Sentry.captureException(
         new Error(
@@ -134,6 +172,7 @@ const handler = async (req, res) => {
     Sentry.withScope(function (scope) {
       scope.setContext('args', { detectedURL })
       scope.setTag('section', 'isValidUrl')
+      scope.setTag('bot_id', botId)
       scope.setUser({ user })
       Sentry.captureException(
         new Error(
@@ -155,6 +194,7 @@ const handler = async (req, res) => {
     Sentry.withScope(function (scope) {
       scope.setContext('args', { detectedURL })
       scope.setTag('section', 'buildCleanURL')
+      scope.setTag('bot_id', botId)
       scope.setUser({ user })
       Sentry.captureException(err)
     })
@@ -165,6 +205,7 @@ const handler = async (req, res) => {
   if (!isShopSupported(cleanURL)) {
     Sentry.withScope(function (scope) {
       scope.setContext('args', { cleanURL })
+      scope.setTag('bot_id', botId)
       scope.setUser({ user })
       Sentry.captureException(
         new Error(
@@ -186,6 +227,7 @@ const handler = async (req, res) => {
     Sentry.withScope(function (scope) {
       scope.setContext('args', { cleanURL })
       scope.setTag('section', 'calculateHash')
+      scope.setTag('bot_id', botId)
       scope.setUser({ user })
       Sentry.captureException(err)
     })
@@ -203,6 +245,7 @@ const handler = async (req, res) => {
     Sentry.withScope(function (scope) {
       scope.setContext('args', { urlHash, cleanURL })
       scope.setTag('section', 'findProductByURLHash')
+      scope.setTag('bot_id', botId)
       scope.setUser({ user })
       Sentry.captureException(err)
     })
@@ -225,6 +268,7 @@ const handler = async (req, res) => {
       Sentry.withScope(function (scope) {
         scope.setContext('args', { newProductArgs })
         scope.setTag('section', 'addNewProductToQueue')
+        scope.setTag('bot_id', botId)
         scope.setUser({ user })
         Sentry.captureException(err)
       })
@@ -245,6 +289,7 @@ const handler = async (req, res) => {
     Sentry.withScope(function (scope) {
       scope.setContext('args', { product })
       scope.setTag('section', 'getProductLatestValidPriceFromHistory')
+      scope.setTag('bot_id', botId)
       scope.setUser({ user })
       Sentry.captureException(err)
     })
@@ -264,6 +309,31 @@ const handler = async (req, res) => {
     )
   }
 
+  let userProduct
+
+  try {
+    userProduct = getUserProduct(user.id, product.id)
+  } catch (err) {
+    console.error({ err })
+
+    Sentry.withScope(function (scope) {
+      scope.setContext('args', { user, product })
+      scope.setTag('section', 'getUserProduct')
+      scope.setTag('bot_id', botId)
+      scope.setUser({ user })
+      Sentry.captureException(err)
+    })
+
+    return responseJSON(res, 500, UNABLE_TO_GET_USER_PRODUCT)
+  }
+
+  if (userProduct) {
+    return responseJSON(res, 200, {
+      ...REDIRECT_TO_PRODUCT_PAGE,
+      location: '/products/' + product.id,
+    })
+  }
+
   try {
     addProductToUser(user.id, product.id, productLatestPrice)
   } catch (err) {
@@ -272,6 +342,7 @@ const handler = async (req, res) => {
     Sentry.withScope(function (scope) {
       scope.setContext('args', { user, product })
       scope.setTag('section', 'addProductToUser')
+      scope.setTag('bot_id', botId)
       scope.setUser({ user })
       Sentry.captureException(err)
     })
@@ -279,9 +350,8 @@ const handler = async (req, res) => {
     return responseJSON(res, 500, UNABLE_TO_ADD_EXISTING_PRODUCT_TO_USER)
   }
 
-  // TODO: Возможно тут надо сделать редирект через 302 или 303
   return responseJSON(res, 201, {
-    ...REDIRECT_TO_PRODUCT_PAGE,
+    ...PRODUCT_ADDED_TO_USER,
     location: '/products/' + product.id,
   })
 }
