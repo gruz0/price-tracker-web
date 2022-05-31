@@ -134,9 +134,7 @@ const handler = async (req, res) => {
       scope.setTag('bot_id', botId)
       scope.setUser({ user })
       Sentry.captureException(
-        new Error(
-          'Не удалось найти ссылки от пользователя через форму добавления товара'
-        )
+        new Error(`Не удалось найти ссылки от пользователя у бота: ${url}`)
       )
     })
 
@@ -152,9 +150,7 @@ const handler = async (req, res) => {
       scope.setTag('bot_id', botId)
       scope.setUser({ user })
       Sentry.captureException(
-        new Error(
-          'Пользователь отправил некорректный URL через форму добавления товара'
-        )
+        new Error(`Пользователь отправил некорректный URL через бота: ${url}`)
       )
     })
 
@@ -186,7 +182,7 @@ const handler = async (req, res) => {
       scope.setUser({ user })
       Sentry.captureException(
         new Error(
-          'Пользователь отправил ссылку на неподдерживаемый магазин через форму добавления товара'
+          `Пользователь отправил ссылку на неподдерживаемый магазин через бота: ${url}`
         )
       )
     })
