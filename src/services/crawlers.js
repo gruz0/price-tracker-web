@@ -3,7 +3,6 @@ const fs = require('fs-extra')
 const uuid = require('uuid')
 
 const crawlersPath = path.join(process.cwd(), '/data/crawlers')
-const crawlersLogsPath = path.join(process.cwd(), '/data/crawlers_logs')
 const productsQueueChangeLocationPath = path.join(
   process.cwd(),
   '/data/queue_change_location'
@@ -33,32 +32,6 @@ export const getCrawlerByToken = (token) => {
   const crawlers = getCrawlers()
 
   return crawlers.find((c) => c.token === token)
-}
-
-export const addCrawlerLog = (crawler, args) => {
-  const recordId = uuid.v4()
-
-  const log = {
-    id: recordId,
-    crawler_id: crawler.id,
-    token: crawler.token,
-    created_at: new Date(),
-    ...args,
-  }
-
-  const logPath = crawlersLogsPath + '/' + crawler.id + '.json'
-
-  let logs = []
-
-  try {
-    logs = fs.readJsonSync(logPath)
-  } catch (err) {
-    logs = []
-  }
-
-  logs.push(log)
-
-  fs.writeJsonSync(logPath, logs, { spaces: 2 })
 }
 
 export const addProductHistory = (

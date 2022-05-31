@@ -224,11 +224,6 @@ export const BOT_DOES_NOT_EXIST = {
   message: 'Бот не существует',
 }
 
-export const UNABLE_TO_ADD_BOT_LOG = {
-  status: 'unable_to_add_bot_log',
-  message: 'Не удалось записать событие бота',
-}
-
 export const UNABLE_TO_GET_CRAWLER_BY_TOKEN = {
   status: 'unable_to_get_crawler_by_token',
   message: 'Не удалось получить краулер по токену',
@@ -237,11 +232,6 @@ export const UNABLE_TO_GET_CRAWLER_BY_TOKEN = {
 export const CRAWLER_DOES_NOT_EXIST = {
   status: 'crawler_does_not_exist',
   message: 'Краулер не существует',
-}
-
-export const UNABLE_TO_ADD_CRAWLER_LOG = {
-  status: 'unable_to_add_crawler_log',
-  message: 'Не удалось записать событие краулера',
 }
 
 export const UNABLE_TO_GET_PRODUCTS_WITH_OUTDATED_PRICE = {

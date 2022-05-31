@@ -10,7 +10,6 @@ import {
   UNABLE_TO_GET_PRODUCTS_WITH_OUTDATED_PRICE,
   UNABLE_TO_GET_CRAWLER_BY_TOKEN,
   CRAWLER_DOES_NOT_EXIST,
-  UNABLE_TO_ADD_CRAWLER_LOG,
   MISSING_REQUESTED_BY,
   MISSING_URL_HASH,
   MISSING_SHOP,
@@ -27,7 +26,6 @@ import {
 } from '../../../../../lib/messages'
 import {
   getCrawlerByToken,
-  addCrawlerLog,
   getOutdatedProducts,
   removeNewProductFromQueue,
   createProduct,
@@ -83,28 +81,6 @@ const handler = async (req, res) => {
   }
 
   const crawlerId = crawler.id
-
-  const logArgs = {
-    method: req.method,
-    url: req.url,
-    body: req.body,
-    headers: req.headers,
-  }
-
-  try {
-    addCrawlerLog(crawler, logArgs)
-  } catch (err) {
-    console.error({ err })
-
-    Sentry.withScope(function (scope) {
-      scope.setContext('args', { crawler, logArgs })
-      scope.setTag('section', 'addCrawlerLog')
-      scope.setTag('crawler_id', crawlerId)
-      Sentry.captureException(err)
-    })
-
-    return responseJSON(res, 500, UNABLE_TO_ADD_CRAWLER_LOG)
-  }
 
   if (req.method === 'GET') {
     let products
