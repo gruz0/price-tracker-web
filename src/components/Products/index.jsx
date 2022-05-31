@@ -139,7 +139,7 @@ export default function ProductsList({ products, isSmallScreen }) {
                     }}
                     primary={view === 'table'}
                   >
-                    <Icon name="table" title="Таблица" />
+                    <Icon name="list" title="Таблица" />
                   </Button>
 
                   <Button
@@ -149,7 +149,7 @@ export default function ProductsList({ products, isSmallScreen }) {
                     }}
                     primary={view === 'card'}
                   >
-                    <Icon name="columns" title="Карточки" />
+                    <Icon name="table" title="Карточки" />
                   </Button>
                 </Button.Group>
               </Grid.Column>
