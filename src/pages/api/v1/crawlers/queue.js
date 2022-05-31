@@ -8,12 +8,10 @@ import {
   MISSING_AUTHORIZATION_HEADER,
   MISSING_BEARER_KEY,
   MISSING_TOKEN,
-  UNABLE_TO_ADD_CRAWLER_LOG,
   UNABLE_TO_GET_CRAWLER_BY_TOKEN,
   UNABLE_TO_GET_NEW_PRODUCTS_REQUESTS,
 } from '../../../../lib/messages'
 import {
-  addCrawlerLog,
   getCrawlerByToken,
   getNewProductsQueue,
 } from '../../../../services/crawlers'
@@ -61,28 +59,6 @@ const handler = async (req, res) => {
   }
 
   const crawlerId = crawler.id
-
-  const logArgs = {
-    method: req.method,
-    url: req.url,
-    body: req.body,
-    headers: req.headers,
-  }
-
-  try {
-    addCrawlerLog(crawler, logArgs)
-  } catch (err) {
-    console.error({ err })
-
-    Sentry.withScope(function (scope) {
-      scope.setContext('args', { crawler, logArgs })
-      scope.setTag('section', 'addCrawlerLog')
-      scope.setTag('crawler_id', crawlerId)
-      Sentry.captureException(err)
-    })
-
-    return responseJSON(res, 500, UNABLE_TO_ADD_CRAWLER_LOG)
-  }
 
   let products
 

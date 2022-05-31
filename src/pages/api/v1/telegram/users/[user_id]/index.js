@@ -14,7 +14,6 @@ import {
   MISSING_TOKEN,
   UNABLE_TO_GET_BOT_BY_TOKEN,
   BOT_DOES_NOT_EXIST,
-  UNABLE_TO_ADD_BOT_LOG,
   MISSING_USER_ID,
   UNABLE_TO_FIND_USER,
   USER_DOES_NOT_EXIST,
@@ -24,7 +23,7 @@ import {
   UNABLE_TO_FIND_USER_BY_TELEGRAM_ACCOUNT,
   UNABLE_TO_UPDATE_USER_TELEGRAM_ACCOUNT,
 } from '../../../../../../lib/messages'
-import { getBotByToken, addBotLog } from '../../../../../../services/bots'
+import { getBotByToken } from '../../../../../../services/bots'
 import { responseJSON } from '../../../../../../lib/helpers'
 
 const handler = async (req, res) => {
@@ -69,28 +68,6 @@ const handler = async (req, res) => {
   }
 
   const botId = bot.id
-
-  const logArgs = {
-    method: req.method,
-    url: req.url,
-    body: req.body,
-    headers: req.headers,
-  }
-
-  try {
-    addBotLog(bot, logArgs)
-  } catch (err) {
-    console.error({ err })
-
-    Sentry.withScope(function (scope) {
-      scope.setContext('args', { bot, logArgs })
-      scope.setTag('section', 'addBotLog')
-      scope.setTag('bot_id', botId)
-      Sentry.captureException(err)
-    })
-
-    return responseJSON(res, 500, UNABLE_TO_ADD_BOT_LOG)
-  }
 
   const { user_id: userId } = req.query
 

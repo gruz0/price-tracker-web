@@ -10,7 +10,6 @@ import {
   MISSING_TOKEN,
   UNABLE_TO_GET_CRAWLER_BY_TOKEN,
   CRAWLER_DOES_NOT_EXIST,
-  UNABLE_TO_ADD_CRAWLER_LOG,
   MISSING_PRODUCT_ID,
   UNABLE_TO_GET_PRODUCT_BY_ID,
   PRODUCT_DOES_NOT_EXIST,
@@ -20,7 +19,6 @@ import {
 } from '../../../../../lib/messages'
 import {
   getCrawlerByToken,
-  addCrawlerLog,
   addProductHistory,
 } from '../../../../../services/crawlers'
 import { sendMessageToTelegramThatProductIsInStock } from '../../../../../services/telegram'
@@ -68,28 +66,6 @@ const handler = async (req, res) => {
   }
 
   const crawlerId = crawler.id
-
-  const logArgs = {
-    method: req.method,
-    url: req.url,
-    body: req.body,
-    headers: req.headers,
-  }
-
-  try {
-    addCrawlerLog(crawler, logArgs)
-  } catch (err) {
-    console.error({ err })
-
-    Sentry.withScope(function (scope) {
-      scope.setContext('args', { crawler, logArgs })
-      scope.setTag('section', 'addCrawlerLog')
-      scope.setTag('crawler_id', crawlerId)
-      Sentry.captureException(err)
-    })
-
-    return responseJSON(res, 500, UNABLE_TO_ADD_CRAWLER_LOG)
-  }
 
   const { product_id: productId } = req.query
 
