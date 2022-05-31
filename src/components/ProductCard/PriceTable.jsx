@@ -2,7 +2,7 @@ import { Table, Icon } from 'semantic-ui-react'
 import { formatDateTime } from '../../lib/formatDate'
 
 const statuses = {
-  ok: 'Всё хорошо',
+  ok: 'Товар найден',
   not_found: 'Товар не существует',
   required_to_change_location: 'Товар не доставляется',
 }
