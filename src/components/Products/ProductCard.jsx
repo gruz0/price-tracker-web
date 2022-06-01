@@ -10,7 +10,7 @@ import Shop from './Shop'
 export default function ProductCard({ product }) {
   const formattedDate = formatDateTime(product.price_updated_at)
 
-  const imagePath = product.image && '/images/' + product.image
+  const imagePath = product.image && '/uploads/' + product.image
 
   return (
     <Card>

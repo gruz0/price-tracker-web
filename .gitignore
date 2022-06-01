@@ -32,3 +32,5 @@ yarn-error.log*
 .vercel
 
 /data
+/public/uploads
+!/public/uploads/.keep

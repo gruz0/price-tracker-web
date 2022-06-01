@@ -1,8 +1,7 @@
-import { withSentry } from '@sentry/nextjs'
 import * as Sentry from '@sentry/nextjs'
-
-import { getProduct } from '../../../../../services/products'
-import { isEmptyString, isNotDefined } from '../../../../../lib/validators'
+import nextConnect from 'next-connect'
+import { tmpdir } from 'os'
+import multer from 'multer'
 import {
   METHOD_NOT_ALLOWED,
   MISSING_AUTHORIZATION_HEADER,
@@ -13,19 +12,47 @@ import {
   MISSING_PRODUCT_ID,
   UNABLE_TO_GET_PRODUCT_BY_ID,
   PRODUCT_DOES_NOT_EXIST,
-  MISSING_STATUS,
-  MISSING_IN_STOCK,
-  UNABLE_TO_ADD_PRODUCT_HISTORY,
-} from '../../../../../lib/messages'
+  UNABLE_TO_MOVE_PRODUCT_IMAGE_TO_UPLOADS_DIRECTORY,
+  UNABLE_TO_UPDATE_PRODUCT_IMAGE,
+} from '../../../../../../lib/messages'
+import { responseJSON } from '../../../../../../lib/helpers'
+import { isEmptyString } from '../../../../../../lib/validators'
+import { getProduct } from '../../../../../../services/products'
 import {
   getCrawlerByToken,
-  addProductHistory,
-} from '../../../../../services/crawlers'
-import { sendMessageToTelegramThatProductIsInStock } from '../../../../../services/telegram'
-import { responseJSON } from '../../../../../lib/helpers'
+  moveProductImageToUploadsDirectory,
+  updateProductImage,
+} from '../../../../../../services/crawlers'
 
-const handler = async (req, res) => {
-  if (req.method !== 'PUT') {
+const upload = multer({
+  storage: multer.diskStorage({
+    destination: tmpdir(),
+    filename: (_req, file, cb) => cb(null, file.originalname),
+  }),
+})
+
+const apiRoute = nextConnect({
+  onError(error, req, res) {
+    console.error({ error })
+
+    Sentry.withScope(function (scope) {
+      scope.setTag('section', 'upload_product_image_error')
+      scope.setTag('crawler_id', req.crawlerId)
+      Sentry.captureException(error)
+    })
+
+    responseJSON(res, 500, {
+      status: 'unable_to_upload_product_image',
+      message: error.message,
+    })
+  },
+  onNoMatch(_req, res) {
+    responseJSON(res, 405, METHOD_NOT_ALLOWED)
+  },
+})
+
+apiRoute.use((req, res, next) => {
+  if (req.method !== 'POST') {
     return responseJSON(res, 405, METHOD_NOT_ALLOWED)
   }
 
@@ -94,68 +121,65 @@ const handler = async (req, res) => {
     return responseJSON(res, 404, PRODUCT_DOES_NOT_EXIST)
   }
 
-  const { original_price, discount_price, title, in_stock, status } = req.body
+  req.crawlerId = crawlerId
+  req.productId = productId
 
-  if (isEmptyString(status)) {
-    return responseJSON(res, 400, MISSING_STATUS)
-  }
+  next()
+})
 
-  // TODO: Check only supported statuses (ok, not_found, required_to_change_location, etc.)
+apiRoute.use(upload.single('image'))
 
-  if (isNotDefined(in_stock)) {
-    return responseJSON(res, 400, MISSING_IN_STOCK)
-  }
+apiRoute.post((req, res) => {
+  const file = req.file
+  const tmpFilename = file.filename
+  const tmpFilePath = file.path
 
-  const telegramArgs = {
-    product,
-    status,
-    price: discount_price || original_price,
-    in_stock,
-  }
+  const productId = req.productId
+  const crawlerId = req.crawlerId
 
   try {
-    sendMessageToTelegramThatProductIsInStock(telegramArgs)
+    moveProductImageToUploadsDirectory(tmpFilePath, tmpFilename)
   } catch (err) {
     console.error({ err })
 
     Sentry.withScope(function (scope) {
-      scope.setContext('args', telegramArgs)
-      scope.setTag('section', 'sendMessageToTelegramThatProductIsInStock')
+      scope.setContext('args', { productId })
+      scope.setTag('section', 'moveProductImageToUploadsDirectory')
       scope.setTag('crawler_id', crawlerId)
       Sentry.captureException(err)
     })
 
-    // NOTE: Здесь мы не возвращаем ответ в JSON, как в остальных try/catch,
-    // потому что нам важно записать историю, которая идёт ниже.
+    return responseJSON(
+      res,
+      500,
+      UNABLE_TO_MOVE_PRODUCT_IMAGE_TO_UPLOADS_DIRECTORY
+    )
   }
 
-  let history
-
-  const productArgs = {
-    original_price,
-    discount_price,
-    in_stock,
-    status,
-    title,
-    crawler_id: crawlerId,
-  }
+  let product
 
   try {
-    history = addProductHistory(productId, productArgs)
+    product = updateProductImage(productId, tmpFilename)
   } catch (err) {
     console.error({ err })
 
     Sentry.withScope(function (scope) {
-      scope.setContext('args', productArgs)
-      scope.setTag('section', 'addProductHistory')
+      scope.setContext('args', { productId, tmpFilename })
+      scope.setTag('section', 'updateProductImage')
       scope.setTag('crawler_id', crawlerId)
       Sentry.captureException(err)
     })
 
-    return responseJSON(res, 500, UNABLE_TO_ADD_PRODUCT_HISTORY)
+    return responseJSON(res, 500, UNABLE_TO_UPDATE_PRODUCT_IMAGE)
   }
 
-  return responseJSON(res, 201, history)
+  res.status(200).json(product)
+})
+
+export default apiRoute
+
+export const config = {
+  api: {
+    bodyParser: false, // Disallow body parsing, consume as stream
+  },
 }
-
-export default withSentry(handler)

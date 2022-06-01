@@ -12,3 +12,5 @@ README.md
 .github
 TODO
 Makefile
+/public/uploads
+!/public/uploads/.keep
