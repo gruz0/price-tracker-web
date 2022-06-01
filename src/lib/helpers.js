@@ -52,5 +52,9 @@ export const responseJSON = (res, status, json) => {
 export const isShopSupported = (url) => {
   const cleanURL = url.trim().toLowerCase()
 
-  return cleanURL.match(/ozon\.ru/) || cleanURL.match(/wildberries\.ru/)
+  return (
+    cleanURL.match(/ozon\.ru/) ||
+    cleanURL.match(/wildberries\.ru/) ||
+    cleanURL.match(/lamoda\.ru/)
+  )
 }
