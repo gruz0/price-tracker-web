@@ -134,6 +134,17 @@ export const METHOD_NOT_ALLOWED = {
   message: 'Метод не поддерживается',
 }
 
+export const UNABLE_TO_MOVE_PRODUCT_IMAGE_TO_UPLOADS_DIRECTORY = {
+  status: 'unable_to_move_product_image_to_uploads_directory',
+  message:
+    'Не удалось переместить временное изображение товара в директорию uploads',
+}
+
+export const UNABLE_TO_UPDATE_PRODUCT_IMAGE = {
+  status: 'unable_to_update_product_image',
+  message: 'Не удалось обновить изображение товара',
+}
+
 export const USER_ALREADY_EXISTS = {
   status: 'user_already_exists',
   message: 'Пользователь с таким логином уже существует',

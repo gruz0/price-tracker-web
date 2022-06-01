@@ -160,7 +160,7 @@ const Screen = () => {
 
           <ClickableImage
             src={productHasBeenAddedImage}
-            alt="Продукт успешно добавлен"
+            alt="Товар успешно добавлен"
             width={700}
             height={431}
           />
@@ -228,7 +228,7 @@ const Screen = () => {
 
           <ClickableImage
             src={productHasBeenAddedImage}
-            alt="Продукт успешно добавлен"
+            alt="Товар успешно добавлен"
             width={700}
             height={431}
           />

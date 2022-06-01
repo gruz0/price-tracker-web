@@ -23,4 +23,4 @@ build-docker-image: # Build Docker image
 	docker build --no-cache -t ${DOCKER_IMAGE_TAG} --build-arg UID=${USER_ID} .
 
 run-docker-image: # Run Docker image
-	docker run -d --name "${PROJECT_NAME}" -it --rm -p 127.0.0.1:3001:3000 --env-file=.env.local -v ${PWD}/data:/app/data ${DOCKER_IMAGE_TAG}
+	docker run -d --name "${PROJECT_NAME}" -it --rm -p 127.0.0.1:3001:3000 --env-file=.env.local -v ${PWD}/data:/app/data -v ${PWD}/public/uploads:/app/public/uploads ${DOCKER_IMAGE_TAG}

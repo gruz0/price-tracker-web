@@ -8,8 +8,11 @@ const productsQueueChangeLocationPath = path.join(
   '/data/queue_change_location'
 )
 
+const uploadsPath = path.join(process.cwd(), '/public/uploads')
+
 import { productsPath, productsQueuePath } from './const'
-import { getProductHistory } from './products'
+import { getProductHistory, getProduct } from './products'
+import { isEmptyString } from '../lib/validators'
 
 const getCrawlers = () => {
   let crawlers = []
@@ -75,7 +78,7 @@ export const getOutdatedProducts = (
       !file.includes('-subscriptions')
     ) {
       const product = fs.readJsonSync(productsPath + '/' + file)
-      const { id, url } = product
+      const { id, url, image } = product
 
       const history = getProductHistory(id)
 
@@ -85,7 +88,12 @@ export const getOutdatedProducts = (
       const diffInHours = Math.abs((now - lastRecordTimestamp) / (1000 * 3600))
 
       if (diffInHours >= lastUpdateInHours) {
-        products.push({ id, url, last_updated_at: history[0].created_at })
+        products.push({
+          id,
+          url,
+          image,
+          last_updated_at: history[0].created_at,
+        })
       }
     }
   })
@@ -95,7 +103,7 @@ export const getOutdatedProducts = (
     .sort((a, b) => new Date(a.last_updated_at) - new Date(b.last_updated_at))
     .slice(0, productsLimit)
     .map((p) => {
-      return { id: p.id, url: p.url }
+      return { id: p.id, url: p.url, image: p.image }
     })
 
   return suitableProducts
@@ -169,4 +177,41 @@ export const moveProductFromQueueToChangeLocation = (url_hash) => {
   const to = productsQueueChangeLocationPath + '/' + url_hash + '.json'
 
   fs.moveSync(from, to)
+}
+
+export const moveProductImageToUploadsDirectory = (originalPath, imageName) => {
+  const to = uploadsPath + '/' + imageName
+
+  // Удаляем файл, если такой уже есть
+  try {
+    fs.unlinkSync(to)
+  } catch (err) {
+    console.error({ err })
+  }
+
+  fs.moveSync(originalPath, to)
+}
+
+export const updateProductImage = (productId, image) => {
+  if (isEmptyString(productId)) {
+    throw new Error('ID товара пустой')
+  }
+
+  const product = getProduct(productId)
+
+  if (!product) {
+    throw new Error('Товар по ID не найден')
+  }
+
+  const productAttributes = {
+    ...product,
+    image: image,
+    updated_at: new Date(),
+  }
+
+  const productPath = productsPath + '/' + productId + '.json'
+
+  fs.writeJsonSync(productPath, productAttributes, { spaces: 2 })
+
+  return productAttributes
 }
