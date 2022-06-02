@@ -12,7 +12,7 @@
   },
   "dependencies": {
     "@next/bundle-analyzer": "^9.1.4",
-    "@sentry/nextjs": "^6.19.7",
+    "@sentry/nextjs": "^7.0.0",
     "fs-extra": "^10.1.0",
     "js-cookie": "^3.0.1",
     "multer": "^1.4.5-lts.1",
