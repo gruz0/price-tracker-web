@@ -104,50 +104,49 @@ export default function ProductCard({ product, isSmallScreen }) {
             <>
               {data?.history && data.history.length > 0 ? (
                 <>
-                  {!data.history[0].in_stock && (
-                    <Segment
-                      padded={!isSmallScreen}
-                      loading={isSubmitting || areSubscriptionsLoading}
-                    >
-                      {subscriptionError && (
-                        <ErrorWrapper
-                          header="Ошибка при обработке подписки"
-                          error={subscriptionError}
-                        />
-                      )}
-
-                      <Checkbox
-                        toggle
-                        label="Уведомить меня в Telegram при появлении товара"
-                        disabled={!userHasTelegramAccount}
-                        onChange={handleOutOfStockSubscription}
-                        checked={
-                          subscriptions &&
-                          Boolean(subscriptions['on_change_status_to_in_stock'])
-                        }
+                  <Segment
+                    padded={!isSmallScreen}
+                    loading={isSubmitting || areSubscriptionsLoading}
+                  >
+                    {subscriptionError && (
+                      <ErrorWrapper
+                        header="Ошибка при обработке подписки"
+                        error={subscriptionError}
                       />
+                    )}
 
-                      {!userHasTelegramAccount && (
-                        <Message warning icon>
-                          <Icon name="warning" />
+                    <Checkbox
+                      toggle
+                      label="Уведомить меня в Telegram при появлении товара"
+                      disabled={!userHasTelegramAccount}
+                      onChange={handleOutOfStockSubscription}
+                      checked={
+                        subscriptions &&
+                        Boolean(subscriptions['on_change_status_to_in_stock'])
+                      }
+                    />
 
-                          <Message.Content>
-                            <Message.Header>
-                              Необходимо привязать аккаунт Telegram
-                            </Message.Header>
+                    {!userHasTelegramAccount && (
+                      <Message warning icon>
+                        <Icon name="warning" />
 
-                            <p>
-                              Для получения уведомлений вам необходимо выполнить
-                              привязку вашего аккаунта Telegram.
-                              <br />
-                              Перейдите <a href="#">по ссылке</a> для получения
-                              пошаговых инструкций.
-                            </p>
-                          </Message.Content>
-                        </Message>
-                      )}
-                    </Segment>
-                  )}
+                        <Message.Content>
+                          <Message.Header>
+                            Необходимо привязать аккаунт Telegram
+                          </Message.Header>
+
+                          <p>
+                            Для получения уведомлений вам необходимо выполнить
+                            привязку вашего аккаунта Telegram.
+                            <br />
+                            Перейдите <a href="#">по ссылке</a> для получения
+                            пошаговых инструкций.
+                          </p>
+                        </Message.Content>
+                      </Message>
+                    )}
+                  </Segment>
+
                   <Segment padded={!isSmallScreen}>
                     <Label
                       as="a"
