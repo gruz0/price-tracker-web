@@ -241,7 +241,7 @@ export default function ProductCard({ product, isSmallScreen }) {
 
                     <Button
                       onClick={handleRemoveProductFromUser}
-                      content="Удалить продукт"
+                      content="Удалить товар"
                       negative
                     />
                   </Segment>
