@@ -114,6 +114,27 @@ export const removeUserProductSubscription = (
   return userProductSubscription
 }
 
+export const removeUserProductSubscriptions = (userId, productId) => {
+  let productSubscriptions = getProductSubscriptions(productId)
+
+  if (productSubscriptions.length === 0) {
+    return
+  }
+
+  for (let idx = 0; idx < productSubscriptions.length; idx++) {
+    if (productSubscriptions[idx].user_id === userId) {
+      productSubscriptions.splice(idx, 1)
+    }
+  }
+
+  const productSubscriptionsPath =
+    productsPath + '/' + productId + '-subscriptions.json'
+
+  fs.writeJsonSync(productSubscriptionsPath, productSubscriptions, {
+    spaces: 2,
+  })
+}
+
 export const addProductSubscription = (
   productId,
   userId,

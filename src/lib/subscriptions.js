@@ -26,3 +26,10 @@ export async function unsubscribeUserFromProductEvent(
     token
   )
 }
+
+export async function removeAllProductSubscriptionsFromUser(token, productId) {
+  return await deleteWithToken(
+    `/api/v1/products/${productId}/subscriptions`,
+    token
+  )
+}

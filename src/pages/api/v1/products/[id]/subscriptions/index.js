@@ -2,7 +2,10 @@ import { withSentry } from '@sentry/nextjs'
 import * as Sentry from '@sentry/nextjs'
 
 import { getUserByToken } from '../../../../../../services/auth'
-import { getProduct } from '../../../../../../services/products'
+import {
+  getProduct,
+  removeUserProductSubscriptions,
+} from '../../../../../../services/products'
 import { getUserProduct } from '../../../../../../services/users'
 import { responseJSON } from '../../../../../../lib/helpers'
 import {
@@ -28,11 +31,12 @@ import {
   MISSING_SUBSCRIPTION_TYPE,
   SUBSCRIPTION_TYPE_IS_NOT_VALID,
   UNABLE_TO_GET_USER_PRODUCT_SUBSCRIPTIONS,
+  UNABLE_TO_REMOVE_USER_PRODUCT_SUBSCRIPTIONS,
 } from '../../../../../../lib/messages'
 import { isEmptyString } from '../../../../../../lib/validators'
 
 const handler = async (req, res) => {
-  if (!['POST', 'GET'].includes(req.method)) {
+  if (!['POST', 'GET', 'DELETE'].includes(req.method)) {
     return responseJSON(res, 405, METHOD_NOT_ALLOWED)
   }
 
@@ -117,110 +121,149 @@ const handler = async (req, res) => {
 
   // FIXME: До этого момента сверху всё копипаста из src/pages/products/[id].jsx
 
-  if (req.method === 'GET') {
-    let subscriptions = {}
-    let userProductSubscriptions
+  switch (req.method) {
+    case 'GET': {
+      let subscriptions = {}
+      let userProductSubscriptions
 
-    try {
-      userProductSubscriptions = getUserProductSubscriptions(
-        user.id,
-        product.id
-      )
-    } catch (err) {
-      console.error({ err })
+      try {
+        userProductSubscriptions = getUserProductSubscriptions(
+          user.id,
+          product.id
+        )
+      } catch (err) {
+        console.error({ err })
 
-      Sentry.withScope(function (scope) {
-        scope.setContext('args', { user, product })
-        scope.setTag('section', 'getUserProductSubscriptions')
-        scope.setUser({ user })
-        Sentry.captureException(err)
-      })
+        Sentry.withScope(function (scope) {
+          scope.setContext('args', { user, product })
+          scope.setTag('section', 'getUserProductSubscriptions')
+          scope.setUser({ user })
+          Sentry.captureException(err)
+        })
 
-      return responseJSON(res, 500, UNABLE_TO_GET_USER_PRODUCT_SUBSCRIPTIONS)
+        return responseJSON(res, 500, UNABLE_TO_GET_USER_PRODUCT_SUBSCRIPTIONS)
+      }
+
+      if (userProductSubscriptions.length !== 0) {
+        userProductSubscriptions.forEach((userProductSubscription) => {
+          const { id, payload, created_at } = userProductSubscription
+
+          subscriptions[userProductSubscription.subscription_type] = {
+            id,
+            payload,
+            created_at,
+          }
+        })
+      }
+
+      return responseJSON(res, 200, subscriptions)
     }
 
-    if (userProductSubscriptions.length !== 0) {
-      userProductSubscriptions.forEach((userProductSubscription) => {
-        const { id, payload, created_at } = userProductSubscription
+    case 'DELETE': {
+      try {
+        removeUserProductSubscriptions(user.id, product.id)
+      } catch (err) {
+        console.error({ err })
 
-        subscriptions[userProductSubscription.subscription_type] = {
-          id,
-          payload,
-          created_at,
-        }
-      })
+        Sentry.withScope(function (scope) {
+          scope.setContext('args', { user, product })
+          scope.setTag('section', 'removeUserProductSubscriptions')
+          scope.setUser({ user })
+          Sentry.captureException(err)
+        })
+
+        return responseJSON(
+          res,
+          500,
+          UNABLE_TO_REMOVE_USER_PRODUCT_SUBSCRIPTIONS
+        )
+      }
+
+      return responseJSON(res, 200, {})
     }
 
-    return responseJSON(res, 200, subscriptions)
+    default: {
+      if (!user.telegram_account || isEmptyString(user.telegram_account)) {
+        return responseJSON(
+          res,
+          400,
+          USER_DOES_NOT_HAVE_LINKED_TELEGRAM_ACCOUNT
+        )
+      }
+
+      const { subscription_type, payload } = req.body
+
+      if (isEmptyString(subscription_type)) {
+        return responseJSON(res, 400, MISSING_SUBSCRIPTION_TYPE)
+      }
+
+      const subscriptionType = subscription_type.toLowerCase()
+
+      if (subscriptionType !== 'on_change_status_to_in_stock') {
+        return responseJSON(res, 422, SUBSCRIPTION_TYPE_IS_NOT_VALID)
+      }
+
+      let userSubscription
+
+      try {
+        userSubscription = getUserProductSubscriptionByType(
+          user.id,
+          product.id,
+          subscriptionType
+        )
+      } catch (err) {
+        console.error({ err })
+
+        Sentry.withScope(function (scope) {
+          scope.setContext('args', { user, product, subscriptionType })
+          scope.setTag('section', 'getUserProductSubscriptionByType')
+          scope.setUser({ user })
+          Sentry.captureException(err)
+        })
+
+        return responseJSON(res, 500, UNABLE_TO_GET_USER_SUBSCRIPTION_BY_TYPE)
+      }
+
+      if (userSubscription) {
+        return responseJSON(
+          res,
+          200,
+          USER_ALREADY_SUBSCRIBED_TO_SUBSCRIPTION_TYPE
+        )
+      }
+
+      try {
+        userSubscription = addProductSubscription(
+          product.id,
+          user.id,
+          subscriptionType,
+          payload
+        )
+      } catch (err) {
+        console.error({ err })
+
+        Sentry.withScope(function (scope) {
+          scope.setContext('args', {
+            user,
+            product,
+            subscriptionType,
+            payload,
+          })
+          scope.setTag('section', 'addProductSubscription')
+          scope.setUser({ user })
+          Sentry.captureException(err)
+        })
+
+        return responseJSON(
+          res,
+          500,
+          UNABLE_TO_ADD_USER_SUBSCRIPTION_TO_PRODUCT
+        )
+      }
+
+      return responseJSON(res, 201, userSubscription)
+    }
   }
-
-  if (!user.telegram_account || isEmptyString(user.telegram_account)) {
-    return responseJSON(res, 400, USER_DOES_NOT_HAVE_LINKED_TELEGRAM_ACCOUNT)
-  }
-
-  const { subscription_type, payload } = req.body
-
-  if (isEmptyString(subscription_type)) {
-    return responseJSON(res, 400, MISSING_SUBSCRIPTION_TYPE)
-  }
-
-  const subscriptionType = subscription_type.toLowerCase()
-
-  if (subscriptionType !== 'on_change_status_to_in_stock') {
-    return responseJSON(res, 422, SUBSCRIPTION_TYPE_IS_NOT_VALID)
-  }
-
-  let userSubscription
-
-  try {
-    userSubscription = getUserProductSubscriptionByType(
-      user.id,
-      product.id,
-      subscriptionType
-    )
-  } catch (err) {
-    console.error({ err })
-
-    Sentry.withScope(function (scope) {
-      scope.setContext('args', { user, product, subscriptionType })
-      scope.setTag('section', 'getUserProductSubscriptionByType')
-      scope.setUser({ user })
-      Sentry.captureException(err)
-    })
-
-    return responseJSON(res, 500, UNABLE_TO_GET_USER_SUBSCRIPTION_BY_TYPE)
-  }
-
-  if (userSubscription) {
-    return responseJSON(res, 200, USER_ALREADY_SUBSCRIBED_TO_SUBSCRIPTION_TYPE)
-  }
-
-  try {
-    userSubscription = addProductSubscription(
-      product.id,
-      user.id,
-      subscriptionType,
-      payload
-    )
-  } catch (err) {
-    console.error({ err })
-
-    Sentry.withScope(function (scope) {
-      scope.setContext('args', {
-        user,
-        product,
-        subscriptionType,
-        payload,
-      })
-      scope.setTag('section', 'addProductSubscription')
-      scope.setUser({ user })
-      Sentry.captureException(err)
-    })
-
-    return responseJSON(res, 500, UNABLE_TO_ADD_USER_SUBSCRIPTION_TO_PRODUCT)
-  }
-
-  return responseJSON(res, 201, userSubscription)
 }
 
 export default withSentry(handler)
