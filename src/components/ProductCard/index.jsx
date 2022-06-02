@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import {
   Divider,
   Label,
+  Button,
   Header,
   Segment,
   Message,
@@ -21,7 +22,9 @@ import { isEmptyString } from '../../lib/validators'
 import {
   subscribeUserToProductEvent,
   unsubscribeUserFromProductEvent,
+  removeAllProductSubscriptionsFromUser,
 } from '../../lib/subscriptions'
+import { removeProductFromUser } from '../../lib/products'
 
 export default function ProductCard({ product, isSmallScreen }) {
   const router = useRouter()
@@ -35,6 +38,13 @@ export default function ProductCard({ product, isSmallScreen }) {
 
   const [subscriptionError, setSubscriptionError] = useState(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
+
+  const hasSubscriptions =
+    subscriptions &&
+    !(
+      Object.keys(subscriptions).length === 0 &&
+      subscriptions.constructor === Object
+    )
 
   useEffect(() => {
     if (error && error?.info?.status === 'forbidden') {
@@ -64,7 +74,7 @@ export default function ProductCard({ product, isSmallScreen }) {
 
     const subscriptionType = 'on_change_status_to_in_stock'
     const subscription =
-      subscriptions && subscriptions['on_change_status_to_in_stock']
+      hasSubscriptions && subscriptions['on_change_status_to_in_stock']
 
     try {
       if (subscription) {
@@ -82,6 +92,38 @@ export default function ProductCard({ product, isSmallScreen }) {
       setSubscriptionError(err)
     } finally {
       setIsSubmitting(false)
+    }
+  }
+
+  const handleRemoveProductFromUser = async (e) => {
+    if (!confirm('Удалить товар из отслеживаемых?')) {
+      return
+    }
+
+    e.preventDefault()
+
+    try {
+      await removeProductFromUser(token, product.id)
+
+      router.push('/products')
+    } catch (err) {
+      console.error({ err })
+    }
+  }
+
+  const handleRemoveAllProductSubscriptions = async (e) => {
+    if (!confirm('Удалить все уведомления товара?')) {
+      return
+    }
+
+    e.preventDefault()
+
+    try {
+      await removeAllProductSubscriptionsFromUser(token, product.id)
+
+      router.reload()
+    } catch (err) {
+      console.error({ err })
     }
   }
 
@@ -121,7 +163,7 @@ export default function ProductCard({ product, isSmallScreen }) {
                       disabled={!userHasTelegramAccount}
                       onChange={handleOutOfStockSubscription}
                       checked={
-                        subscriptions &&
+                        hasSubscriptions &&
                         Boolean(subscriptions['on_change_status_to_in_stock'])
                       }
                     />
@@ -185,6 +227,24 @@ export default function ProductCard({ product, isSmallScreen }) {
                   ) : (
                     <PriceTable history={data.history} />
                   )}
+
+                  <Header as="h3">Полезные кнопки</Header>
+
+                  <Segment textAlign="right">
+                    {hasSubscriptions && (
+                      <Button
+                        onClick={handleRemoveAllProductSubscriptions}
+                        content="Удалить все уведомления"
+                        color="orange"
+                      />
+                    )}
+
+                    <Button
+                      onClick={handleRemoveProductFromUser}
+                      content="Удалить продукт"
+                      negative
+                    />
+                  </Segment>
                 </>
               ) : (
                 <Message info>

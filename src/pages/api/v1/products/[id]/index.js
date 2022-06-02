@@ -1,10 +1,13 @@
 import { withSentry } from '@sentry/nextjs'
 import * as Sentry from '@sentry/nextjs'
 
-import { getUserByToken } from '../../../../services/auth'
-import { isProductExists } from '../../../../services/products'
-import { getUserProduct } from '../../../../services/users'
-import { responseJSON } from '../../../../lib/helpers'
+import { getUserByToken } from '../../../../../services/auth'
+import { isProductExists } from '../../../../../services/products'
+import {
+  getUserProduct,
+  removeProductWithSubscriptionsFromUser,
+} from '../../../../../services/users'
+import { responseJSON } from '../../../../../lib/helpers'
 
 import {
   METHOD_NOT_ALLOWED,
@@ -17,10 +20,11 @@ import {
   PRODUCT_DOES_NOT_EXIST,
   UNABLE_TO_GET_USER_PRODUCT,
   USER_DOES_NOT_HAVE_PRODUCT,
-} from '../../../../lib/messages'
+  UNABLE_TO_REMOVE_USER_PRODUCT_WITH_SUBSCRIPTIONS,
+} from '../../../../../lib/messages'
 
 const handler = async (req, res) => {
-  if (req.method !== 'GET') {
+  if (!['GET', 'DELETE'].includes(req.method)) {
     return responseJSON(res, 405, METHOD_NOT_ALLOWED)
   }
 
@@ -101,6 +105,29 @@ const handler = async (req, res) => {
 
   if (!userProduct) {
     return responseJSON(res, 404, USER_DOES_NOT_HAVE_PRODUCT)
+  }
+
+  if (req.method === 'DELETE') {
+    try {
+      removeProductWithSubscriptionsFromUser(user.id, productId)
+    } catch (err) {
+      console.error({ err })
+
+      Sentry.withScope(function (scope) {
+        scope.setContext('args', { user, productId })
+        scope.setTag('section', 'removeProductWithSubscriptionsFromUser')
+        scope.setUser({ user })
+        Sentry.captureException(err)
+      })
+
+      return responseJSON(
+        res,
+        500,
+        UNABLE_TO_REMOVE_USER_PRODUCT_WITH_SUBSCRIPTIONS
+      )
+    }
+
+    return responseJSON(res, 200, {})
   }
 
   return responseJSON(res, 200, { product: userProduct })

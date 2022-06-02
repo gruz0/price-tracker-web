@@ -160,6 +160,16 @@ export const USER_DOES_NOT_HAVE_LINKED_TELEGRAM_ACCOUNT = {
   message: 'Пользователь не имеет связанного аккаунта Telegram',
 }
 
+export const UNABLE_TO_REMOVE_USER_PRODUCT_WITH_SUBSCRIPTIONS = {
+  status: 'unable_to_remove_user_product_with_subscriptions',
+  message: 'Не удалось удалить товар пользователя с подписками на товар',
+}
+
+export const UNABLE_TO_REMOVE_USER_PRODUCT_SUBSCRIPTIONS = {
+  status: 'unable_to_remove_user_product_subscriptions',
+  message: 'Не удалось удалить подписки пользователя на товар',
+}
+
 export const USER_ALREADY_SUBSCRIBED_TO_SUBSCRIPTION_TYPE = {
   status: 'user_already_subscribed_to_subscription_type',
   message: 'Вы уже подписаны на этот тип события',

@@ -4,6 +4,7 @@ import {
   getProduct,
   getProductHistory,
   getProductDiscountPriceOrOriginalPrice,
+  removeUserProductSubscriptions,
 } from './products'
 import { usersPath } from './const'
 
@@ -212,4 +213,29 @@ export const getUserProduct = (userId, productId) => {
     ...userProduct,
     title: product.title,
   }
+}
+
+export const removeProductWithSubscriptionsFromUser = (userId, productId) => {
+  let userProduct
+
+  let userProducts = getUserProducts(userId)
+
+  for (let idx = 0; idx < userProducts.length; idx++) {
+    if (userProducts[idx].id === productId) {
+      userProduct = userProducts.splice(idx, 1)
+    }
+  }
+
+  if (!userProduct) {
+    throw new Error(
+      `Не удалось найти товар ${productId} у пользователя ${userId}`
+    )
+  }
+
+  // В идеале это надо в транзакции запускать в базе данных, чтобы не потерять какие-то данные в случае ошибок
+  removeUserProductSubscriptions(userId, productId)
+
+  const userProductsPath = usersPath + '/' + userId + '/products.json'
+
+  fs.writeJsonSync(userProductsPath, { products: userProducts }, { spaces: 2 })
 }
