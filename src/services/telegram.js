@@ -63,12 +63,10 @@ export const sendMessageToTelegramThatProductIsInStock = ({
   })
 }
 
-export const newUserRegistration = (userId, userLogin) => {
+export const newUserRegistration = (userId) => {
   bot.sendMessage(
     telegram_tech_group_id,
-    `***Зарегистрирован новый пользователь!***\n` +
-      `Login: ${userLogin}\n` +
-      `ID: ${userId}`,
+    `***Зарегистрирован новый пользователь!***\n` + `ID: ${userId}`,
     {
       parse_mode: 'markdown',
     }

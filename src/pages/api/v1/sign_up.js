@@ -81,7 +81,7 @@ const handler = async (req, res) => {
   }
 
   try {
-    newUserRegistration(user.id, user.login)
+    newUserRegistration(user.id)
   } catch (err) {
     console.error({ err })
 
