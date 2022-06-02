@@ -55,6 +55,7 @@ export const isShopSupported = (url) => {
   return (
     cleanURL.match(/ozon\.ru/) ||
     cleanURL.match(/wildberries\.ru/) ||
-    cleanURL.match(/lamoda\.ru/)
+    cleanURL.match(/lamoda\.ru/) ||
+    cleanURL.match(/store77\.net/)
   )
 }
