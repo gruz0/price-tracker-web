@@ -64,7 +64,7 @@ const Screen = () => {
           onClick={handleClick}
         >
           <Icon name="dropdown" />
-          Как добавить товар из OZON, WILDBERRIES с компьютера
+          Как добавить товар с компьютера
         </Accordion.Title>
         <Accordion.Content active={activeIndex === 0}>
           <p>
@@ -156,7 +156,7 @@ const Screen = () => {
 
           <MyDivider />
 
-          <p>Через полчаса товар появится в системе.</p>
+          <p>Через 5 минут товар появится в системе.</p>
 
           <ClickableImage
             src={productHasBeenAddedImage}
@@ -244,8 +244,8 @@ const Screen = () => {
         </Accordion.Title>
         <Accordion.Content active={activeIndex === 3}>
           <p>
-            На первом этапе бот будет использоваться для отправки сообщений о
-            появлении нужных вам товаров.
+            Бот умеет уведомлять в личные сообщения Telegram о появлении
+            отслеживаемых вами товаров.
             <br />
             Для этого необходимо отправить боту{' '}
             <a
@@ -269,14 +269,19 @@ const Screen = () => {
           <Divider hidden />
 
           <p>
-            Дальше в планах добавление товаров напрямую через бота.
-            <br />В этом случае не нужно будет копировать ссылки на товар, а
-            достаточно просто отправить боту в личку.
+            Ещё вы можете прислать ссылку на любой товар из поддерживаемых нами
+            магазинов.
+            <br />
+            Бот автоматически добавит товар к вашей учётной записи сразу после
+            обработки цены и наличия.
           </p>
 
           <p>
-            Ещё, конечно же, хочется через бота отправлять сообщения о снижении
-            цены на конкретные (избранные) товары, но это на будущее.
+            Хочется в ближайшем будущем через бота отправлять сообщения о
+            снижении цены на конкретные (избранные) товары.
+            <br />
+            Пока записано в списке наших хотелок, делать будем по мере
+            возможности.
           </p>
         </Accordion.Content>
 
@@ -318,7 +323,7 @@ const Screen = () => {
           Как часто обновляются данные в системе
         </Accordion.Title>
         <Accordion.Content active={activeIndex === 6}>
-          <p>Новые товары появляются в системе раз в полчаса.</p>
+          <p>Новые товары появляются в системе раз 5 минут.</p>
 
           <p>
             Цены и наличие существующих товаров обновляются несколько раз в день
@@ -344,58 +349,9 @@ const Screen = () => {
           onClick={handleClick}
         >
           <Icon name="dropdown" />
-          Как добавить все товары из магазина за один раз
-        </Accordion.Title>
-        <Accordion.Content active={activeIndex === 7}>
-          <p>
-            Прямо сейчас такой возможности нет, но в данный момент мы работаем
-            именно над этой функциональностью, т.к. понимаем, что вбивать
-            вручную даже 10 товаров слишком утомительно. Эта функция появится в
-            самое ближайшее время. Следите за новостями в{' '}
-            <a
-              href="https://t.me/chartik_ru"
-              target="_blank"
-              rel="noreferrer noopener"
-            >
-              канале Telegram
-            </a>
-            .
-          </p>
-        </Accordion.Content>
-
-        <Accordion.Title
-          active={activeIndex === 8}
-          index={8}
-          onClick={handleClick}
-        >
-          <Icon name="dropdown" />
-          Как экспортировать список товаров из OZON
-        </Accordion.Title>
-        <Accordion.Content active={activeIndex === 8}>
-          <p>Напишем позже.</p>
-        </Accordion.Content>
-
-        <Accordion.Title
-          active={activeIndex === 9}
-          index={9}
-          onClick={handleClick}
-        >
-          <Icon name="dropdown" />
-          Как экспортировать список товаров из WILDBERRIES
-        </Accordion.Title>
-        <Accordion.Content active={activeIndex === 9}>
-          <p>Напишем позже.</p>
-        </Accordion.Content>
-
-        <Accordion.Title
-          active={activeIndex === 10}
-          index={10}
-          onClick={handleClick}
-        >
-          <Icon name="dropdown" />
           Как связать товары из двух магазинов в одну карточку
         </Accordion.Title>
-        <Accordion.Content active={activeIndex === 10}>
+        <Accordion.Content active={activeIndex === 7}>
           <p>
             Эта функция на обсуждении и если к ней будет интерес — мы реализуем
             её после внедрения основной функциональности.
