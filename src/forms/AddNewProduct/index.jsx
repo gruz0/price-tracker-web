@@ -1,6 +1,13 @@
 import React, { useState } from 'react'
 import Router from 'next/router'
-import { Form, Divider, Input, Message, Segment } from 'semantic-ui-react'
+import {
+  Form,
+  Divider,
+  Label,
+  Input,
+  Message,
+  Segment,
+} from 'semantic-ui-react'
 import { addProduct } from '../../lib/api'
 import ErrorWrapper from '../../components/ErrorWrapper'
 
@@ -53,16 +60,22 @@ export default function AddNewProduct({ token, isSmallScreen }) {
         {message && <Message positive header={message} />}
 
         <Form onSubmit={handleAddProduct}>
-          <Input
-            id="url"
-            action={{ type: 'submit', content: 'Добавить', primary: true }}
-            placeholder="Вставьте ссылку на товар, цену которого хотите отслеживать"
-            value={fields.url}
-            onChange={handleInputChange}
-            required
-            fluid
-            float="right"
-          />
+          <Form.Field>
+            <Input
+              id="url"
+              action={{ type: 'submit', content: 'Добавить', primary: true }}
+              placeholder="Вставьте ссылку на товар, цену которого хотите отслеживать"
+              value={fields.url}
+              onChange={handleInputChange}
+              required
+              fluid
+              float="right"
+            />
+            <Label pointing>
+              Поддерживаются ссылки из: ozon.ru, wildberries.ru, lamoda.ru,
+              sbermegamarket.ru, store77.net
+            </Label>
+          </Form.Field>
         </Form>
       </Segment>
     </>
