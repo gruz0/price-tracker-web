@@ -115,7 +115,7 @@ const Screen = () => {
       <SegmentContent>
         <MyH3>Что Chartik умеет?</MyH3>
 
-        <List relaxed animated>
+        <List relaxed>
           <List.Item>
             <List.Icon name="star" />
             <List.Content>
@@ -162,7 +162,7 @@ const Screen = () => {
       <SegmentContent>
         <MyH3>Вам здесь понравится, если вы:</MyH3>
 
-        <List relaxed animated>
+        <List relaxed>
           <List.Item>
             <List.Icon name="heart" />
             <List.Content>Любите сохранять товары в Избранном</List.Content>
@@ -192,7 +192,7 @@ const Screen = () => {
       <SegmentContent>
         <MyH3>Чего точно не будет в Chartik?</MyH3>
 
-        <List relaxed animated>
+        <List relaxed>
           <List.Item>
             <List.Icon name="dont" />
             <List.Content>
@@ -209,6 +209,12 @@ const Screen = () => {
             <List.Icon name="dont" />
             <List.Content>
               Синхронизации с вашей корзиной в маркетплейсах
+            </List.Content>
+          </List.Item>
+          <List.Item>
+            <List.Icon name="dont" />
+            <List.Content>
+              Мы не обрабатываем товары, которые помечены в маркетплейсах как 18+
             </List.Content>
           </List.Item>
         </List>
