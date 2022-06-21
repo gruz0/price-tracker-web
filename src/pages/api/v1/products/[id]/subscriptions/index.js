@@ -1,9 +1,9 @@
 import { withSentry } from '@sentry/nextjs'
 import * as Sentry from '@sentry/nextjs'
 
-import { getUserByToken } from '../../../../../../services/auth'
+import { findUserByToken } from '../../../../../../services/auth'
 import {
-  getProduct,
+  findProductById,
   removeUserProductSubscriptions,
 } from '../../../../../../services/products'
 import { getUserProduct } from '../../../../../../services/users'
@@ -18,9 +18,12 @@ import {
   MISSING_AUTHORIZATION_HEADER,
   MISSING_BEARER_KEY,
   MISSING_TOKEN,
-  UNABLE_TO_GET_USER_BY_TOKEN,
+  INVALID_TOKEN_UUID,
+  UNABLE_TO_FIND_USER_BY_TOKEN,
   FORBIDDEN,
-  UNABLE_TO_GET_PRODUCT_BY_ID,
+  MISSING_PRODUCT_ID,
+  INVALID_PRODUCT_UUID,
+  UNABLE_TO_FIND_PRODUCT_BY_ID,
   PRODUCT_DOES_NOT_EXIST,
   UNABLE_TO_GET_USER_PRODUCT,
   USER_DOES_NOT_HAVE_PRODUCT,
@@ -33,7 +36,7 @@ import {
   UNABLE_TO_GET_USER_PRODUCT_SUBSCRIPTIONS,
   UNABLE_TO_REMOVE_USER_PRODUCT_SUBSCRIPTIONS,
 } from '../../../../../../lib/messages'
-import { isEmptyString } from '../../../../../../lib/validators'
+import { isEmptyString, isValidUUID } from '../../../../../../lib/validators'
 
 const handler = async (req, res) => {
   if (!['POST', 'GET', 'DELETE'].includes(req.method)) {
@@ -56,19 +59,23 @@ const handler = async (req, res) => {
     return responseJSON(res, 401, MISSING_TOKEN)
   }
 
+  if (!isValidUUID(token)) {
+    return responseJSON(res, 400, INVALID_TOKEN_UUID)
+  }
+
   let user
 
   try {
-    user = getUserByToken(token)
+    user = await findUserByToken(token)
   } catch (err) {
     console.error({ err })
 
     Sentry.withScope(function (scope) {
-      scope.setTag('section', 'getUserByToken')
+      scope.setTag('section', 'findUserByToken')
       Sentry.captureException(err)
     })
 
-    return responseJSON(res, 500, UNABLE_TO_GET_USER_BY_TOKEN)
+    return responseJSON(res, 500, UNABLE_TO_FIND_USER_BY_TOKEN)
   }
 
   if (!user) {
@@ -77,21 +84,29 @@ const handler = async (req, res) => {
 
   const productId = req.query.id
 
+  if (isEmptyString(productId)) {
+    return responseJSON(res, 400, MISSING_PRODUCT_ID)
+  }
+
+  if (!isValidUUID(productId)) {
+    return responseJSON(res, 400, INVALID_PRODUCT_UUID)
+  }
+
   let product
 
   try {
-    product = getProduct(productId)
+    product = await findProductById(productId)
   } catch (err) {
     console.error({ err })
 
     Sentry.withScope(function (scope) {
       scope.setContext('args', { productId })
-      scope.setTag('section', 'getProduct')
+      scope.setTag('section', 'findProductById')
       scope.setUser({ user })
       Sentry.captureException(err)
     })
 
-    return responseJSON(res, 500, UNABLE_TO_GET_PRODUCT_BY_ID)
+    return responseJSON(res, 500, UNABLE_TO_FIND_PRODUCT_BY_ID)
   }
 
   if (!product) {
@@ -101,7 +116,7 @@ const handler = async (req, res) => {
   let userProduct
 
   try {
-    userProduct = getUserProduct(user.id, product.id)
+    userProduct = await getUserProduct(user.id, product.id)
   } catch (err) {
     console.error({ err })
 
@@ -127,7 +142,7 @@ const handler = async (req, res) => {
       let userProductSubscriptions
 
       try {
-        userProductSubscriptions = getUserProductSubscriptions(
+        userProductSubscriptions = await getUserProductSubscriptions(
           user.id,
           product.id
         )
@@ -144,7 +159,7 @@ const handler = async (req, res) => {
         return responseJSON(res, 500, UNABLE_TO_GET_USER_PRODUCT_SUBSCRIPTIONS)
       }
 
-      if (userProductSubscriptions.length !== 0) {
+      if (userProductSubscriptions.length > 0) {
         userProductSubscriptions.forEach((userProductSubscription) => {
           const { id, payload, created_at } = userProductSubscription
 
@@ -161,7 +176,7 @@ const handler = async (req, res) => {
 
     case 'DELETE': {
       try {
-        removeUserProductSubscriptions(user.id, product.id)
+        await removeUserProductSubscriptions(user.id, product.id)
       } catch (err) {
         console.error({ err })
 
@@ -206,7 +221,7 @@ const handler = async (req, res) => {
       let userSubscription
 
       try {
-        userSubscription = getUserProductSubscriptionByType(
+        userSubscription = await getUserProductSubscriptionByType(
           user.id,
           product.id,
           subscriptionType
@@ -233,7 +248,7 @@ const handler = async (req, res) => {
       }
 
       try {
-        userSubscription = addProductSubscription(
+        userSubscription = await addProductSubscription(
           product.id,
           user.id,
           subscriptionType,

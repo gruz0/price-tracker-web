@@ -1,0 +1,119 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Crawler {
+  id         String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  token      String           @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  location   String           @db.VarChar(64)
+  created_at DateTime         @default(now())
+  updated_at DateTime         @updatedAt
+  products   ProductHistory[]
+
+  @@map("crawlers")
+}
+
+model Bot {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  token      String   @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  location   String   @db.VarChar(64)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@map("bots")
+}
+
+model User {
+  id                    String                    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  login                 String                    @unique @db.VarChar(255)
+  password              String                    @db.VarChar(255)
+  token                 String                    @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  telegram_account      String?                   @db.VarChar(255)
+  created_at            DateTime                  @default(now())
+  updated_at            DateTime                  @updatedAt
+  queued_products       ProductQueue[]
+  products              UserProduct[]
+  product_subscriptions UserProductSubscription[]
+
+  @@map("users")
+}
+
+model ProductQueue {
+  id                  String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  url                 String   @db.VarChar(255)
+  url_hash            String   @db.VarChar(255)
+  requested_by        User     @relation(fields: [requested_by_id], references: [id])
+  requested_by_id     String   @db.Uuid
+  skip_for_crawler_id String?  @db.Uuid
+  created_at          DateTime @default(now())
+  updated_at          DateTime @updatedAt
+
+  @@unique([url, url_hash, requested_by_id])
+  @@map("products_queue")
+}
+
+model Product {
+  id                 String                    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title              String                    @db.VarChar(512)
+  url                String                    @unique @db.VarChar(255)
+  url_hash           String                    @unique @db.VarChar(255)
+  shop               String                    @db.VarChar(255)
+  image              String?                   @db.VarChar(255)
+  created_at         DateTime                  @default(now())
+  updated_at         DateTime                  @updatedAt
+  history            ProductHistory[]
+  followed_by_users  UserProduct[]
+  user_subscriptions UserProductSubscription[]
+
+  @@map("products")
+}
+
+model ProductHistory {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title          String?  @db.VarChar(512)
+  original_price Float?
+  discount_price Float?
+  status         String   @db.VarChar(32)
+  in_stock       Boolean  @default(false)
+  product        Product  @relation(fields: [product_id], references: [id])
+  product_id     String   @db.Uuid
+  crawler        Crawler  @relation(fields: [crawler_id], references: [id])
+  crawler_id     String   @db.Uuid
+  created_at     DateTime @default(now())
+
+  @@map("product_history")
+}
+
+model UserProduct {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user       User     @relation(fields: [user_id], references: [id])
+  user_id    String   @db.Uuid
+  product    Product  @relation(fields: [product_id], references: [id])
+  product_id String   @db.Uuid
+  favorited  Boolean  @default(false)
+  price      Float
+  created_at DateTime @default(now())
+
+  @@unique([user_id, product_id])
+  @@map("user_products")
+}
+
+model UserProductSubscription {
+  id                String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user              User     @relation(fields: [user_id], references: [id])
+  user_id           String   @db.Uuid
+  product           Product  @relation(fields: [product_id], references: [id])
+  product_id        String   @db.Uuid
+  subscription_type String   @db.VarChar(64)
+  payload           Json?
+  created_at        DateTime @default(now())
+  updated_at        DateTime @updatedAt
+
+  @@unique([user_id, product_id, subscription_type])
+  @@map("user_product_subscriptions")
+}

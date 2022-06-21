@@ -1,16 +1,18 @@
 import { withSentry } from '@sentry/nextjs'
 import * as Sentry from '@sentry/nextjs'
 
-import { getUserByToken } from '../../../services/auth'
+import { findUserByToken } from '../../../services/auth'
 import {
   METHOD_NOT_ALLOWED,
   MISSING_AUTHORIZATION_HEADER,
   MISSING_BEARER_KEY,
   MISSING_TOKEN,
-  UNABLE_TO_GET_USER_BY_TOKEN,
+  INVALID_TOKEN_UUID,
+  UNABLE_TO_FIND_USER_BY_TOKEN,
   FORBIDDEN,
 } from '../../../lib/messages'
-import { responseJSON } from '../../../lib/helpers'
+import { buildUserResponse, responseJSON } from '../../../lib/helpers'
+import { isValidUUID } from '../../../lib/validators'
 
 const handler = async (req, res) => {
   if (req.method !== 'GET') {
@@ -33,34 +35,31 @@ const handler = async (req, res) => {
     return responseJSON(res, 401, MISSING_TOKEN)
   }
 
+  if (!isValidUUID(token)) {
+    return responseJSON(res, 400, INVALID_TOKEN_UUID)
+  }
+
   let user
 
   try {
-    user = getUserByToken(token)
+    user = await findUserByToken(token)
   } catch (err) {
     console.error({ err })
 
     Sentry.withScope(function (scope) {
       scope.setContext('args', { token })
-      scope.setTag('section', 'getUserByToken')
+      scope.setTag('section', 'findUserByToken')
       Sentry.captureException(err)
     })
 
-    return responseJSON(res, 500, UNABLE_TO_GET_USER_BY_TOKEN)
+    return responseJSON(res, 500, UNABLE_TO_FIND_USER_BY_TOKEN)
   }
 
   if (!user) {
     return responseJSON(res, 403, FORBIDDEN)
   }
 
-  return responseJSON(res, 200, {
-    token: user.token,
-    user: {
-      id: user.id,
-      login: user.login,
-      telegram_account: user.telegram_account,
-    },
-  })
+  return responseJSON(res, 200, buildUserResponse(user))
 }
 
 export default withSentry(handler)

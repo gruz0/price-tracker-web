@@ -2,17 +2,18 @@ import { withSentry } from '@sentry/nextjs'
 import * as Sentry from '@sentry/nextjs'
 
 import {
-  getUserByToken,
+  findUserByToken,
   findUserByLoginAndPassword,
   updateUserPasswordAndToken,
 } from '../../../../services/auth'
-import { isEmptyString } from '../../../../lib/validators'
+import { isEmptyString, isValidUUID } from '../../../../lib/validators'
 
 import {
   METHOD_NOT_ALLOWED,
   MISSING_AUTHORIZATION_HEADER,
   MISSING_BEARER_KEY,
   MISSING_TOKEN,
+  INVALID_TOKEN_UUID,
   CURRENT_PASSWORD_IS_NOT_VALID,
   FORBIDDEN,
   MISSING_CURRENT_PASSWORD,
@@ -22,10 +23,10 @@ import {
   PASSWORDS_DO_NOT_MATCH,
   PASSWORD_IS_TOO_SHORT,
   UNABLE_TO_FIND_USER,
-  UNABLE_TO_GET_USER_BY_TOKEN,
+  UNABLE_TO_FIND_USER_BY_TOKEN,
   UNABLE_TO_UPDATE_USER_PASSWORD_AND_TOKEN,
 } from '../../../../lib/messages'
-import { responseJSON } from '../../../../lib/helpers'
+import { buildUserResponse, responseJSON } from '../../../../lib/helpers'
 
 const handler = async (req, res) => {
   if (req.method !== 'POST') {
@@ -48,19 +49,23 @@ const handler = async (req, res) => {
     return responseJSON(res, 401, MISSING_TOKEN)
   }
 
+  if (!isValidUUID(token)) {
+    return responseJSON(res, 400, INVALID_TOKEN_UUID)
+  }
+
   let userByToken
 
   try {
-    userByToken = getUserByToken(token)
+    userByToken = await findUserByToken(token)
   } catch (err) {
     console.error({ err })
 
     Sentry.withScope(function (scope) {
-      scope.setTag('section', 'getUserByToken')
+      scope.setTag('section', 'findUserByToken')
       Sentry.captureException(err)
     })
 
-    return responseJSON(res, 500, UNABLE_TO_GET_USER_BY_TOKEN)
+    return responseJSON(res, 500, UNABLE_TO_FIND_USER_BY_TOKEN)
   }
 
   if (!userByToken) {
@@ -100,7 +105,7 @@ const handler = async (req, res) => {
   let user
 
   try {
-    user = findUserByLoginAndPassword(userByToken.login, current_password)
+    user = await findUserByLoginAndPassword(userByToken.login, current_password)
   } catch (err) {
     console.error({ err })
 
@@ -118,7 +123,7 @@ const handler = async (req, res) => {
   }
 
   try {
-    user = updateUserPasswordAndToken(user.id, new_password)
+    user = await updateUserPasswordAndToken(user.id, new_password)
   } catch (err) {
     console.error({ err })
 
@@ -131,13 +136,7 @@ const handler = async (req, res) => {
     return responseJSON(res, 500, UNABLE_TO_UPDATE_USER_PASSWORD_AND_TOKEN)
   }
 
-  return responseJSON(res, 200, {
-    token: user.token,
-    user: {
-      id: user.id,
-      login: user.login,
-    },
-  })
+  return responseJSON(res, 200, buildUserResponse(user))
 }
 
 export default withSentry(handler)

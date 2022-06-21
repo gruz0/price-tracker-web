@@ -1,3 +1,5 @@
+import { validate } from 'uuid'
+
 export const isEmptyString = (string) => {
   return (
     typeof string === 'undefined' ||
@@ -8,4 +10,8 @@ export const isEmptyString = (string) => {
 
 export const isNotDefined = (value) => {
   return typeof value === 'undefined' || value === null
+}
+
+export const isValidUUID = (value) => {
+  return validate(value)
 }

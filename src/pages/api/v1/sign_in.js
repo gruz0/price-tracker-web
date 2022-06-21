@@ -15,7 +15,7 @@ import {
   INVALID_CREDENTIALS,
   UNABLE_TO_UPDATE_USER_TOKEN,
 } from '../../../lib/messages'
-import { responseJSON } from '../../../lib/helpers'
+import { buildUserResponse, responseJSON } from '../../../lib/helpers'
 
 const handler = async (req, res) => {
   if (req.method !== 'POST') {
@@ -34,13 +34,15 @@ const handler = async (req, res) => {
 
   let user
 
+  const cleanLogin = login.toString().toLowerCase().trim()
+
   try {
-    user = findUserByLoginAndPassword(login, password)
+    user = await findUserByLoginAndPassword(cleanLogin, password)
   } catch (err) {
     console.error({ err })
 
     Sentry.withScope(function (scope) {
-      scope.setContext('args', { login })
+      scope.setContext('args', { cleanLogin })
       scope.setTag('section', 'findUserByLoginAndPassword')
       Sentry.captureException(err)
     })
@@ -53,7 +55,7 @@ const handler = async (req, res) => {
   }
 
   try {
-    user = updateUserToken(user.id)
+    user = await updateUserToken(user.id)
   } catch (err) {
     console.error({ err })
 
@@ -66,14 +68,7 @@ const handler = async (req, res) => {
     return responseJSON(res, 500, UNABLE_TO_UPDATE_USER_TOKEN)
   }
 
-  return responseJSON(res, 200, {
-    token: user.token,
-    user: {
-      id: user.id,
-      login: user.login,
-      telegram_account: user.telegram_account,
-    },
-  })
+  return responseJSON(res, 200, buildUserResponse(user))
 }
 
 export default withSentry(handler)

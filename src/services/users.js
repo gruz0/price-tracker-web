@@ -1,241 +1,166 @@
-const fs = require('fs-extra')
+import prisma from '../lib/prisma'
 
-import {
-  getProduct,
-  getProductHistory,
-  getProductDiscountPriceOrOriginalPrice,
-  removeUserProductSubscriptions,
-} from './products'
-import { usersPath } from './const'
+import { getProductHistory } from './products'
 
-export const getUserProductWithActualStateAndHistory = (
-  product,
-  userProduct
+export const getUserProductWithActualStateAndHistory = async (
+  userId,
+  productId
 ) => {
-  const productHistory = getProductHistory(product.id)
+  const productHistory = await getProductHistory(productId)
 
-  if (productHistory.length === 0) {
-    throw new Error(`Товар с ID ${userProduct.id} не содержит истории цен`)
-  }
-
-  const productActualState = buildProductActualState(
-    product,
-    userProduct,
-    productHistory
-  )
+  const productActualState = await prisma.$queryRaw`select p.id as id
+      , p.shop
+      , p.url
+      , p.title
+      , p.image
+      , last_product_history.price as last_price
+      , last_product_history.in_stock
+      , last_product_history.created_at as price_updated_at
+      , products_history.min_price as lowest_price_ever
+      , products_history.max_price as highest_price_ever
+      , p.created_at as product_created_at
+      , up.created_at as user_added_product_at
+      , up.favorited
+      , up.price as my_price
+      , (up.price - last_product_history.price) as my_benefit
+      , case when last_product_history.in_stock and up.price > last_product_history.price then true else false end as has_discount
+    from user_products up
+    join products p on p.id = up.product_id
+    left join (
+      select product_id,
+        min(min_price) as min_price,
+        max(max_price) as max_price
+      from (
+        select distinct(product_history.product_id) as product_id
+          , least(product_history.discount_price, product_history.original_price) as min_price
+          , greatest(product_history.discount_price, product_history.original_price) as max_price
+        from product_history
+        where status = 'ok'
+        group by product_id, min_price, max_price
+      ) products_history
+      group by product_id
+    ) products_history on products_history.product_id = up.product_id
+    left join (
+      select distinct on (product_id) product_id
+        , coalesce(discount_price, original_price) as price
+        , created_at
+        , in_stock
+      from product_history
+      where status = 'ok'
+      order by product_id, created_at desc
+    ) last_product_history on last_product_history.product_id = up.product_id
+    where up.user_id = ${userId} and up.product_id = ${productId}
+    order by price_updated_at DESC
+  `
 
   return {
-    product: productActualState,
+    product: productActualState[0],
     history: productHistory,
   }
 }
 
-export const getUserProductsWithActualState = (userId) => {
-  const userProducts = getUserProducts(userId)
+export const getUserProductsWithActualState = async (userId) => {
+  const userProducts = await prisma.$queryRaw`select p.id as id
+      , p.shop
+      , p.url
+      , p.title
+      , p.image
+      , last_product_history.price as last_price
+      , last_product_history.in_stock
+      , last_product_history.created_at as price_updated_at
+      , products_history.min_price as lowest_price_ever
+      , products_history.max_price as highest_price_ever
+      , p.created_at as product_created_at
+      , up.favorited
+      , up.price as my_price
+      , (up.price - last_product_history.price) as my_benefit
+      , case when last_product_history.in_stock and up.price > last_product_history.price then true else false end as has_discount
+    from user_products up
+    join products p on p.id = up.product_id
+    left join (
+      select product_id,
+        min(min_price) as min_price,
+        max(max_price) as max_price
+      from (
+        select distinct(product_history.product_id) as product_id
+          , least(product_history.discount_price, product_history.original_price) as min_price
+          , greatest(product_history.discount_price, product_history.original_price) as max_price
+        from product_history
+        group by product_id, min_price, max_price
+      ) products_history
+      group by product_id
+    ) products_history on products_history.product_id = up.product_id
+    join (
+      select distinct on (product_id) product_id
+        , coalesce(discount_price, original_price) as price
+        , created_at
+        , in_stock
+      from product_history
+      order by product_id, created_at desc
+    ) last_product_history on last_product_history.product_id = up.product_id
+    where up.user_id = ${userId}
+    order by price_updated_at DESC
+  `
 
-  if (userProducts.length === 0) {
-    return []
-  }
+  return userProducts
+}
 
-  const products = userProducts.map((userProduct) => {
-    const product = getProduct(userProduct.id)
-
-    if (!product) {
-      throw new Error(
-        `Не удалось найти товар с ID ${userProduct.id}, который привязан к пользователю`
-      )
-    }
-
-    const productHistory = getProductHistory(product.id)
-
-    if (productHistory.length === 0) {
-      throw new Error(`Товар с ID ${userProduct.id} не имеет истории цен`)
-    }
-
-    const productActualState = buildProductActualState(
-      product,
-      userProduct,
-      productHistory
-    )
-
-    return productActualState
+export const addProductToUser = async (userId, productId, productPrice) => {
+  return await prisma.userProduct.create({
+    data: {
+      user_id: userId,
+      product_id: productId,
+      price: productPrice,
+      favorited: false,
+    },
   })
-
-  return products.sort(
-    (a, b) => new Date(b.price_updated_at) - new Date(a.price_updated_at)
-  )
 }
 
-const buildProductActualState = (product, userProduct, productHistory) => {
-  const { id, shop, url, title, image } = product
-  const { price: myPrice, favorited, created_at } = userProduct
-
-  if (!myPrice) {
-    throw new Error(`У пользовательского товара ${product.id} нет цены`)
-  }
-
-  if (!created_at) {
-    throw new Error(
-      `У пользовательского товара ${product.id} нет даты создания`
-    )
-  }
-
-  let inStock = false
-  let priceUpdatedAt = product.created_at
-  let lastPrice = userProduct.price
-  let lowestProductPrice = 0
-  let highestProductPrice = 0
-
-  if (productHistory.length > 0) {
-    const lastProductHistory = productHistory[0]
-
-    inStock = lastProductHistory.in_stock
-    priceUpdatedAt = lastProductHistory.created_at
-    lastPrice = getProductDiscountPriceOrOriginalPrice(lastProductHistory)
-
-    lowestProductPrice = buildProductLowestPriceFromHistory(
-      product.id,
-      productHistory
-    )
-    highestProductPrice = buildProductHighestPriceFromHistory(
-      product.id,
-      productHistory
-    )
-  }
-
-  return {
-    id,
-    shop,
-    url,
-    title,
-    image,
-    last_price: lastPrice,
-    in_stock: inStock,
-    price_updated_at: priceUpdatedAt,
-    lowest_price_ever: lowestProductPrice,
-    highest_price_ever: highestProductPrice,
-    product_created_at: created_at,
-    favorited: favorited,
-    my_price: myPrice,
-    my_benefit: myPrice - lastPrice,
-    has_discount: inStock && myPrice > lastPrice,
-  }
-}
-
-const buildProductLowestPriceFromHistory = (productId, productHistory) => {
-  let lowestPrice = null
-
-  const pricesWithDiscount = [...productHistory]
-    .filter((product) => product.discount_price !== null)
-    .map((product) => product.discount_price)
-    .reverse()
-
-  if (pricesWithDiscount.length > 0) {
-    lowestPrice = Math.min.apply(Math, pricesWithDiscount)
-  }
-
-  if (lowestPrice !== null) {
-    return lowestPrice
-  }
-
-  const pricesWithoutDiscount = [...productHistory]
-    .filter((product) => product.original_price !== null)
-    .map((product) => product.original_price)
-    .reverse()
-
-  if (pricesWithoutDiscount.length > 0) {
-    return Math.min.apply(Math, pricesWithoutDiscount)
-  }
-
-  throw new Error(
-    `Не удалось получить наименьшую цену из истории для товара ${productId}`
-  )
-}
-
-const buildProductHighestPriceFromHistory = (productId, productHistory) => {
-  const pricesWithoutDiscount = [...productHistory]
-    .filter((product) => product.original_price !== null)
-    .map((product) => product.original_price)
-    .sort()
-
-  if (pricesWithoutDiscount.length > 0) {
-    return Math.max.apply(Math, pricesWithoutDiscount)
-  }
-
-  throw new Error(
-    `Не удалось получить наивысшую цену из истории для товара ${productId}`
-  )
-}
-
-const getUserProducts = (userId) => {
-  const userProductsPath = usersPath + '/' + userId + '/products.json'
-
-  const products = fs.readJsonSync(userProductsPath)
-
-  return products.products
-}
-
-export const addProductToUser = (userId, productId, productPrice) => {
-  let userProducts = getUserProducts(userId)
-
-  const hasProduct = userProducts.find((product) => product.id === productId)
-
-  if (hasProduct) {
-    return
-  }
-
-  userProducts.push({
-    id: productId,
-    price: productPrice,
-    created_at: new Date(),
-    favorited: false,
+export const getUserProduct = async (userId, productId) => {
+  const userProduct = await prisma.userProduct.findFirst({
+    where: {
+      product_id: productId,
+      user_id: userId,
+    },
+    include: {
+      product: {
+        select: {
+          title: true,
+        },
+      },
+    },
   })
-
-  const userProductsPath = usersPath + '/' + userId + '/products.json'
-
-  fs.writeJsonSync(userProductsPath, { products: userProducts }, { spaces: 2 })
-}
-
-export const getUserProduct = (userId, productId) => {
-  const userProducts = getUserProducts(userId)
-
-  const userProduct = userProducts.find(
-    (userProduct) => userProduct.id === productId
-  )
 
   if (!userProduct) {
     return null
   }
 
-  const product = getProduct(productId)
-
   return {
-    ...userProduct,
-    title: product.title,
+    id: userProduct.product_id,
+    price: userProduct.price,
+    created_at: userProduct.created_at,
+    favorited: userProduct.favorited,
+    title: userProduct.product.title,
   }
 }
 
-export const removeProductWithSubscriptionsFromUser = (userId, productId) => {
-  let userProduct
+export const removeProductWithSubscriptionsFromUser = async (
+  userId,
+  productId
+) => {
+  await prisma.$transaction([
+    prisma.userProductSubscription.deleteMany({
+      where: {
+        user_id: userId,
+        product_id: productId,
+      },
+    }),
 
-  let userProducts = getUserProducts(userId)
-
-  for (let idx = 0; idx < userProducts.length; idx++) {
-    if (userProducts[idx].id === productId) {
-      userProduct = userProducts.splice(idx, 1)
-    }
-  }
-
-  if (!userProduct) {
-    throw new Error(
-      `Не удалось найти товар ${productId} у пользователя ${userId}`
-    )
-  }
-
-  // В идеале это надо в транзакции запускать в базе данных, чтобы не потерять какие-то данные в случае ошибок
-  removeUserProductSubscriptions(userId, productId)
-
-  const userProductsPath = usersPath + '/' + userId + '/products.json'
-
-  fs.writeJsonSync(userProductsPath, { products: userProducts }, { spaces: 2 })
+    prisma.userProduct.deleteMany({
+      where: {
+        user_id: userId,
+        product_id: productId,
+      },
+    }),
+  ])
 }

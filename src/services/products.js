@@ -1,237 +1,185 @@
-const fs = require('fs-extra')
-const uuid = require('uuid')
+import prisma from '../lib/prisma'
 
-import { productsPath, productsQueuePath } from './const'
-
-export const getProduct = (id) => {
-  const productPath = productsPath + '/' + id + '.json'
-
-  return fs.readJsonSync(productPath)
+const findProductBy = async (condition) => {
+  return await prisma.product.findUnique({
+    where: condition,
+  })
 }
 
-export const getProductHistory = (productId) => {
-  const productHistoryPath = productsPath + '/' + productId + '-history.json'
+export const findProductById = async (id) => {
+  return await findProductBy({ id: id })
+}
 
-  let productHistory = []
+export const findProductByURLHash = async (urlHash) => {
+  return await findProductBy({ url_hash: urlHash })
+}
 
-  try {
-    productHistory = fs.readJsonSync(productHistoryPath)
-  } catch (err) {
-    return []
+export const getProductHistory = async (productId) => {
+  return await prisma.productHistory.findMany({
+    where: { product_id: productId },
+    orderBy: { created_at: 'desc' },
+    select: {
+      created_at: true,
+      original_price: true,
+      discount_price: true,
+      in_stock: true,
+      status: true,
+    },
+  })
+}
+
+export const getLastProductHistory = async (productId) => {
+  return await prisma.productHistory.findFirst({
+    where: { product_id: productId },
+    orderBy: { created_at: 'desc' },
+    take: 1,
+  })
+}
+
+export const getProductSubscriptions = async (productId) => {
+  return await prisma.userProductSubscription.findMany({
+    where: {
+      product_id: productId,
+    },
+  })
+}
+
+export const getTelegramAccountsSubscribedToProductChangeStatusToInStock =
+  async (productId) => {
+    return await prisma.$queryRaw`
+      select distinct(u.telegram_account) as telegram_account
+      from users u
+      join user_product_subscriptions ups on ups.user_id = u.id
+      join (
+        select distinct on (product_id) product_id, in_stock
+        from product_history
+        order by product_id, created_at desc
+      ) ph on ph.product_id = ups.product_id
+      where u.telegram_account is not null
+        and u.telegram_account <> ''
+        and ups.subscription_type = 'on_change_status_to_in_stock'
+        and ph.in_stock = false
+        and ups.product_id = ${productId}
+    `
   }
 
-  const history = productHistory.sort(
-    (a, b) => new Date(b.created_at) - new Date(a.created_at)
-  )
-
-  return history
+export const getUserProductSubscriptions = async (userId, productId) => {
+  return await prisma.userProductSubscription.findMany({
+    where: {
+      product_id: productId,
+      user_id: userId,
+    },
+    select: {
+      id: true,
+      subscription_type: true,
+      payload: true,
+    },
+  })
 }
 
-export const getProductSubscriptions = (productId) => {
-  const productSubscriptionsPath =
-    productsPath + '/' + productId + '-subscriptions.json'
-
-  let productSubscriptions = []
-
-  try {
-    productSubscriptions = fs.readJsonSync(productSubscriptionsPath)
-  } catch (err) {
-    return []
-  }
-
-  return productSubscriptions
-}
-
-export const getUserProductSubscriptions = (userId, productId) => {
-  const productSubscriptions = getProductSubscriptions(productId)
-
-  return productSubscriptions.filter(
-    (subscription) => subscription.user_id === userId
-  )
-}
-
-export const getUserProductSubscription = (
+export const getUserProductSubscription = async (
   userId,
   productId,
   subscriptionId
 ) => {
-  const userProductSubscriptions = getUserProductSubscriptions(
-    userId,
-    productId
-  )
-
-  return userProductSubscriptions.find(
-    (userProductSubscription) => userProductSubscription.id === subscriptionId
-  )
+  return await prisma.userProductSubscription.findFirst({
+    where: {
+      id: subscriptionId,
+      product_id: productId,
+      user_id: userId,
+    },
+  })
 }
 
-export const getUserProductSubscriptionByType = (
+export const getUserProductSubscriptionByType = async (
   userId,
   productId,
   subscriptionType
 ) => {
-  const userProductSubscriptions = getUserProductSubscriptions(
-    userId,
-    productId
-  )
-
-  return userProductSubscriptions.find(
-    (subscription) => subscription.subscription_type === subscriptionType
-  )
+  return await prisma.userProductSubscription.findFirst({
+    where: {
+      product_id: productId,
+      user_id: userId,
+      subscription_type: subscriptionType,
+    },
+  })
 }
 
-export const removeUserProductSubscription = (
+export const removeUserProductSubscription = async (
   userId,
   productId,
   subscriptionId
 ) => {
-  let userProductSubscription
-
-  let productSubscriptions = getProductSubscriptions(productId)
-
-  for (let idx = 0; idx < productSubscriptions.length; idx++) {
-    if (
-      productSubscriptions[idx].user_id === userId &&
-      productSubscriptions[idx].id === subscriptionId
-    ) {
-      userProductSubscription = productSubscriptions.splice(idx, 1)
-    }
-  }
-
-  if (!userProductSubscription) {
-    throw new Error(
-      `Не удалось найти подписку ${subscriptionId} у товара ${productId} для пользователя ${userId}`
-    )
-  }
-
-  const productSubscriptionsPath =
-    productsPath + '/' + productId + '-subscriptions.json'
-
-  fs.writeJsonSync(productSubscriptionsPath, productSubscriptions, {
-    spaces: 2,
-  })
-
-  return userProductSubscription
-}
-
-export const removeUserProductSubscriptions = (userId, productId) => {
-  let productSubscriptions = getProductSubscriptions(productId)
-
-  if (productSubscriptions.length === 0) {
-    return
-  }
-
-  for (let idx = 0; idx < productSubscriptions.length; idx++) {
-    if (productSubscriptions[idx].user_id === userId) {
-      productSubscriptions.splice(idx, 1)
-    }
-  }
-
-  const productSubscriptionsPath =
-    productsPath + '/' + productId + '-subscriptions.json'
-
-  fs.writeJsonSync(productSubscriptionsPath, productSubscriptions, {
-    spaces: 2,
+  return await prisma.userProductSubscription.deleteMany({
+    where: {
+      id: subscriptionId,
+      user_id: userId,
+      product_id: productId,
+    },
   })
 }
 
-export const addProductSubscription = (
+export const removeUserProductSubscriptions = async (userId, productId) => {
+  return await prisma.userProductSubscription.deleteMany({
+    where: {
+      user_id: userId,
+      product_id: productId,
+    },
+  })
+}
+
+export const addProductSubscription = async (
   productId,
   userId,
   subscriptionType,
   payload = {}
 ) => {
-  let productSubscriptions = getProductSubscriptions(productId)
-
-  const userSubscription = {
-    id: uuid.v4(),
-    product_id: productId,
-    user_id: userId,
-    subscription_type: subscriptionType,
-    payload: payload,
-    created_at: new Date(),
-  }
-
-  productSubscriptions.push(userSubscription)
-
-  const productSubscriptionsPath =
-    productsPath + '/' + productId + '-subscriptions.json'
-
-  fs.writeJsonSync(productSubscriptionsPath, productSubscriptions, {
-    spaces: 2,
+  return prisma.userProductSubscription.create({
+    data: {
+      product_id: productId,
+      user_id: userId,
+      subscription_type: subscriptionType,
+      payload: payload,
+    },
   })
-
-  return userSubscription
 }
 
-export const getSuccessProductHistory = (productHistory) => {
-  return productHistory.filter((history) => history.status === 'ok')
-}
-
-export const getProductLatestValidPriceFromHistory = (productId) => {
-  const productHistory = getProductHistory(productId)
+export const getProductLatestValidPriceFromHistory = async (productId) => {
+  const productHistory = await prisma.productHistory.findMany({
+    where: {
+      product_id: productId,
+      status: 'ok',
+    },
+    orderBy: { created_at: 'desc' },
+    take: 1,
+  })
 
   if (productHistory.length === 0) {
-    throw new Error(`Товар с ID ${productId} не содержит истории цен`)
+    return
   }
 
-  const successProductHistory = getSuccessProductHistory(productHistory)
+  const lastProductHistory = productHistory[0]
 
-  if (successProductHistory.length === 0) {
-    console.error({ productHistory })
-
-    throw new Error(
-      `Товар с ID ${productId} не содержит записей в истории с успешным статусом парсинга`
-    )
-  }
-
-  return getProductDiscountPriceOrOriginalPrice(successProductHistory[0])
+  return lastProductHistory.discount_price || lastProductHistory.original_price
 }
 
-export const getProductDiscountPriceOrOriginalPrice = (productHistoryItem) => {
-  return productHistoryItem.discount_price || productHistoryItem.original_price
-}
-
-export const findProductByURLHash = (urlHash) => {
-  const products = getProducts()
-
-  if (products.length === 0) {
-    return null
-  }
-
-  return products.find((product) => product.url_hash === urlHash)
-}
-
-const getProducts = () => {
-  let products = []
-
-  const files = fs.readdirSync(productsPath)
-
-  files.forEach((file) => {
-    if (
-      file.endsWith('.json') &&
-      !file.includes('-history') &&
-      !file.includes('-subscriptions')
-    ) {
-      products.push(fs.readJsonSync(productsPath + '/' + file))
-    }
+export const addNewProductToQueue = async ({ url_hash, url, requested_by }) => {
+  const productQueue = await prisma.productQueue.findFirst({
+    where: {
+      url_hash: url_hash,
+      requested_by_id: requested_by,
+    },
   })
 
-  return products
-}
+  if (productQueue) {
+    return productQueue
+  }
 
-export const addNewProductToQueue = ({ url_hash, url, requested_by }) => {
-  const productQueuePath = productsQueuePath + '/' + url_hash + '.json'
-
-  fs.writeJsonSync(
-    productQueuePath,
-    { url_hash, url, requested_by },
-    { spaces: 2 }
-  )
-}
-
-export const isProductExists = (id) => {
-  const productPath = productsPath + '/' + id + '.json'
-
-  return fs.pathExistsSync(productPath)
+  return await prisma.productQueue.create({
+    data: {
+      url_hash: url_hash,
+      url: url,
+      requested_by_id: requested_by,
+    },
+  })
 }

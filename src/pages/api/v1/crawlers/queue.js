@@ -1,18 +1,19 @@
 import { withSentry } from '@sentry/nextjs'
 import * as Sentry from '@sentry/nextjs'
 
-import { isEmptyString } from '../../../../lib/validators'
+import { isEmptyString, isValidUUID } from '../../../../lib/validators'
 import {
   METHOD_NOT_ALLOWED,
   CRAWLER_DOES_NOT_EXIST,
   MISSING_AUTHORIZATION_HEADER,
   MISSING_BEARER_KEY,
   MISSING_TOKEN,
-  UNABLE_TO_GET_CRAWLER_BY_TOKEN,
+  INVALID_TOKEN_UUID,
+  UNABLE_TO_FIND_CRAWLER_BY_TOKEN,
   UNABLE_TO_GET_NEW_PRODUCTS_REQUESTS,
 } from '../../../../lib/messages'
 import {
-  getCrawlerByToken,
+  findCrawlerByToken,
   getNewProductsQueue,
 } from '../../../../services/crawlers'
 import { responseJSON } from '../../../../lib/helpers'
@@ -38,20 +39,24 @@ const handler = async (req, res) => {
     return responseJSON(res, 401, MISSING_TOKEN)
   }
 
+  if (!isValidUUID(token)) {
+    return responseJSON(res, 400, INVALID_TOKEN_UUID)
+  }
+
   let crawler
 
   try {
-    crawler = getCrawlerByToken(token)
+    crawler = await findCrawlerByToken(token)
   } catch (err) {
     console.error({ err })
 
     Sentry.withScope(function (scope) {
       scope.setContext('args', { token })
-      scope.setTag('section', 'getCrawlerByToken')
+      scope.setTag('section', 'findCrawlerByToken')
       Sentry.captureException(err)
     })
 
-    return responseJSON(res, 500, UNABLE_TO_GET_CRAWLER_BY_TOKEN)
+    return responseJSON(res, 500, UNABLE_TO_FIND_CRAWLER_BY_TOKEN)
   }
 
   if (!crawler) {
@@ -63,7 +68,7 @@ const handler = async (req, res) => {
   let products
 
   try {
-    products = getNewProductsQueue()
+    products = await getNewProductsQueue(crawlerId)
   } catch (err) {
     console.error({ err })
 

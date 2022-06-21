@@ -1,13 +1,22 @@
+# misc
+.DS_Store
+*.pem
+
 .next
+/coverage
 /out/
 Dockerfile
 .dockerignore
+
+# PostgreSQL data
+/.data
+
 /data
+/__tests__
 *.env*
 node_modules
 npm-debug.log
 README.md
-.next
 .git
 .github
 TODO

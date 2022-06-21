@@ -4,6 +4,7 @@ export const fetcher = async (url) => {
   const payload = {
     method: 'GET',
     headers,
+    mode: 'cors',
   }
 
   const res = await fetch(url, payload)
@@ -30,6 +31,7 @@ export const fetchWithToken = async (url, token) => {
   const payload = {
     method: 'GET',
     headers,
+    mode: 'cors',
   }
 
   const res = await fetch(url, payload)
@@ -57,6 +59,7 @@ export const postWithToken = async (url, token, body = {}) => {
     method: 'POST',
     headers,
     body: JSON.stringify(body),
+    mode: 'cors',
   }
 
   const res = await fetch(url, payload)
@@ -83,6 +86,7 @@ export const deleteWithToken = async (url, token) => {
   const payload = {
     method: 'DELETE',
     headers,
+    mode: 'cors',
   }
 
   const res = await fetch(url, payload)

@@ -3,6 +3,26 @@ export const UNHANDLED_ERROR = {
   message: 'Неизвестная ошибка. Отчёт отправлен разработчику.',
 }
 
+export const INVALID_TOKEN_UUID = {
+  status: 'invalid_token_uuid',
+  message: 'Токен должен быть UUID',
+}
+
+export const INVALID_PRODUCT_UUID = {
+  status: 'invalid_product_uuid',
+  message: 'ID товара должен быть UUID',
+}
+
+export const INVALID_USER_UUID = {
+  status: 'invalid_user_uuid',
+  message: 'ID пользователя должен быть UUID',
+}
+
+export const INVALID_SUBSCRIPTION_UUID = {
+  status: 'invalid_subscription_uuid',
+  message: 'ID подписки на товар должен быть UUID',
+}
+
 export const MISSING_AUTHORIZATION_HEADER = {
   status: 'missing_authorization_header',
   message: 'Требуется авторизация для доступа к разделу',
@@ -84,6 +104,11 @@ export const MISSING_SUBSCRIPTION_TYPE = {
   message: 'Не заполнено поле subscription_type',
 }
 
+export const MISSING_SUBSCRIPTION_ID = {
+  status: 'missing_subscription_id',
+  message: 'Отсутствует subscription_id в запросе',
+}
+
 export const SUBSCRIPTION_TYPE_IS_NOT_VALID = {
   status: 'subscription_type_is_not_valid',
   message: 'Неправильное значение для subscription_type',
@@ -122,6 +147,37 @@ export const MISSING_URL = {
 export const MISSING_STATUS = {
   status: 'missing_status',
   message: 'Отсутствует status в запросе',
+}
+
+export const MISSING_TITLE = {
+  status: 'missing_title',
+  message: 'Отсутствует title в запросе',
+}
+
+export const INVALID_PRODUCT_STATUS = {
+  status: 'invalid_product_status',
+  message: 'Неправильный статус товара',
+}
+
+export const MISSING_PRICES = {
+  status: 'missing_prices',
+  message: 'Одна из цен должна быть заполнена',
+}
+
+export const UNABLE_TO_GET_PRODUCT_PRICES = {
+  status: 'UNABLE_TO_GET_PRODUCT_PRICES',
+  message:
+    'Не удалось получить ни одну из цен для привязки товара к пользователю',
+}
+
+export const ORIGINAL_PRICE_MUST_BE_POSITIVE = {
+  status: 'original_price_must_be_positive',
+  message: 'Оригинальная цена должна быть больше нуля',
+}
+
+export const DISCOUNT_PRICE_MUST_BE_POSITIVE = {
+  status: 'discount_price_must_be_positive',
+  message: 'Цена со скидкой должна быть больше нуля',
 }
 
 export const INVALID_CREDENTIALS = {
@@ -220,11 +276,6 @@ export const UNABLE_TO_ADD_USER_SUBSCRIPTION_TO_PRODUCT = {
   message: 'Не удалось добавить подписку пользователя на событие товара',
 }
 
-export const USER_ALREADY_HAS_TELEGRAM_ACCOUNT = {
-  status: 'user_already_has_telegram_account',
-  message: 'Пользователь уже имеет привязанный аккаунт Telegram',
-}
-
 export const USER_WITH_TELEGRAM_ACCOUNT_ALREADY_EXISTS = {
   status: 'user_with_telegram_account_already_exists',
   message: 'Пользователь с таким аккаунтом Telegram уже существует',
@@ -235,9 +286,9 @@ export const PRODUCT_DOES_NOT_EXIST = {
   message: 'Товар не существует',
 }
 
-export const UNABLE_TO_GET_BOT_BY_TOKEN = {
-  status: 'unable_to_get_bot_by_token',
-  message: 'Не удалось получить бота по токену',
+export const UNABLE_TO_FIND_BOT_BY_TOKEN = {
+  status: 'unable_to_find_bot_by_token',
+  message: 'Не удалось найти бота по токену',
 }
 
 export const BOT_DOES_NOT_EXIST = {
@@ -245,9 +296,9 @@ export const BOT_DOES_NOT_EXIST = {
   message: 'Бот не существует',
 }
 
-export const UNABLE_TO_GET_CRAWLER_BY_TOKEN = {
+export const UNABLE_TO_FIND_CRAWLER_BY_TOKEN = {
   status: 'unable_to_get_crawler_by_token',
-  message: 'Не удалось получить краулер по токену',
+  message: 'Не удалось найти краулер по токену',
 }
 
 export const CRAWLER_DOES_NOT_EXIST = {
@@ -286,8 +337,18 @@ export const PRODUCT_ADDED_TO_QUEUE = {
     'Товара ещё нет в системе, мы добавили его в очередь на обработку. Спасибо!',
 }
 
-export const UNABLE_TO_GET_USER_BY_TOKEN = {
-  status: 'unable_to_get_user_by_token',
+export const UNABLE_TO_FIND_PRODUCT_QUEUE_BY_URL_HASH = {
+  status: 'unable_to_find_product_queue_by_url_hash',
+  message: 'Не удалось найти товар в очереди по url_hash',
+}
+
+export const PRODUCT_QUEUE_DOES_NOT_EXIST = {
+  status: 'PRODUCT_QUEUE_DOES_NOT_EXIST',
+  message: 'Товар в очереди не существует',
+}
+
+export const UNABLE_TO_FIND_USER_BY_TOKEN = {
+  status: 'unable_to_find_user_by_token',
   message: 'Не удалось найти пользователя по токену',
 }
 
@@ -355,6 +416,11 @@ export const UNABLE_TO_FIND_USER_BY_TELEGRAM_ACCOUNT = {
   message: 'Не удалось найти пользователя по аккаунту Telegram',
 }
 
+export const UNABLE_TO_FIND_USER_BY_LOGIN = {
+  status: 'unable_to_find_user_by_login',
+  message: 'Не удалось найти пользователя по логину',
+}
+
 export const UNABLE_TO_FIND_PRODUCT_BY_URL_HASH = {
   status: 'unable_to_find_product_by_url_hash',
   message: 'Не удалось выполнить поиск товара по ссылке',
@@ -408,8 +474,8 @@ export const UNABLE_TO_GET_NEW_PRODUCTS_REQUESTS = {
   message: 'Не удалось получить список новых товаров',
 }
 
-export const UNABLE_TO_GET_PRODUCT_BY_ID = {
-  status: 'unable_to_get_product_by_id',
+export const UNABLE_TO_FIND_PRODUCT_BY_ID = {
+  status: 'unable_to_find_product_by_id',
   message: 'Не удалось найти товар по ID',
 }
 
@@ -421,6 +487,10 @@ export const UNABLE_TO_ADD_EXISTING_PRODUCT_TO_USER = {
 export const UNABLE_TO_GET_PRODUCT_HISTORY = {
   status: 'unable_to_get_product_history',
   message: 'Не удалось получить историю товара',
+}
+export const UNABLE_TO_GET_LAST_PRODUCT_HISTORY = {
+  status: 'unable_to_get_last_product_history',
+  message: 'Не удалось получить последнюю запись истории товара',
 }
 
 export const UNABLE_TO_ADD_PRODUCT_HISTORY = {

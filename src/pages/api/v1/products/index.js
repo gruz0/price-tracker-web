@@ -15,9 +15,10 @@ import {
   addNewProductToQueue,
   getProductLatestValidPriceFromHistory,
 } from '../../../../services/products'
-import { getUserByToken } from '../../../../services/auth'
+import { findUserByToken } from '../../../../services/auth'
 import {
   addProductToUser,
+  getUserProduct,
   getUserProductsWithActualState,
 } from '../../../../services/users'
 
@@ -26,9 +27,11 @@ import {
   MISSING_AUTHORIZATION_HEADER,
   MISSING_BEARER_KEY,
   MISSING_TOKEN,
+  INVALID_TOKEN_UUID,
   FORBIDDEN,
   REDIRECT_TO_PRODUCT_PAGE,
-  UNABLE_TO_GET_USER_BY_TOKEN,
+  UNABLE_TO_FIND_USER_BY_TOKEN,
+  UNABLE_TO_GET_USER_PRODUCT,
   UNABLE_TO_GET_USER_PRODUCTS_WITH_PRICES,
   INVALID_URL,
   UNABLE_TO_CLEAN_URL,
@@ -42,7 +45,7 @@ import {
   SHOP_IS_NOT_SUPPORTED_YET,
   MISSING_URL,
 } from '../../../../lib/messages'
-import { isEmptyString } from '../../../../lib/validators'
+import { isEmptyString, isValidUUID } from '../../../../lib/validators'
 
 const handler = async (req, res) => {
   if (!['POST', 'GET'].includes(req.method)) {
@@ -65,20 +68,24 @@ const handler = async (req, res) => {
     return responseJSON(res, 401, MISSING_TOKEN)
   }
 
+  if (!isValidUUID(token)) {
+    return responseJSON(res, 400, INVALID_TOKEN_UUID)
+  }
+
   let user
 
   try {
-    user = getUserByToken(token)
+    user = await findUserByToken(token)
   } catch (err) {
     console.error({ err })
 
     Sentry.withScope(function (scope) {
       scope.setContext('args', { token })
-      scope.setTag('section', 'getUserByToken')
+      scope.setTag('section', 'findUserByToken')
       Sentry.captureException(err)
     })
 
-    return responseJSON(res, 500, UNABLE_TO_GET_USER_BY_TOKEN)
+    return responseJSON(res, 500, UNABLE_TO_FIND_USER_BY_TOKEN)
   }
 
   if (!user) {
@@ -89,11 +96,12 @@ const handler = async (req, res) => {
     let products
 
     try {
-      products = getUserProductsWithActualState(user.id)
+      products = await getUserProductsWithActualState(user.id)
     } catch (err) {
       console.error({ err })
 
       Sentry.withScope(function (scope) {
+        scope.setContext('args', { user })
         scope.setTag('section', 'getUserProductsWithActualState')
         scope.setUser({ user })
         Sentry.captureException(err)
@@ -113,7 +121,11 @@ const handler = async (req, res) => {
 
   const detectedURLs = detectURL(url)
 
-  if (!detectedURLs || detectedURLs.length === 0) {
+  if (
+    !detectedURLs ||
+    detectedURLs.length === 0 ||
+    !isValidUrl(detectedURLs[0])
+  ) {
     Sentry.withScope(function (scope) {
       scope.setContext('args', { url, detectedURLs })
       scope.setTag('section', 'detectURL')
@@ -130,19 +142,18 @@ const handler = async (req, res) => {
 
   const detectedURL = detectedURLs[0]
 
-  if (!isValidUrl(detectedURL)) {
+  if (!isShopSupported(detectedURL)) {
     Sentry.withScope(function (scope) {
       scope.setContext('args', { detectedURL })
-      scope.setTag('section', 'isValidUrl')
       scope.setUser({ user })
       Sentry.captureException(
         new Error(
-          `Пользователь отправил некорректный URL через форму добавления товара: ${url}`
+          `Пользователь отправил ссылку на неподдерживаемый магазин через форму добавления товара: ${url}`
         )
       )
     })
 
-    return responseJSON(res, 422, INVALID_URL)
+    return responseJSON(res, 400, SHOP_IS_NOT_SUPPORTED_YET)
   }
 
   let cleanURL
@@ -160,20 +171,6 @@ const handler = async (req, res) => {
     })
 
     return responseJSON(res, 500, UNABLE_TO_CLEAN_URL)
-  }
-
-  if (!isShopSupported(cleanURL)) {
-    Sentry.withScope(function (scope) {
-      scope.setContext('args', { cleanURL })
-      scope.setUser({ user })
-      Sentry.captureException(
-        new Error(
-          `Пользователь отправил ссылку на неподдерживаемый магазин через форму добавления товара: ${url}`
-        )
-      )
-    })
-
-    return responseJSON(res, 400, SHOP_IS_NOT_SUPPORTED_YET)
   }
 
   let urlHash
@@ -196,7 +193,7 @@ const handler = async (req, res) => {
   let product
 
   try {
-    product = findProductByURLHash(urlHash)
+    product = await findProductByURLHash(urlHash)
   } catch (err) {
     console.error({ err })
 
@@ -218,7 +215,7 @@ const handler = async (req, res) => {
     }
 
     try {
-      addNewProductToQueue(newProductArgs)
+      await addNewProductToQueue(newProductArgs)
     } catch (err) {
       console.error({ err })
 
@@ -235,10 +232,34 @@ const handler = async (req, res) => {
     return responseJSON(res, 201, PRODUCT_ADDED_TO_QUEUE)
   }
 
+  let userProduct
+
+  try {
+    userProduct = await getUserProduct(user.id, product.id)
+  } catch (err) {
+    console.error({ err })
+
+    Sentry.withScope(function (scope) {
+      scope.setContext('args', { user, product })
+      scope.setTag('section', 'getUserProduct')
+      scope.setUser({ user })
+      Sentry.captureException(err)
+    })
+
+    return responseJSON(res, 500, UNABLE_TO_GET_USER_PRODUCT)
+  }
+
+  if (userProduct) {
+    return responseJSON(res, 200, {
+      ...REDIRECT_TO_PRODUCT_PAGE,
+      location: '/products/' + product.id,
+    })
+  }
+
   let productLatestPrice = null
 
   try {
-    productLatestPrice = getProductLatestValidPriceFromHistory(product.id)
+    productLatestPrice = await getProductLatestValidPriceFromHistory(product.id)
   } catch (err) {
     console.error({ err })
 
@@ -265,7 +286,7 @@ const handler = async (req, res) => {
   }
 
   try {
-    addProductToUser(user.id, product.id, productLatestPrice)
+    await addProductToUser(user.id, product.id, productLatestPrice)
   } catch (err) {
     console.error({ err })
 
@@ -279,7 +300,6 @@ const handler = async (req, res) => {
     return responseJSON(res, 500, UNABLE_TO_ADD_EXISTING_PRODUCT_TO_USER)
   }
 
-  // TODO: Возможно тут надо сделать редирект через 302 или 303
   return responseJSON(res, 201, {
     ...REDIRECT_TO_PRODUCT_PAGE,
     location: '/products/' + product.id,

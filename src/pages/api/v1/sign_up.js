@@ -1,7 +1,7 @@
 import { withSentry } from '@sentry/nextjs'
 import * as Sentry from '@sentry/nextjs'
 
-import { isUserExists, createUser } from '../../../services/auth'
+import { findUserByLogin, createUser } from '../../../services/auth'
 import { isEmptyString, isNotDefined } from '../../../lib/validators'
 
 import {
@@ -10,11 +10,11 @@ import {
   MISSING_LOGIN,
   MISSING_PASSWORD,
   PASSWORD_IS_TOO_SHORT,
-  UNABLE_TO_CHECK_USER_EXISTENCE,
+  UNABLE_TO_FIND_USER_BY_LOGIN,
   UNABLE_TO_CREATE_NEW_USER,
   USER_ALREADY_EXISTS,
 } from '../../../lib/messages'
-import { responseJSON } from '../../../lib/helpers'
+import { buildUserResponse, responseJSON } from '../../../lib/helpers'
 import { newUserRegistration } from '../../../services/telegram'
 
 const handler = async (req, res) => {
@@ -44,30 +44,28 @@ const handler = async (req, res) => {
     return responseJSON(res, 422, PASSWORD_IS_TOO_SHORT)
   }
 
-  let userExists
+  let user
 
   try {
-    userExists = isUserExists(cleanLogin)
+    user = await findUserByLogin(cleanLogin)
   } catch (err) {
     console.error({ err })
 
     Sentry.withScope(function (scope) {
       scope.setContext('args', { cleanLogin })
-      scope.setTag('section', 'isUserExists')
+      scope.setTag('section', 'findUserByLogin')
       Sentry.captureException(err)
     })
 
-    return responseJSON(res, 500, UNABLE_TO_CHECK_USER_EXISTENCE)
+    return responseJSON(res, 500, UNABLE_TO_FIND_USER_BY_LOGIN)
   }
 
-  if (userExists) {
+  if (user) {
     return responseJSON(res, 409, USER_ALREADY_EXISTS)
   }
 
-  let user
-
   try {
-    user = createUser(cleanLogin, password)
+    user = await createUser(cleanLogin, password)
   } catch (err) {
     console.error({ err })
 
@@ -92,13 +90,7 @@ const handler = async (req, res) => {
     })
   }
 
-  return responseJSON(res, 200, {
-    token: user.token,
-    user: {
-      id: user.id,
-      login: user.login,
-    },
-  })
+  return responseJSON(res, 201, buildUserResponse(user))
 }
 
 export default withSentry(handler)

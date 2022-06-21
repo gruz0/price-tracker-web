@@ -5,6 +5,8 @@ const statuses = {
   ok: 'Товар найден',
   not_found: 'Товар не существует',
   required_to_change_location: 'Товар не доставляется',
+  age_restriction: 'Товар 18+',
+  skip: 'Магазин заблокировал проверку',
 }
 
 export default function PriceTable({ history }) {
