@@ -1,5 +1,15 @@
 # README
 
+## How to deploy on production
+
+Make sure that you've changed `DATABASE_URL` and credentials in `.env`.
+
+1. `make docker-build`
+2. `make docker-start-database`
+3. `make docker-start-app`
+4. `make docker-db-migrate`
+5. `make docker-db-migrate-from-json`
+
 ## [Use HTTP Status Codes and Error Responses](https://github.com/peterboyer/restful-api-design-tips#use-http-status-codes-and-error-responses)
 
 Because we are using HTTP methods, we should use HTTP status codes.

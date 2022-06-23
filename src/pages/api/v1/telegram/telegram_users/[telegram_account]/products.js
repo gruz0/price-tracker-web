@@ -2,13 +2,14 @@ import { withSentry } from '@sentry/nextjs'
 import * as Sentry from '@sentry/nextjs'
 
 import { findUserByTelegramAccount } from '../../../../../../services/auth'
-import { isEmptyString } from '../../../../../../lib/validators'
+import { isEmptyString, isValidUUID } from '../../../../../../lib/validators'
 import {
   METHOD_NOT_ALLOWED,
   MISSING_AUTHORIZATION_HEADER,
   MISSING_BEARER_KEY,
   MISSING_TOKEN,
-  UNABLE_TO_GET_BOT_BY_TOKEN,
+  INVALID_TOKEN_UUID,
+  UNABLE_TO_FIND_BOT_BY_TOKEN,
   BOT_DOES_NOT_EXIST,
   MISSING_TELEGRAM_ACCOUNT,
   UNABLE_TO_FIND_USER_BY_TELEGRAM_ACCOUNT,
@@ -28,7 +29,7 @@ import {
   PRODUCT_ADDED_TO_USER,
   USER_DOES_NOT_EXIST,
 } from '../../../../../../lib/messages'
-import { getBotByToken } from '../../../../../../services/bots'
+import { findBotByToken } from '../../../../../../services/bots'
 import {
   buildCleanURL,
   calculateHash,
@@ -68,20 +69,24 @@ const handler = async (req, res) => {
     return responseJSON(res, 401, MISSING_TOKEN)
   }
 
+  if (!isValidUUID(token)) {
+    return responseJSON(res, 400, INVALID_TOKEN_UUID)
+  }
+
   let bot
 
   try {
-    bot = getBotByToken(token)
+    bot = await findBotByToken(token)
   } catch (err) {
     console.error({ err })
 
     Sentry.withScope(function (scope) {
       scope.setContext('args', { token })
-      scope.setTag('section', 'getBotByToken')
+      scope.setTag('section', 'findBotByToken')
       Sentry.captureException(err)
     })
 
-    return responseJSON(res, 500, UNABLE_TO_GET_BOT_BY_TOKEN)
+    return responseJSON(res, 500, UNABLE_TO_FIND_BOT_BY_TOKEN)
   }
 
   if (!bot) {
@@ -101,7 +106,7 @@ const handler = async (req, res) => {
   let user
 
   try {
-    user = findUserByTelegramAccount(clearTelegramAccount)
+    user = await findUserByTelegramAccount(clearTelegramAccount)
   } catch (err) {
     console.error({ err })
 
@@ -127,14 +132,18 @@ const handler = async (req, res) => {
 
   const detectedURLs = detectURL(url)
 
-  if (!detectedURLs || detectedURLs.length === 0) {
+  if (
+    !detectedURLs ||
+    detectedURLs.length === 0 ||
+    !isValidUrl(detectedURLs[0])
+  ) {
     Sentry.withScope(function (scope) {
       scope.setContext('args', { url, detectedURLs })
       scope.setTag('section', 'detectURL')
       scope.setTag('bot_id', botId)
       scope.setUser({ user })
       Sentry.captureException(
-        new Error(`Не удалось найти ссылки от пользователя у бота: ${url}`)
+        new Error(`Не удалось найти ссылки от пользователя через бота: ${url}`)
       )
     })
 
@@ -143,18 +152,19 @@ const handler = async (req, res) => {
 
   const detectedURL = detectedURLs[0]
 
-  if (!isValidUrl(detectedURL)) {
+  if (!isShopSupported(detectedURL)) {
     Sentry.withScope(function (scope) {
       scope.setContext('args', { detectedURL })
-      scope.setTag('section', 'isValidUrl')
       scope.setTag('bot_id', botId)
       scope.setUser({ user })
       Sentry.captureException(
-        new Error(`Пользователь отправил некорректный URL через бота: ${url}`)
+        new Error(
+          `Пользователь отправил ссылку на неподдерживаемый магазин через бота: ${url}`
+        )
       )
     })
 
-    return responseJSON(res, 422, INVALID_URL)
+    return responseJSON(res, 400, SHOP_IS_NOT_SUPPORTED_YET)
   }
 
   let cleanURL
@@ -173,21 +183,6 @@ const handler = async (req, res) => {
     })
 
     return responseJSON(res, 500, UNABLE_TO_CLEAN_URL)
-  }
-
-  if (!isShopSupported(cleanURL)) {
-    Sentry.withScope(function (scope) {
-      scope.setContext('args', { cleanURL })
-      scope.setTag('bot_id', botId)
-      scope.setUser({ user })
-      Sentry.captureException(
-        new Error(
-          `Пользователь отправил ссылку на неподдерживаемый магазин через бота: ${url}`
-        )
-      )
-    })
-
-    return responseJSON(res, 400, SHOP_IS_NOT_SUPPORTED_YET)
   }
 
   let urlHash
@@ -211,7 +206,7 @@ const handler = async (req, res) => {
   let product
 
   try {
-    product = findProductByURLHash(urlHash)
+    product = await findProductByURLHash(urlHash)
   } catch (err) {
     console.error({ err })
 
@@ -234,7 +229,7 @@ const handler = async (req, res) => {
     }
 
     try {
-      addNewProductToQueue(newProductArgs)
+      await addNewProductToQueue(newProductArgs)
     } catch (err) {
       console.error({ err })
 
@@ -252,10 +247,35 @@ const handler = async (req, res) => {
     return responseJSON(res, 201, PRODUCT_ADDED_TO_QUEUE)
   }
 
+  let userProduct
+
+  try {
+    userProduct = await getUserProduct(user.id, product.id)
+  } catch (err) {
+    console.error({ err })
+
+    Sentry.withScope(function (scope) {
+      scope.setContext('args', { user, product })
+      scope.setTag('section', 'getUserProduct')
+      scope.setTag('bot_id', botId)
+      scope.setUser({ user })
+      Sentry.captureException(err)
+    })
+
+    return responseJSON(res, 500, UNABLE_TO_GET_USER_PRODUCT)
+  }
+
+  if (userProduct) {
+    return responseJSON(res, 200, {
+      ...REDIRECT_TO_PRODUCT_PAGE,
+      location: '/products/' + product.id,
+    })
+  }
+
   let productLatestPrice = null
 
   try {
-    productLatestPrice = getProductLatestValidPriceFromHistory(product.id)
+    productLatestPrice = await getProductLatestValidPriceFromHistory(product.id)
   } catch (err) {
     console.error({ err })
 
@@ -282,33 +302,8 @@ const handler = async (req, res) => {
     )
   }
 
-  let userProduct
-
   try {
-    userProduct = getUserProduct(user.id, product.id)
-  } catch (err) {
-    console.error({ err })
-
-    Sentry.withScope(function (scope) {
-      scope.setContext('args', { user, product })
-      scope.setTag('section', 'getUserProduct')
-      scope.setTag('bot_id', botId)
-      scope.setUser({ user })
-      Sentry.captureException(err)
-    })
-
-    return responseJSON(res, 500, UNABLE_TO_GET_USER_PRODUCT)
-  }
-
-  if (userProduct) {
-    return responseJSON(res, 200, {
-      ...REDIRECT_TO_PRODUCT_PAGE,
-      location: '/products/' + product.id,
-    })
-  }
-
-  try {
-    addProductToUser(user.id, product.id, productLatestPrice)
+    await addProductToUser(user.id, product.id, productLatestPrice)
   } catch (err) {
     console.error({ err })
 

@@ -1,49 +1,102 @@
-const fs = require('fs-extra')
-const uuid = require('uuid')
-import crypto from 'crypto'
+import { Prisma } from '@prisma/client'
+import prisma from '../lib/prisma'
 
-import { usersPath } from './const'
+const uuid = require('uuid')
+
+import { encryptPassword } from '../lib/security'
 import { isEmptyString } from '../lib/validators'
 
-const encryptPassword = (userId, login, password) => {
-  return crypto
-    .createHash('sha256')
-    .update(`${userId}${login}${password}`)
-    .digest('hex')
-}
-
-const getUsers = () => {
-  let users = []
-  const files = fs.readdirSync(usersPath)
-
-  files.forEach((file) => {
-    if (file.endsWith('.json')) {
-      const { id, login, password, token, telegram_account } = fs.readJsonSync(
-        usersPath + '/' + file
-      )
-
-      users.push({ id, login, password, token, telegram_account })
-
-      return
-    }
+const findUserBy = async (condition) => {
+  return await prisma.user.findUnique({
+    where: condition,
   })
-
-  return users
 }
 
-export const getUsersById = (ids) => {
-  const users = getUsers()
+const _findUserByLogin = async (login) => {
+  if (isEmptyString(login)) {
+    throw new Error('Не заполнен login')
+  }
 
-  const matchedUsers = users.filter((user) => ids.includes(user.id))
-
-  return matchedUsers.map((user) => buildUser(user))
+  return await findUserBy({ login: login.toLowerCase().trim() })
 }
 
-export const getUserByToken = (token) => {
-  const users = getUsers()
+const updateUser = async (userId, attributes) => {
+  if (isEmptyString(userId)) {
+    throw new Error('ID пользователя пустой')
+  }
 
-  const user = users.find((u) => {
-    return u.token === token
+  const hasAttributes =
+    attributes &&
+    !(Object.keys(attributes).length === 0 && attributes.constructor === Object)
+
+  if (!hasAttributes) {
+    throw new Error('Атрибуты для обновления не заполнены')
+  }
+
+  return await prisma.user.update({
+    where: { id: userId },
+    data: attributes,
+  })
+}
+
+export const findUserById = async (id) => {
+  const user = await findUserBy({ id: id })
+
+  if (!user) {
+    return null
+  }
+
+  return buildUser(user)
+}
+
+export const findUserByToken = async (token) => {
+  if (isEmptyString(token)) {
+    throw new Error('Не заполнен token')
+  }
+
+  const user = await findUserBy({ token: token.toLowerCase().trim() })
+
+  if (!user) {
+    return null
+  }
+
+  return buildUser(user)
+}
+
+export const findUserByLogin = async (login) => {
+  const user = await _findUserByLogin(login)
+
+  if (!user) {
+    return null
+  }
+
+  return buildUser(user)
+}
+
+export const findUserByLoginAndPassword = async (login, password) => {
+  const user = await _findUserByLogin(login)
+
+  if (!user) {
+    return null
+  }
+
+  if (user.password !== encryptPassword(user.id, login, password)) {
+    return null
+  }
+
+  return buildUser(user)
+}
+
+export const findUserByTelegramAccount = async (telegramAccount) => {
+  if (isEmptyString(telegramAccount)) {
+    throw new Error(`Не заполнен telegramAccount`)
+  }
+
+  // NOTE: Здесь не используем findUnique, потому что telegram_account это nullable-поле без уникального ключа в базе
+  const user = await prisma.user.findFirst({
+    where: {
+      telegram_account: telegramAccount.toLowerCase().trim(),
+    },
   })
 
   if (!user) {
@@ -53,79 +106,7 @@ export const getUserByToken = (token) => {
   return buildUser(user)
 }
 
-export const findUserByLoginAndPassword = (login, password) => {
-  const users = getUsers()
-
-  const user = users.find((u) => {
-    return (
-      u.login.toLowerCase().trim() === login.toLowerCase().trim() &&
-      u.password === encryptPassword(u.id, u.login, password)
-    )
-  })
-
-  if (!user) {
-    return null
-  }
-
-  return buildUser(user)
-}
-
-export const isUserExists = (login) => {
-  const users = getUsers()
-
-  return users.find((u) => u.login.toLowerCase() === login.toLowerCase())
-}
-
-export const findUserByTelegramAccount = (telegram_account) => {
-  if (isEmptyString(telegram_account)) {
-    throw new Error(`Не заполнен telegram_account`)
-  }
-
-  const users = getUsers()
-
-  const usersWithTelegramAccounts = users.filter(
-    (u) => !isEmptyString(u.telegram_account)
-  )
-
-  if (usersWithTelegramAccounts.length === 0) {
-    return null
-  }
-
-  return usersWithTelegramAccounts.find(
-    (u) => u.telegram_account.toString().trim() === telegram_account.trim()
-  )
-}
-
-export const findUser = (id) => {
-  const users = getUsers()
-
-  const user = users.find((u) => {
-    return u.id === id
-  })
-
-  if (!user) {
-    return null
-  }
-
-  return buildUser(user)
-}
-
-// Используется только для того, чтобы получить хеш пароля.
-const findRawUser = (id) => {
-  const users = getUsers()
-
-  const user = users.find((u) => {
-    return u.id === id
-  })
-
-  if (!user) {
-    return null
-  }
-
-  return user
-}
-
-export const createUser = (login, password) => {
+export const createUser = async (login, password, telegramAccount) => {
   if (isEmptyString(login)) {
     throw new Error('Логин пустой')
   }
@@ -135,124 +116,90 @@ export const createUser = (login, password) => {
   }
 
   const userId = uuid.v4()
-  const userToken = uuid.v4()
-  const lowercasedLogin = login.toLowerCase().trim()
+  const cleanLogin = login.toLowerCase().trim()
 
-  const newUser = buildUser({
-    id: userId,
-    login: lowercasedLogin,
-    token: userToken,
-    created_at: new Date(),
-    updated_at: new Date(),
-  })
+  try {
+    const user = await prisma.user.create({
+      data: {
+        id: userId,
+        login: cleanLogin,
+        token: uuid.v4(),
+        password: encryptPassword(userId, cleanLogin, password),
+        telegram_account: isEmptyString(telegramAccount)
+          ? null
+          : telegramAccount.toString().toLowerCase().trim(),
+      },
+    })
 
-  const userPath = usersPath + '/' + userId + '.json'
-
-  fs.writeJsonSync(
-    userPath,
-    {
-      ...newUser,
-      password: encryptPassword(userId, lowercasedLogin, password),
-    },
-    { spaces: 2 }
-  )
-
-  const userDirectoryPath = usersPath + '/' + userId
-
-  fs.mkdirSync(userDirectoryPath)
-
-  fs.writeJsonSync(
-    userDirectoryPath + '/products.json',
-    {
-      products: [],
-    },
-    { spaces: 2 }
-  )
-
-  return buildUser(newUser)
+    return buildUser(user)
+  } catch (e) {
+    if (e instanceof Prisma.PrismaClientKnownRequestError) {
+      // The .code property can be accessed in a type-safe manner
+      if (e.code === 'P2002') {
+        throw new Error(`Пользователь с логином ${cleanLogin} уже существует`)
+      }
+    }
+    throw e
+  }
 }
 
-export const updateUserPasswordAndToken = (userId, newPassword) => {
+export const updateUserPasswordAndToken = async (userId, newPassword) => {
   if (isEmptyString(userId)) {
     throw new Error('ID пользователя пустой')
+  }
+
+  const user = await findUserById(userId)
+
+  if (!user) {
+    throw new Error('Пользователь по ID не найден')
   }
 
   if (isEmptyString(newPassword)) {
     throw new Error('Новый пароль пустой')
   }
 
-  const user = findUser(userId)
-
-  if (!user) {
-    throw new Error('Пользователь по ID не найден')
-  }
-
-  const userAttributes = {
-    ...user,
+  const updatedUser = await updateUser(userId, {
     token: uuid.v4(),
-    updated_at: new Date(),
-  }
+    password: encryptPassword(user.id, user.login, newPassword),
+  })
 
-  const userPath = usersPath + '/' + userId + '.json'
-
-  fs.writeJsonSync(
-    userPath,
-    {
-      ...userAttributes,
-      password: encryptPassword(userId, user.login, newPassword),
-    },
-    { spaces: 2 }
-  )
-
-  return buildUser(userAttributes)
+  return buildUser(updatedUser)
 }
 
-export const updateUserToken = (userId) => {
+export const updateUserToken = async (userId) => {
   if (isEmptyString(userId)) {
     throw new Error('ID пользователя пустой')
   }
 
-  const user = findRawUser(userId)
+  const user = await findUserById(userId)
 
   if (!user) {
     throw new Error('Пользователь по ID не найден')
   }
 
-  const userAttributes = {
-    ...user,
-    token: uuid.v4(),
-    updated_at: new Date(),
-  }
+  const updatedUser = await updateUser(userId, { token: uuid.v4() })
 
-  const userPath = usersPath + '/' + userId + '.json'
-
-  fs.writeJsonSync(userPath, userAttributes, { spaces: 2 })
-
-  return buildUser(userAttributes)
+  return buildUser(updatedUser)
 }
 
-export const updateUserTelegramAccount = (userId, telegramAccount) => {
+export const updateUserTelegramAccount = async (userId, telegramAccount) => {
   if (isEmptyString(userId)) {
     throw new Error('ID пользователя пустой')
   }
 
-  const user = findRawUser(userId)
+  const user = await findUserById(userId)
 
   if (!user) {
     throw new Error('Пользователь по ID не найден')
   }
 
-  const userAttributes = {
-    ...user,
-    telegram_account: telegramAccount,
-    updated_at: new Date(),
-  }
+  const updatedUser = await updateUser(userId, {
+    telegram_account: isEmptyString(telegramAccount)
+      ? null
+      : telegramAccount.toString().toLowerCase().trim(),
+  })
 
-  const userPath = usersPath + '/' + userId + '.json'
-
-  fs.writeJsonSync(userPath, userAttributes, { spaces: 2 })
-
-  return buildUser(userAttributes)
+  return buildUser(updatedUser)
 }
 
 const buildUser = ({

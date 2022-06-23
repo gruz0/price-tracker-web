@@ -1,5 +1,4 @@
-import { getProductHistory, getProductSubscriptions } from './products'
-import { getUsersById } from './auth'
+import { getTelegramAccountsSubscribedToProductChangeStatusToInStock } from './products'
 
 const telegram_bot_token = process.env.TELEGRAM_BOT_TOKEN
 const service_products_url = process.env.SERVICE_PRODUCTS_URL
@@ -9,48 +8,28 @@ const TelegramBot = require('node-telegram-bot-api')
 const bot = new TelegramBot(telegram_bot_token)
 
 // TODO: Добавить сюда проверки, что сообщение доставлено в Telegram
-export const sendMessageToTelegramThatProductIsInStock = ({
+export const sendMessageToTelegramThatProductIsInStock = async (
   product,
-  status,
-  price,
-  in_stock,
-}) => {
-  if (status !== 'ok') return
-  if (!price) return
-  if (!in_stock) return
+  price
+) => {
+  if (process.env.NODE_ENV === 'test') {
+    return
+  }
 
-  const productHistory = getProductHistory(product.id)
+  const telegramAccounts =
+    await getTelegramAccountsSubscribedToProductChangeStatusToInStock(
+      product.id
+    )
 
-  if (productHistory.length === 0) return
+  if (telegramAccounts.length === 0) {
+    return
+  }
 
-  const lastProductHistory = productHistory[0]
-
-  if (lastProductHistory.in_stock) return
-
-  const productSubscriptions = getProductSubscriptions(product.id)
-
-  if (productSubscriptions.length === 0) return
-
-  const inStockSubscriptions = productSubscriptions.filter(
-    (productSubscription) =>
-      productSubscription.subscription_type === 'on_change_status_to_in_stock'
+  const flattenTelegramAccounts = telegramAccounts.map(
+    (account) => account.telegram_account
   )
 
-  if (inStockSubscriptions.length === 0) return
-
-  const userIds = inStockSubscriptions.map(
-    (subscription) => subscription.user_id
-  )
-
-  const users = getUsersById(userIds)
-
-  if (users.length === 0) return
-
-  const telegramAccounts = users.map((u) => u.telegram_account)
-
-  if (telegramAccounts.length === 0) return
-
-  telegramAccounts.forEach((telegramAccount) => {
+  flattenTelegramAccounts.forEach((telegramAccount) => {
     bot.sendMessage(
       telegramAccount,
       `Добавленный вами товар [${product.title}](${product.url}) появился в наличии!\n\n` +
@@ -64,6 +43,10 @@ export const sendMessageToTelegramThatProductIsInStock = ({
 }
 
 export const newUserRegistration = (userId) => {
+  if (process.env.NODE_ENV === 'test') {
+    return
+  }
+
   bot.sendMessage(
     telegram_tech_group_id,
     `***Зарегистрирован новый пользователь!***\n` + `ID: ${userId}`,

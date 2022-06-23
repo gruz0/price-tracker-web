@@ -39,6 +39,7 @@ export default function ProductCard({ product, isSmallScreen }) {
   const [subscriptionError, setSubscriptionError] = useState(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
+  // FIXME: Вынести это в хелпер и переиспользовать в auth.js
   const hasSubscriptions =
     subscriptions &&
     !(
@@ -106,6 +107,7 @@ export default function ProductCard({ product, isSmallScreen }) {
       await removeProductFromUser(token, product.id)
 
       router.push('/products')
+      return
     } catch (err) {
       console.error({ err })
     }
@@ -122,6 +124,7 @@ export default function ProductCard({ product, isSmallScreen }) {
       await removeAllProductSubscriptionsFromUser(token, product.id)
 
       router.reload()
+      return
     } catch (err) {
       console.error({ err })
     }
@@ -140,7 +143,7 @@ export default function ProductCard({ product, isSmallScreen }) {
         />
       ) : (
         <>
-          {isLoading ? (
+          {isLoading || !data?.product ? (
             <JustOneSecond />
           ) : (
             <>
@@ -181,8 +184,16 @@ export default function ProductCard({ product, isSmallScreen }) {
                             Для получения уведомлений вам необходимо выполнить
                             привязку вашего аккаунта Telegram.
                             <br />
-                            Перейдите <a href="#">по ссылке</a> для получения
-                            пошаговых инструкций.
+                            Перейдите{' '}
+                            <a
+                              href={`https://t.me/chartik_ru_bot?start=${user.id}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              title="Выполнить привязку бота к аккаунту"
+                            >
+                              по ссылке{' '}
+                            </a>
+                            для привязки вашего аккаунта к сервису.
                           </p>
                         </Message.Content>
                       </Message>

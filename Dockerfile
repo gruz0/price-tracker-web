@@ -1,9 +1,9 @@
 # Install dependencies only when needed
-FROM node:17.9-alpine AS deps
+FROM node:17.9-alpine AS base
 
 # Check https://github.com/nodejs/docker-node/tree/b4117f9333da4138b03a546ec926ef50a31506c3#nodealpine to understand why libc6-compat might be needed.
 # hadolint ignore=DL3018
-RUN apk add --no-cache libc6-compat
+RUN apk add --update --no-cache libc6-compat
 WORKDIR /app
 
 COPY package.json package-lock.json ./
@@ -14,15 +14,29 @@ RUN npm ci
 FROM node:17.9-alpine AS builder
 WORKDIR /app
 
-COPY --from=deps /app/node_modules ./node_modules
+COPY --from=base /app/node_modules ./node_modules
 COPY . .
 
 ENV NEXT_TELEMETRY_DISABLED 1
 
 RUN npm run build
 
+FROM node:17.9-alpine AS prod_builder
+WORKDIR /app
+
+ENV NODE_ENV production
+
+COPY --from=base /app/node_modules ./node_modules
+COPY . .
+
+RUN npm install && \
+    npm run prisma:generate_client && \
+    cp -Rv node_modules prod_node_modules
+
 # Production image, copy all the files and run next
 FROM node:17.9-alpine AS runner
+RUN apk add --update --no-cache curl=7.80.0-r1
+
 WORKDIR /app
 
 ENV NODE_ENV production
@@ -34,9 +48,11 @@ ENV USER="app"
 RUN adduser -D $USER -u $UID
 
 # You only need to copy next.config.js if you are NOT using the default configuration
-COPY --from=builder /app/next.config.js ./
-COPY --from=builder /app/public ./public
-COPY --from=builder /app/package.json ./package.json
+COPY --from=builder --chown=$USER:$USER /app/next.config.js ./
+COPY --from=builder --chown=$USER:$USER /app/prisma ./prisma
+COPY --from=builder --chown=$USER:$USER /app/public ./public
+COPY --from=builder --chown=$USER:$USER /app/package.json ./package.json
+COPY --from=prod_builder --chown=$USER:$USER /app/prod_node_modules ./node_modules
 
 # Automatically leverage output traces to reduce image size
 # https://nextjs.org/docs/advanced-features/output-file-tracing
@@ -44,6 +60,8 @@ COPY --from=builder --chown=$USER:$USER /app/.next/standalone ./
 COPY --from=builder --chown=$USER:$USER /app/.next/static ./.next/static
 
 USER $USER
+
+RUN npm run prisma:generate_client
 
 EXPOSE 3000
 

@@ -1,16 +1,15 @@
 import crypto from 'crypto'
+import { isEmptyString } from './validators'
 
+// TODO: Добавить тесты
 export const detectURL = (string) => {
   var urlRegex = /(((https?:\/\/)|(www\.))[^\s]+)/g
   return string.match(urlRegex)
 }
 
+// TODO: Добавить тесты
 export const isValidUrl = (string) => {
-  if (
-    !string ||
-    typeof string === 'undefined' ||
-    string.toString().trim().length === 0
-  ) {
+  if (isEmptyString(string)) {
     return false
   }
 
@@ -19,28 +18,24 @@ export const isValidUrl = (string) => {
   try {
     url = new URL(string.toString().trim())
   } catch (e) {
-    console.error(e)
+    console.error({ e })
     return false
   }
 
   return url.protocol === 'http:' || url.protocol === 'https:'
 }
 
+// TODO: Добавить тесты
 export const buildCleanURL = (string) => {
   let url = new URL(string.toString().trim())
   return `${url.protocol}//${url.host}${url.pathname}`
 }
 
+// TODO: Добавить тесты
 export const calculateHash = (string) => {
+  if (isEmptyString(string)) throw new Error('Пустая строка')
+
   return crypto.createHash('sha256').update(string).digest('hex')
-}
-
-export const truncateString = (str, num) => {
-  if (str.length <= num) {
-    return str
-  }
-
-  return str.slice(0, num) + '...'
 }
 
 export const responseJSON = (res, status, json) => {
@@ -49,6 +44,7 @@ export const responseJSON = (res, status, json) => {
   return res.end()
 }
 
+// TODO: Добавить тесты
 export const isShopSupported = (url) => {
   const cleanURL = url.trim().toLowerCase()
 
@@ -59,4 +55,31 @@ export const isShopSupported = (url) => {
     cleanURL.match(/sbermegamarket\.ru/) ||
     cleanURL.match(/store77\.net/)
   )
+}
+
+const SUPPORTED_PRODUCT_STATUSES = [
+  'ok',
+  'not_found',
+  'required_to_change_location',
+  'skip',
+  'age_restriction',
+]
+
+// TODO: Добавить тесты
+export const isStatusSupported = (status) => {
+  return SUPPORTED_PRODUCT_STATUSES.includes(status)
+}
+
+// TODO: Добавить тесты
+export const buildUserResponse = (user) => {
+  if (!user) throw new Error('Пустой пользователь')
+
+  return {
+    token: user.token,
+    user: {
+      id: user.id,
+      login: user.login,
+      telegram_account: user.telegram_account,
+    },
+  }
 }

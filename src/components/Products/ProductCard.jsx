@@ -2,7 +2,6 @@ import React from 'react'
 import { Card, List, Divider, Image } from 'semantic-ui-react'
 import Link from 'next/link'
 import { formatDateTime } from '../../lib/formatDate'
-import { truncateString } from '../../lib/helpers'
 import PriceLabel from './PriceLabel'
 import InStock from './InStockIcon'
 import Shop from './Shop'
@@ -11,6 +10,14 @@ export default function ProductCard({ product }) {
   const formattedDate = formatDateTime(product.price_updated_at)
 
   const imagePath = product.image && '/uploads/' + product.image
+
+  const truncateString = (str, num) => {
+    if (str.length <= num) {
+      return str
+    }
+
+    return str.slice(0, num) + '...'
+  }
 
   return (
     <Card>

@@ -16,6 +16,8 @@ const nextConfig = {
     outputStandalone: true,
   },
 
+  swcMinify: true,
+
   sentry: {
     disableServerWebpackPlugin: true,
     disableClientWebpackPlugin: true,
