@@ -64,6 +64,13 @@ docker-start-test-database: # Up test database
 docker-stop-test-database: # Stop dockerized database only
 	docker compose -f docker-compose.test.yml stop test_db
 
+# NOTE: Make sure to use commands below before restore:
+# 1. make docker-stop-database
+# 2. rm -rf .data
+# 3. make docker-start-database
+restore-database-dump-to-docker:
+	gunzip -c path/to/database.sql.gz | docker-compose exec -T db psql -U app app
+
 # NOTE: Make sure ports temporary changed to 3001:3000 in docker-compose.yml
 start-nginx:
 	./ops/nginx.sh
