@@ -25,10 +25,17 @@ export const isValidUrl = (string) => {
   return url.protocol === 'http:' || url.protocol === 'https:'
 }
 
-// TODO: Добавить тесты
+const mobileURLMapping = {
+  'm.ozon.ru': 'www.ozon.ru',
+  'm.lamoda.ru': 'www.lamoda.ru',
+}
+
 export const buildCleanURL = (string) => {
   let url = new URL(string.toString().trim())
-  return `${url.protocol}//${url.host}${url.pathname}`
+
+  const host = mobileURLMapping[url.host] || url.host
+
+  return `${url.protocol}//${host}${url.pathname}`
 }
 
 // TODO: Добавить тесты
