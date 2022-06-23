@@ -125,12 +125,6 @@ const Screen = () => {
           <List.Item>
             <List.Icon name="star" />
             <List.Content>
-              Собирать данные из Озон, Вайлдберриз и Ламоды
-            </List.Content>
-          </List.Item>
-          <List.Item>
-            <List.Icon name="star" />
-            <List.Content>
               Обрабатывать новые товары каждые 5 минут
             </List.Content>
           </List.Item>
@@ -155,6 +149,37 @@ const Screen = () => {
           <List.Item>
             <List.Icon name="star" />
             <List.Content>Добавлять новые товары через бота</List.Content>
+          </List.Item>
+        </List>
+      </SegmentContent>
+
+      <SegmentContent>
+        <MyH3>Какие магазины поддерживаются?</MyH3>
+
+        <List relaxed>
+          <List.Item>
+            <List.Icon name="shop" />
+            <List.Content>ozon.ru</List.Content>
+          </List.Item>
+          <List.Item>
+            <List.Icon name="shop" />
+            <List.Content>lamoda.ru</List.Content>
+          </List.Item>
+          <List.Item>
+            <List.Icon name="shop" />
+            <List.Content>sbermegamarket.ru</List.Content>
+          </List.Item>
+          <List.Item>
+            <List.Icon name="shop" />
+            <List.Content>wildberries.ru</List.Content>
+          </List.Item>
+          <List.Item>
+            <List.Icon name="shop" />
+            <List.Content>goldapple.ru</List.Content>
+          </List.Item>
+          <List.Item>
+            <List.Icon name="shop" />
+            <List.Content>store77.net</List.Content>
           </List.Item>
         </List>
       </SegmentContent>

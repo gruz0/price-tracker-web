@@ -73,7 +73,7 @@ export default function AddNewProduct({ token, isSmallScreen }) {
             />
             <Label pointing>
               Поддерживаются ссылки из: ozon.ru, wildberries.ru, lamoda.ru,
-              sbermegamarket.ru, store77.net
+              sbermegamarket.ru, store77.net, goldapple.ru
             </Label>
           </Form.Field>
         </Form>
