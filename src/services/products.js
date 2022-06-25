@@ -28,6 +28,37 @@ export const getProductHistory = async (productId) => {
   })
 }
 
+export const getProductHistoryGroupedByLastRecordByDate = async (
+  productId,
+  limit = 30
+) => {
+  const history = await prisma.$queryRaw`
+    SELECT ph.created_at
+      , in_stock
+      , status
+      , original_price
+      , discount_price
+    FROM product_history ph
+    INNER JOIN (
+      SELECT MAX(created_at) AS created_at
+      FROM product_history
+      WHERE product_id = ${productId} AND status IN ('ok', 'not_found')
+      GROUP BY DATE(created_at)
+      ORDER BY created_at DESC
+      LIMIT ${limit}
+    ) sub ON sub.created_at = ph.created_at
+    WHERE ph.product_id = ${productId} AND status IN ('ok', 'not_found')
+    ORDER BY ph.created_at DESC
+  `
+
+  return history.map((h) => {
+    return {
+      ...h,
+      created_at: new Date(h.created_at).toISOString(),
+    }
+  })
+}
+
 export const getLastProductHistory = async (productId) => {
   return await prisma.productHistory.findFirst({
     where: { product_id: productId },
