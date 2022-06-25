@@ -303,11 +303,29 @@ describe(`GET ${ENDPOINT}`, () => {
               {
                 product_id: product.id,
                 crawler_id: crawler.id,
+                status: 'skip',
+                created_at: new Date('2022-06-12 13:01:00'),
+              },
+              {
+                product_id: product.id,
+                crawler_id: crawler.id,
+                status: 'required_to_change_location',
+                created_at: new Date('2022-06-12 13:02:00'),
+              },
+              {
+                product_id: product.id,
+                crawler_id: crawler.id,
                 original_price: 50,
                 discount_price: 38,
                 in_stock: true,
                 status: 'ok',
                 created_at: new Date('2022-06-12 13:01:00'),
+              },
+              {
+                product_id: product.id,
+                crawler_id: crawler.id,
+                status: 'not_found',
+                created_at: new Date('2022-06-13 12:00:00'),
               },
             ],
           })
@@ -331,18 +349,18 @@ describe(`GET ${ENDPOINT}`, () => {
           expect(parseJSON(res)).toEqual({
             history: [
               {
+                original_price: null,
+                discount_price: null,
+                in_stock: false,
+                status: 'not_found',
+                created_at: '2022-06-13T09:00:00.000Z',
+              },
+              {
                 original_price: 50,
                 discount_price: 38,
                 in_stock: true,
                 status: 'ok',
                 created_at: '2022-06-12T10:01:00.000Z',
-              },
-              {
-                original_price: null,
-                discount_price: null,
-                in_stock: false,
-                status: 'not_found',
-                created_at: '2022-06-12T10:00:00.000Z',
               },
             ],
             product: {

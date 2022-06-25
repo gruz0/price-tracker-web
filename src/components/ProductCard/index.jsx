@@ -220,7 +220,7 @@ export default function ProductCard({ product, isSmallScreen }) {
                   <Header as="h3">Динамика цен</Header>
 
                   <Segment>
-                    <Chart product={product} history={data.history} />
+                    <Chart product={data.product} history={data.history} />
                   </Segment>
 
                   <Header as="h3">Таблица цен</Header>

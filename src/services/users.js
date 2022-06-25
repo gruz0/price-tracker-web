@@ -1,13 +1,16 @@
 import prisma from '../lib/prisma'
 
-import { getProductHistory } from './products'
+import { getProductHistoryGroupedByLastRecordByDate } from './products'
 
 export const getUserProductWithActualStateAndHistory = async (
   userId,
   productId
 ) => {
-  const productHistory = await getProductHistory(productId)
+  const productHistory = await getProductHistoryGroupedByLastRecordByDate(
+    productId
+  )
 
+  // FIXME: Вынести в отдельную функцию
   const productActualState = await prisma.$queryRaw`select p.id as id
       , p.shop
       , p.url
