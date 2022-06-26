@@ -3,6 +3,7 @@ import Router from 'next/router'
 import {
   Form,
   Divider,
+  Header,
   Label,
   Input,
   Message,
@@ -53,6 +54,8 @@ export default function AddNewProduct({ token, isSmallScreen }) {
       {!isSmallScreen && <Divider fitted hidden />}
 
       <Segment loading={isSubmitting} padded={!isSmallScreen}>
+        <Header as="h3">Добавление товара</Header>
+
         {error && (
           <ErrorWrapper header="Ошибки при добавлении товара" error={error} />
         )}
