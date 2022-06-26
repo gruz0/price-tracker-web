@@ -29,7 +29,11 @@ const Screen = () => {
           {isLoading ? (
             <JustOneSecond />
           ) : (
-            <ProductCard product={data.product} isSmallScreen={isSmallScreen} />
+            <ProductCard
+              product={data.product}
+              shops={data.shops}
+              isSmallScreen={isSmallScreen}
+            />
           )}
         </>
       )}

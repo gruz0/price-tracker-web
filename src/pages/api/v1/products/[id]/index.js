@@ -26,6 +26,7 @@ import {
   UNABLE_TO_REMOVE_USER_PRODUCT_WITH_SUBSCRIPTIONS,
 } from '../../../../../lib/messages'
 import { isEmptyString, isValidUUID } from '../../../../../lib/validators'
+import { getShops } from '../../../../../services/shops'
 
 const handler = async (req, res) => {
   if (!['GET', 'DELETE'].includes(req.method)) {
@@ -146,7 +147,7 @@ const handler = async (req, res) => {
     return responseJSON(res, 200, {})
   }
 
-  return responseJSON(res, 200, { product: userProduct })
+  return responseJSON(res, 200, { product: userProduct, shops: getShops() })
 }
 
 export default withSentry(handler)

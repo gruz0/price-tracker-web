@@ -2,6 +2,7 @@ import prisma from '../lib/prisma'
 
 import { getProductHistoryGroupedByLastRecordByDate } from './products'
 
+// TODO: Add tests
 export const getUserProductWithActualStateAndHistory = async (
   userId,
   productId
@@ -62,6 +63,7 @@ export const getUserProductWithActualStateAndHistory = async (
   }
 }
 
+// TODO: Add tests
 export const getUserProductsWithActualState = async (userId) => {
   const userProducts = await prisma.$queryRaw`select p.id as id
       , p.shop
@@ -108,6 +110,7 @@ export const getUserProductsWithActualState = async (userId) => {
   return userProducts
 }
 
+// TODO: Add tests
 export const addProductToUser = async (userId, productId, productPrice) => {
   return await prisma.userProduct.create({
     data: {
@@ -129,6 +132,7 @@ export const getUserProduct = async (userId, productId) => {
       product: {
         select: {
           title: true,
+          shop: true,
         },
       },
     },
@@ -144,9 +148,11 @@ export const getUserProduct = async (userId, productId) => {
     created_at: userProduct.created_at,
     favorited: userProduct.favorited,
     title: userProduct.product.title,
+    shop: userProduct.product.shop,
   }
 }
 
+// TODO: Add tests
 export const removeProductWithSubscriptionsFromUser = async (
   userId,
   productId

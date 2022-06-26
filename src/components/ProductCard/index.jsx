@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import {
   Divider,
-  Label,
+  Menu,
   Button,
   Header,
   Segment,
@@ -11,6 +11,7 @@ import {
 } from 'semantic-ui-react'
 import { useRouter } from 'next/router'
 import Statistics from './Statistics'
+import SearchInOtherShops from './SearchInOtherShops'
 import Chart from './Chart'
 import PriceTable from './PriceTable'
 import { useAuth } from '../../hooks'
@@ -26,7 +27,7 @@ import {
 } from '../../lib/subscriptions'
 import { removeProductFromUser } from '../../lib/products'
 
-export default function ProductCard({ product, isSmallScreen }) {
+export default function ProductCard({ product, shops, isSmallScreen }) {
   const router = useRouter()
   const { user, token, logout } = useAuth()
   const { data, isLoading, error } = useProductHistory(product.id, token)
@@ -130,148 +131,153 @@ export default function ProductCard({ product, isSmallScreen }) {
     }
   }
 
+  if (!user || isLoading || areSubscriptionsLoading) {
+    return <JustOneSecond />
+  }
+
+  if (error) {
+    return (
+      <ErrorWrapper
+        header="Не удалось загрузить историю товара"
+        error={error}
+      />
+    )
+  }
+
+  if (subscriptionsLoadingError) {
+    return (
+      <ErrorWrapper
+        header="Не удалось загрузить подписки на товар"
+        error={subscriptionsLoadingError}
+      />
+    )
+  }
+
   return (
     <>
       {!isSmallScreen && <Divider hidden fitted />}
 
       <Header as={isSmallScreen ? 'h2' : 'h1'}>{product.title}</Header>
 
-      {error ? (
-        <ErrorWrapper
-          header="Не удалось загрузить историю товара"
-          error={error}
-        />
-      ) : (
+      {data?.history && data.history.length > 0 ? (
         <>
-          {isLoading || !data?.product ? (
-            <JustOneSecond />
-          ) : (
-            <>
-              {data?.history && data.history.length > 0 ? (
-                <>
-                  <Segment
-                    padded={!isSmallScreen}
-                    loading={isSubmitting || areSubscriptionsLoading}
-                  >
-                    {subscriptionError && (
-                      <ErrorWrapper
-                        header="Ошибка при обработке подписки"
-                        error={subscriptionError}
-                      />
-                    )}
+          <Segment
+            padded={!isSmallScreen}
+            loading={isSubmitting || areSubscriptionsLoading}
+          >
+            {subscriptionError && (
+              <ErrorWrapper
+                header="Ошибка при обработке подписки"
+                error={subscriptionError}
+              />
+            )}
 
-                    <Checkbox
-                      toggle
-                      label="Уведомить меня в Telegram при появлении товара"
-                      disabled={!userHasTelegramAccount}
-                      onChange={handleOutOfStockSubscription}
-                      checked={
-                        hasSubscriptions &&
-                        Boolean(subscriptions['on_change_status_to_in_stock'])
-                      }
-                    />
+            <Checkbox
+              toggle
+              label="Уведомить меня в Telegram при появлении товара"
+              disabled={!userHasTelegramAccount}
+              onChange={handleOutOfStockSubscription}
+              checked={
+                hasSubscriptions &&
+                Boolean(subscriptions['on_change_status_to_in_stock'])
+              }
+            />
 
-                    {!userHasTelegramAccount && (
-                      <Message warning icon>
-                        <Icon name="warning" />
+            {!userHasTelegramAccount && (
+              <Message warning icon>
+                <Icon name="warning" />
 
-                        <Message.Content>
-                          <Message.Header>
-                            Необходимо привязать аккаунт Telegram
-                          </Message.Header>
-
-                          <p>
-                            Для получения уведомлений вам необходимо выполнить
-                            привязку вашего аккаунта Telegram.
-                            <br />
-                            Перейдите{' '}
-                            <a
-                              href={`https://t.me/chartik_ru_bot?start=${user.id}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              title="Выполнить привязку бота к аккаунту"
-                            >
-                              по ссылке{' '}
-                            </a>
-                            для привязки вашего аккаунта к сервису.
-                          </p>
-                        </Message.Content>
-                      </Message>
-                    )}
-                  </Segment>
-
-                  <Segment padded={!isSmallScreen}>
-                    <Label
-                      as="a"
-                      href={data.product.url}
-                      target="_blank"
-                      rel="noreferrer noopener"
-                      content="Перейти в магазин"
-                      attached="bottom"
-                      icon="linkify"
-                    />
-
-                    <Statistics
-                      product={data.product}
-                      isSmallScreen={isSmallScreen}
-                    />
-                  </Segment>
-
-                  <Header as="h3">Динамика цен</Header>
-
-                  <Segment>
-                    <Chart product={data.product} history={data.history} />
-                  </Segment>
-
-                  <Header as="h3">Таблица цен</Header>
-
-                  {isSmallScreen ? (
-                    <Message>
-                      <Message.Header>
-                        Не доступно в мобильной версии
-                      </Message.Header>
-                      <p>
-                        В мобильной версии таблица цен не отображается.
-                        Воспользуйтесь десктопной версией, пожалуйста.
-                      </p>
-                    </Message>
-                  ) : (
-                    <PriceTable history={data.history} />
-                  )}
-
-                  <Header as="h3">Полезные кнопки</Header>
-
-                  <Segment textAlign="right">
-                    {hasSubscriptions && (
-                      <Button
-                        onClick={handleRemoveAllProductSubscriptions}
-                        content="Удалить все уведомления"
-                        color="orange"
-                      />
-                    )}
-
-                    <Button
-                      onClick={handleRemoveProductFromUser}
-                      content="Удалить товар"
-                      negative
-                    />
-                  </Segment>
-                </>
-              ) : (
-                <Message info>
+                <Message.Content>
                   <Message.Header>
-                    В данный момент недостаточно информации для отображения
-                    графиков и таблиц
+                    Необходимо привязать аккаунт Telegram
                   </Message.Header>
+
                   <p>
-                    Вернитесь, пожалуйста, через несколько часов, мы обновим
-                    цены и сможем отобразить все необходимые элементы страницы.
+                    Для получения уведомлений вам необходимо выполнить привязку
+                    вашего аккаунта Telegram.
+                    <br />
+                    Перейдите{' '}
+                    <a
+                      href={`https://t.me/chartik_ru_bot?start=${user.id}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      title="Выполнить привязку бота к аккаунту"
+                    >
+                      по ссылке{' '}
+                    </a>
+                    для привязки вашего аккаунта к сервису.
                   </p>
-                </Message>
-              )}
-            </>
+                </Message.Content>
+              </Message>
+            )}
+          </Segment>
+
+          <Segment padded={!isSmallScreen}>
+            <Statistics product={data.product} isSmallScreen={isSmallScreen} />
+          </Segment>
+
+          <Menu stackable>
+            <Menu.Item
+              as="a"
+              href={data.product.url}
+              target="_blank"
+              rel="noreferrer noopener"
+              content={`Перейти в магазин ${product.shop}`}
+              icon="linkify"
+            />
+
+            <SearchInOtherShops product={product} shops={shops} />
+          </Menu>
+
+          <Header as="h3">Динамика цен</Header>
+
+          <Segment>
+            <Chart product={data.product} history={data.history} />
+          </Segment>
+
+          <Header as="h3">Таблица цен</Header>
+
+          {isSmallScreen ? (
+            <Message>
+              <Message.Header>Не доступно в мобильной версии</Message.Header>
+              <p>
+                В мобильной версии таблица цен не отображается. Воспользуйтесь
+                десктопной версией, пожалуйста.
+              </p>
+            </Message>
+          ) : (
+            <PriceTable history={data.history} />
           )}
+
+          <Header as="h3">Полезные кнопки</Header>
+
+          <Segment textAlign="right">
+            {hasSubscriptions && (
+              <Button
+                onClick={handleRemoveAllProductSubscriptions}
+                content="Удалить все уведомления"
+                color="orange"
+              />
+            )}
+
+            <Button
+              onClick={handleRemoveProductFromUser}
+              content="Удалить товар"
+              negative
+            />
+          </Segment>
         </>
+      ) : (
+        <Message info>
+          <Message.Header>
+            В данный момент недостаточно информации для отображения графиков и
+            таблиц
+          </Message.Header>
+          <p>
+            Вернитесь, пожалуйста, через несколько часов, мы обновим цены и
+            сможем отобразить все необходимые элементы страницы.
+          </p>
+        </Message>
       )}
     </>
   )
