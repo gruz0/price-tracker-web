@@ -3,12 +3,15 @@ import * as Sentry from '@sentry/nextjs'
 
 import {
   isValidUrl,
-  buildCleanURL,
   calculateHash,
   responseJSON,
   detectURL,
-  isShopSupported,
 } from '../../../../lib/helpers'
+import {
+  findShopByURL,
+  isSingleProductURL,
+  replaceHostWithOriginalShopDomain,
+} from '../../../../services/shops'
 
 import {
   findProductByURLHash,
@@ -34,7 +37,8 @@ import {
   UNABLE_TO_GET_USER_PRODUCT,
   UNABLE_TO_GET_USER_PRODUCTS_WITH_PRICES,
   INVALID_URL,
-  UNABLE_TO_CLEAN_URL,
+  IT_IS_NOT_A_SINGLE_PRODUCT_URL,
+  UNABLE_TO_USE_SHOP_ORIGINAL_DOMAIN,
   UNABLE_TO_CALCULATE_URL_HASH,
   UNABLE_TO_FIND_PRODUCT_BY_URL_HASH,
   PRODUCT_ADDED_TO_QUEUE,
@@ -142,9 +146,16 @@ const handler = async (req, res) => {
 
   const detectedURL = detectedURLs[0]
 
-  if (!isShopSupported(detectedURL)) {
+  let shop
+
+  try {
+    shop = findShopByURL(detectedURL)
+  } catch (err) {
+    console.error({ err })
+
     Sentry.withScope(function (scope) {
       scope.setContext('args', { detectedURL })
+      scope.setTag('section', 'findShopByURL')
       scope.setUser({ user })
       Sentry.captureException(
         new Error(
@@ -152,25 +163,46 @@ const handler = async (req, res) => {
         )
       )
     })
+  }
 
-    return responseJSON(res, 400, SHOP_IS_NOT_SUPPORTED_YET)
+  if (!shop) {
+    return responseJSON(res, 422, SHOP_IS_NOT_SUPPORTED_YET)
   }
 
   let cleanURL
 
   try {
-    cleanURL = buildCleanURL(detectedURL)
+    cleanURL = replaceHostWithOriginalShopDomain(shop, detectedURL)
   } catch (err) {
     console.error({ err })
 
     Sentry.withScope(function (scope) {
-      scope.setContext('args', { detectedURL })
-      scope.setTag('section', 'buildCleanURL')
+      scope.setContext('args', { shop, detectedURL })
+      scope.setTag('section', 'replaceHostWithOriginalShopDomain')
       scope.setUser({ user })
       Sentry.captureException(err)
     })
 
-    return responseJSON(res, 500, UNABLE_TO_CLEAN_URL)
+    return responseJSON(res, 500, UNABLE_TO_USE_SHOP_ORIGINAL_DOMAIN)
+  }
+
+  try {
+    if (!isSingleProductURL(shop.name, cleanURL)) {
+      return responseJSON(res, 422, IT_IS_NOT_A_SINGLE_PRODUCT_URL)
+    }
+  } catch (err) {
+    console.error({ err })
+
+    Sentry.withScope(function (scope) {
+      scope.setContext('args', { shop, cleanURL })
+      scope.setTag('section', 'isSingleProductURL')
+      scope.setUser({ user })
+      Sentry.captureException(
+        new Error(
+          `Пользователь отправил ссылку на неподдерживаемую страницу через форму добавления товара: ${url}`
+        )
+      )
+    })
   }
 
   let urlHash
