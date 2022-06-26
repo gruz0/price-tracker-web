@@ -1,5 +1,13 @@
 import React, { useState, useEffect } from 'react'
-import { Button, Grid, Divider, Form, Segment, Icon } from 'semantic-ui-react'
+import {
+  Button,
+  Grid,
+  Header,
+  Divider,
+  Form,
+  Segment,
+  Icon,
+} from 'semantic-ui-react'
 import ProductsTable from './ProductsTable'
 import ProductsCards from './ProductsCards'
 import PaginationComponent from './Pagination'
@@ -94,6 +102,8 @@ export default function ProductsList({ products, isSmallScreen }) {
   return (
     <>
       <Segment padded={!isSmallScreen}>
+        <Header as="h3">Поиск и фильтры</Header>
+
         <Grid>
           <Grid.Row verticalAlign="top">
             <Grid.Column width={isSmallScreen ? null : 13}>
