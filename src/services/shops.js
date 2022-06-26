@@ -69,6 +69,22 @@ const findShopByHost = (host) => {
   return null
 }
 
+export const getShops = () => {
+  let result = {}
+
+  for (const key in shops) {
+    const shop = shops[key]
+
+    result[shop.name] = {
+      name: shop.name,
+      domain: shop.domain,
+      search_path: shop.searchPath,
+    }
+  }
+
+  return result
+}
+
 export const findShopByURL = (input) => {
   const url = new URL(input.toString().trim().toLowerCase())
 

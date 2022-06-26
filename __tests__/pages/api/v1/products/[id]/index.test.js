@@ -143,7 +143,7 @@ describe(`GET ${ENDPOINT}`, () => {
     })
 
     describe('when all is good', () => {
-      test('returns response', async () => {
+      test('returns products with shops', async () => {
         const product = await prisma.product.create({
           data: {
             title: 'Product',
@@ -176,6 +176,39 @@ describe(`GET ${ENDPOINT}`, () => {
             title: product.title,
             favorited: true,
             created_at: '2022-06-11T09:34:56.000Z',
+            shop: 'shop',
+          },
+          shops: {
+            goldapple: {
+              domain: 'goldapple.ru',
+              name: 'goldapple',
+              search_path: '/catalogsearch/result?q=',
+            },
+            lamoda: {
+              domain: 'www.lamoda.ru',
+              name: 'lamoda',
+              search_path: '/catalogsearch/result/?q=',
+            },
+            ozon: {
+              domain: 'www.ozon.ru',
+              name: 'ozon',
+              search_path: '/search?text=',
+            },
+            sbermegamarket: {
+              domain: 'sbermegamarket.ru',
+              name: 'sbermegamarket',
+              search_path: '/catalog/?q=',
+            },
+            store77: {
+              domain: 'store77.net',
+              name: 'store77',
+              search_path: '/search/?q=',
+            },
+            wildberries: {
+              domain: 'www.wildberries.ru',
+              name: 'wildberries',
+              search_path: '/catalog/0/search.aspx?sort=popular&search=',
+            },
           },
         })
         expect(res._getStatusCode()).toBe(200)
