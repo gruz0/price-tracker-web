@@ -12,6 +12,7 @@ import {
   MISSING_URL,
   INVALID_URL,
   SHOP_IS_NOT_SUPPORTED_YET,
+  IT_IS_NOT_A_SINGLE_PRODUCT_URL,
   PRODUCT_ADDED_TO_QUEUE,
   UNABLE_TO_ADD_PRODUCT_TO_USER_RIGHT_NOW_BECAUSE_OF_MISSING_PRICE,
   REDIRECT_TO_PRODUCT_PAGE,
@@ -247,17 +248,60 @@ describe(`POST ${ENDPOINT}`, () => {
         await handler(req, res)
 
         expect(parseJSON(res)).toEqual(SHOP_IS_NOT_SUPPORTED_YET)
-        expect(res._getStatusCode()).toBe(400)
+        expect(res._getStatusCode()).toBe(422)
+      })
+    })
+
+    describe('when URL is not a single product URL', () => {
+      test('returns error', async () => {
+        const { req, res } = mockAuthorizedPOSTRequest(
+          user.token,
+          {},
+          {
+            url: 'https://www.ozon.ru/category/protsessory-15726/',
+          }
+        )
+
+        await handler(req, res)
+
+        expect(parseJSON(res)).toEqual(IT_IS_NOT_A_SINGLE_PRODUCT_URL)
+        expect(res._getStatusCode()).toBe(422)
       })
     })
 
     describe('when product does not exist', () => {
+      describe('when used alternate domain', () => {
+        test('adds new product to queue', async () => {
+          const { req, res } = mockAuthorizedPOSTRequest(
+            user.token,
+            {},
+            {
+              url: 'https://m.ozon.ru/product/42',
+            }
+          )
+
+          await handler(req, res)
+
+          expect(res._getStatusCode()).toBe(201)
+          expect(parseJSON(res)).toEqual(PRODUCT_ADDED_TO_QUEUE)
+
+          const productInQueue = await prisma.productQueue.findMany()
+          expect(productInQueue.length).toEqual(1)
+          expect(productInQueue[0].url).toEqual(
+            'https://www.ozon.ru/product/42'
+          )
+          expect(productInQueue[0].url_hash).toEqual(
+            '7bb40729dde6700a1540e342904e73696d3ffdb5ed222b7c4a69d3181d78d87f'
+          )
+        })
+      })
+
       test('adds new product to queue', async () => {
         const { req, res } = mockAuthorizedPOSTRequest(
           user.token,
           {},
           {
-            url: 'https://ozon.ru',
+            url: 'https://ozon.ru/product/42',
           }
         )
 
@@ -268,7 +312,10 @@ describe(`POST ${ENDPOINT}`, () => {
 
         const productInQueue = await prisma.productQueue.findMany()
         expect(productInQueue.length).toEqual(1)
-        expect(productInQueue[0].url).toEqual('https://ozon.ru/')
+        expect(productInQueue[0].url).toEqual('https://www.ozon.ru/product/42')
+        expect(productInQueue[0].url_hash).toEqual(
+          '7bb40729dde6700a1540e342904e73696d3ffdb5ed222b7c4a69d3181d78d87f'
+        )
       })
 
       test('removes extra query args from url', async () => {
@@ -276,7 +323,7 @@ describe(`POST ${ENDPOINT}`, () => {
           user.token,
           {},
           {
-            url: 'https://ozon.ru/?qwe=zxc',
+            url: 'https://ozon.ru/product/42?qwe=zxc',
           }
         )
 
@@ -287,19 +334,60 @@ describe(`POST ${ENDPOINT}`, () => {
 
         const productInQueue = await prisma.productQueue.findMany()
         expect(productInQueue.length).toEqual(1)
-        expect(productInQueue[0].url).toEqual('https://ozon.ru/')
+        expect(productInQueue[0].url).toEqual('https://www.ozon.ru/product/42')
+        expect(productInQueue[0].url_hash).toEqual(
+          '7bb40729dde6700a1540e342904e73696d3ffdb5ed222b7c4a69d3181d78d87f'
+        )
       })
     })
 
     describe('when product exists', () => {
       describe('when user has this product', () => {
+        describe('when used alternate url', () => {
+          test('does nothing', async () => {
+            const product = await prisma.product.create({
+              data: {
+                title: 'Product',
+                url: 'https://www.ozon.ru/product/42',
+                url_hash:
+                  '7bb40729dde6700a1540e342904e73696d3ffdb5ed222b7c4a69d3181d78d87f',
+                shop: 'shop',
+              },
+            })
+
+            await prisma.userProduct.create({
+              data: {
+                user_id: user.id,
+                product_id: product.id,
+                price: 42,
+              },
+            })
+
+            const { req, res } = mockAuthorizedPOSTRequest(
+              user.token,
+              {},
+              {
+                url: 'https://m.ozon.ru/product/42',
+              }
+            )
+
+            await handler(req, res)
+
+            expect(res._getStatusCode()).toBe(200)
+            expect(parseJSON(res)).toEqual({
+              ...REDIRECT_TO_PRODUCT_PAGE,
+              location: '/products/' + product.id,
+            })
+          })
+        })
+
         test('does nothing', async () => {
           const product = await prisma.product.create({
             data: {
               title: 'Product',
-              url: 'https://ozon.ru',
+              url: 'https://www.ozon.ru/product/42',
               url_hash:
-                '4d9bcf604a702d30b50ab1d0ac830209bfe7c5bfec95d0787fbbb4ca741129dc',
+                '7bb40729dde6700a1540e342904e73696d3ffdb5ed222b7c4a69d3181d78d87f',
               shop: 'shop',
             },
           })
@@ -335,9 +423,9 @@ describe(`POST ${ENDPOINT}`, () => {
           const product = await prisma.product.create({
             data: {
               title: 'Product',
-              url: 'https://ozon.ru',
+              url: 'https://www.ozon.ru/product/42',
               url_hash:
-                '4d9bcf604a702d30b50ab1d0ac830209bfe7c5bfec95d0787fbbb4ca741129dc',
+                '7bb40729dde6700a1540e342904e73696d3ffdb5ed222b7c4a69d3181d78d87f',
               shop: 'shop',
             },
           })
@@ -364,9 +452,9 @@ describe(`POST ${ENDPOINT}`, () => {
           const product = await prisma.product.create({
             data: {
               title: 'Product',
-              url: 'https://ozon.ru',
+              url: 'https://www.ozon.ru/product/42',
               url_hash:
-                '4d9bcf604a702d30b50ab1d0ac830209bfe7c5bfec95d0787fbbb4ca741129dc',
+                '7bb40729dde6700a1540e342904e73696d3ffdb5ed222b7c4a69d3181d78d87f',
               shop: 'shop',
             },
           })
@@ -409,9 +497,9 @@ describe(`POST ${ENDPOINT}`, () => {
           const product = await prisma.product.create({
             data: {
               title: 'Product',
-              url: 'https://ozon.ru',
+              url: 'https://www.ozon.ru/product/42',
               url_hash:
-                '4d9bcf604a702d30b50ab1d0ac830209bfe7c5bfec95d0787fbbb4ca741129dc',
+                '7bb40729dde6700a1540e342904e73696d3ffdb5ed222b7c4a69d3181d78d87f',
               shop: 'shop',
             },
           })
@@ -475,9 +563,9 @@ describe(`POST ${ENDPOINT}`, () => {
           const product = await prisma.product.create({
             data: {
               title: 'Product',
-              url: 'https://ozon.ru',
+              url: 'https://www.ozon.ru/product/42',
               url_hash:
-                '4d9bcf604a702d30b50ab1d0ac830209bfe7c5bfec95d0787fbbb4ca741129dc',
+                '7bb40729dde6700a1540e342904e73696d3ffdb5ed222b7c4a69d3181d78d87f',
               shop: 'shop',
             },
           })

@@ -396,9 +396,9 @@ export const INVALID_URL = {
     'Попробуйте скопировать её из браузера или из приложения магазина',
 }
 
-export const UNABLE_TO_CLEAN_URL = {
-  status: 'unable_to_clean_url',
-  message: 'Не удалось очистить ссылку',
+export const UNABLE_TO_USE_SHOP_ORIGINAL_DOMAIN = {
+  status: 'unable_to_use_shop_original_domain',
+  message: 'Не удалось заменить хост в ссылке на основной домен магазина',
 }
 
 export const UNABLE_TO_CALCULATE_URL_HASH = {
@@ -451,6 +451,12 @@ export const SHOP_IS_NOT_SUPPORTED_YET = {
   message:
     'В данный момент ссылки из этого магазина не поддерживаются. ' +
     'Мы посмотрим количество запросов по этому сайту от других пользователей и, возможно, добавим этот магазин. Спасибо!',
+}
+
+export const IT_IS_NOT_A_SINGLE_PRODUCT_URL = {
+  status: 'it_is_not_a_single_product_url',
+  message:
+    'Поддерживаются только ссылки на карточку товара (каталог и прочие страницы не поддерживаются)',
 }
 
 export const UNABLE_TO_ADD_NEW_PRODUCT_TO_QUEUE = {

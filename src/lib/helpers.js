@@ -25,21 +25,8 @@ export const isValidUrl = (string) => {
   return url.protocol === 'http:' || url.protocol === 'https:'
 }
 
-const mobileURLMapping = {
-  'm.ozon.ru': 'www.ozon.ru',
-  'm.lamoda.ru': 'www.lamoda.ru',
-}
-
-export const buildCleanURL = (string) => {
-  let url = new URL(string.toString().trim())
-
-  const host = mobileURLMapping[url.host] || url.host
-
-  return `${url.protocol}//${host}${url.pathname}`
-}
-
-// TODO: Добавить тесты
 export const calculateHash = (string) => {
+  // TODO: Добавить тесты
   if (isEmptyString(string)) throw new Error('Пустая строка')
 
   return crypto.createHash('sha256').update(string).digest('hex')
@@ -49,20 +36,6 @@ export const responseJSON = (res, status, json) => {
   res.status(status)
   res.json(json)
   return res.end()
-}
-
-// TODO: Добавить тесты
-export const isShopSupported = (url) => {
-  const cleanURL = url.trim().toLowerCase()
-
-  return (
-    cleanURL.match(/ozon\.ru/) ||
-    cleanURL.match(/wildberries\.ru/) ||
-    cleanURL.match(/lamoda\.ru/) ||
-    cleanURL.match(/sbermegamarket\.ru/) ||
-    cleanURL.match(/store77\.net/) ||
-    cleanURL.match(/goldapple\.ru/)
-  )
 }
 
 const SUPPORTED_PRODUCT_STATUSES = [
