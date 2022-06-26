@@ -177,7 +177,10 @@ export const updateUserToken = async (userId) => {
     throw new Error('Пользователь по ID не найден')
   }
 
-  const updatedUser = await updateUser(userId, { token: uuid.v4() })
+  const updatedUser = await updateUser(userId, {
+    token: uuid.v4(),
+    last_sign_in_at: new Date(),
+  })
 
   return buildUser(updatedUser)
 }

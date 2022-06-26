@@ -108,6 +108,7 @@ describe(`POST ${ENDPOINT}`, () => {
           login: 'user1',
           password: encryptPassword(userId, 'user1', 'password'),
           telegram_account: '12345',
+          last_sign_in_at: new Date('2022-06-26 12:00:00'),
         },
       })
     })
@@ -126,6 +127,27 @@ describe(`POST ${ENDPOINT}`, () => {
         where: { id: user.id },
       })
       expect(updatedUser.token).not.toEqual('token')
+    })
+
+    test('updates last_sign_in_at', async () => {
+      const { req, res } = mockPOSTRequest({
+        login: 'User1',
+        password: 'password',
+      })
+
+      await handler(req, res)
+
+      expect(res._getStatusCode()).toBe(200)
+
+      const updatedUser = await prisma.user.findUnique({
+        where: { id: user.id },
+      })
+
+      expect(updatedUser.last_sign_in_at).not.toEqual(user.last_sign_in_at)
+      expect(+updatedUser.last_sign_in_at).toBeGreaterThan(
+        +user.last_sign_in_at
+      )
+      expect(+updatedUser.updated_at).toBeGreaterThan(+user.updated_at)
     })
 
     test('returns response', async () => {
