@@ -36,6 +36,7 @@ model User {
   telegram_account      String?                   @db.VarChar(255)
   created_at            DateTime                  @default(now())
   updated_at            DateTime                  @updatedAt
+  last_sign_in_at       DateTime                  @default(now())
   queued_products       ProductQueue[]
   products              UserProduct[]
   product_subscriptions UserProductSubscription[]

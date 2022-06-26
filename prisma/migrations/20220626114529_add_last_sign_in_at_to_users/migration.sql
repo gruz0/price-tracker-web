@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "users" ADD COLUMN     "last_sign_in_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP;
