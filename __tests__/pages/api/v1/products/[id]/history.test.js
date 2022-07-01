@@ -187,8 +187,8 @@ describe(`GET ${ENDPOINT}`, () => {
             lowest_price_ever: null,
             my_benefit: null,
             price_updated_at: null,
-            product_created_at: '2022-06-12T09:34:56+00:00',
-            user_added_product_at: '2022-06-13T09:34:56+00:00',
+            product_created_at: '2022-06-12T09:34:56.000Z',
+            user_added_product_at: '2022-06-13T09:34:56.000Z',
           },
         })
         expect(res._getStatusCode()).toBe(200)
@@ -266,8 +266,8 @@ describe(`GET ${ENDPOINT}`, () => {
               lowest_price_ever: null,
               my_benefit: null,
               price_updated_at: null,
-              product_created_at: '2022-06-12T09:34:56+00:00',
-              user_added_product_at: '2022-06-13T09:34:56+00:00',
+              product_created_at: '2022-06-12T09:34:56.000Z',
+              user_added_product_at: '2022-06-13T09:34:56.000Z',
             },
           })
           expect(res._getStatusCode()).toBe(200)
@@ -377,9 +377,9 @@ describe(`GET ${ENDPOINT}`, () => {
               highest_price_ever: 50,
               lowest_price_ever: 38,
               my_benefit: 4,
-              price_updated_at: '2022-06-12T10:01:00+00:00',
-              product_created_at: '2022-06-12T09:34:56+00:00',
-              user_added_product_at: '2022-06-13T09:34:56+00:00',
+              price_updated_at: '2022-06-12T10:01:00.000Z',
+              product_created_at: '2022-06-12T09:34:56.000Z',
+              user_added_product_at: '2022-06-13T09:34:56.000Z',
             },
           })
           expect(res._getStatusCode()).toBe(200)

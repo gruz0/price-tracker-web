@@ -63,6 +63,20 @@ export const findUserByToken = async (token) => {
   return buildUser(user)
 }
 
+export const findUserByApiKey = async (api_key) => {
+  if (isEmptyString(api_key)) {
+    throw new Error('Не заполнен api_key')
+  }
+
+  const user = await findUserBy({ api_key: api_key.toLowerCase().trim() })
+
+  if (!user) {
+    return null
+  }
+
+  return buildUser(user)
+}
+
 export const findUserByLogin = async (login) => {
   const user = await _findUserByLogin(login)
 
@@ -123,7 +137,6 @@ export const createUser = async (login, password, telegramAccount) => {
       data: {
         id: userId,
         login: cleanLogin,
-        token: uuid.v4(),
         password: encryptPassword(userId, cleanLogin, password),
         telegram_account: isEmptyString(telegramAccount)
           ? null
@@ -209,6 +222,7 @@ const buildUser = ({
   id,
   login,
   token,
+  api_key,
   created_at,
   updated_at,
   telegram_account,
@@ -217,6 +231,7 @@ const buildUser = ({
     id,
     login: login.toLowerCase().trim(),
     token,
+    api_key,
     created_at,
     updated_at,
     telegram_account,

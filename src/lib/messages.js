@@ -8,6 +8,16 @@ export const INVALID_TOKEN_UUID = {
   message: 'Токен должен быть UUID',
 }
 
+export const INVALID_API_KEY_UUID = {
+  status: 'invalid_api_key_uuid',
+  message: 'Ключ API должен быть UUID',
+}
+
+export const API_KEY_DOES_NOT_EXIST = {
+  status: 'api_key_does_not_exist',
+  message: 'Ключ API не существует',
+}
+
 export const INVALID_PRODUCT_UUID = {
   status: 'invalid_product_uuid',
   message: 'ID товара должен быть UUID',
@@ -36,6 +46,11 @@ export const MISSING_BEARER_KEY = {
 export const MISSING_TOKEN = {
   status: 'missing_token',
   message: 'Отсутствует токен',
+}
+
+export const MISSING_API_KEY = {
+  status: 'missing_api_key',
+  message: 'Отсутствует ключ API',
 }
 
 export const MISSING_USER_ID = {
@@ -352,6 +367,11 @@ export const UNABLE_TO_FIND_USER_BY_TOKEN = {
   message: 'Не удалось найти пользователя по токену',
 }
 
+export const UNABLE_TO_FIND_USER_BY_API_KEY = {
+  status: 'unable_to_find_user_by_api_key',
+  message: 'Не удалось найти пользователя по ключу API',
+}
+
 export const UNABLE_TO_UPDATE_USER_TOKEN = {
   status: 'unable_to_update_user_token',
   message: 'Не удалось обновить токен пользователя',
@@ -449,8 +469,8 @@ export const UNABLE_TO_CREATE_NEW_PRODUCT = {
 export const SHOP_IS_NOT_SUPPORTED_YET = {
   status: 'shop_is_not_supported_yet',
   message:
-    'В данный момент ссылки из этого магазина не поддерживаются. ' +
-    'Мы посмотрим количество запросов по этому сайту от других пользователей и, возможно, добавим этот магазин. Спасибо!',
+    'В данный момент ссылки с этого сайта не поддерживаются. ' +
+    'Мы посмотрим количество запросов от других пользователей и, возможно, добавим его. Спасибо!',
 }
 
 export const IT_IS_NOT_A_SINGLE_PRODUCT_URL = {
@@ -494,6 +514,7 @@ export const UNABLE_TO_GET_PRODUCT_HISTORY = {
   status: 'unable_to_get_product_history',
   message: 'Не удалось получить историю товара',
 }
+
 export const UNABLE_TO_GET_LAST_PRODUCT_HISTORY = {
   status: 'unable_to_get_last_product_history',
   message: 'Не удалось получить последнюю запись истории товара',
@@ -502,4 +523,20 @@ export const UNABLE_TO_GET_LAST_PRODUCT_HISTORY = {
 export const UNABLE_TO_ADD_PRODUCT_HISTORY = {
   status: 'unable_to_add_product_history',
   message: 'Не удалось добавить историю товара',
+}
+
+export const URL_IS_SUPPORTED_AND_CAN_BE_ADDED_TO_YOUR_LIST = {
+  status: 'url_is_supported_and_can_be_added_to_your_list',
+  message: 'Магазин поддерживается, можно добавить товар для отслеживания цены',
+}
+
+export const PRODUCT_EXISTS_AND_CAN_BE_ADDED_TO_YOUR_LIST = {
+  status: 'product_exists_and_can_be_added_to_your_list',
+  message:
+    'У нас есть информация о ценах этого товара, добавьте его к себе для отслеживания',
+}
+
+export const YOU_ARE_ALREADY_HAVE_THIS_PRODUCT = {
+  status: 'you_are_already_have_this_product',
+  message: 'У вас уже есть этот товар, можно открыть карточку в Chartik',
 }

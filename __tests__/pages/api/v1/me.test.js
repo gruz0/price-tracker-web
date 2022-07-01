@@ -89,6 +89,7 @@ describe(`GET ${ENDPOINT}`, () => {
       expect(response.token).toEqual(user.token)
       expect(response.user.id).toEqual(user.id)
       expect(response.user.login).toEqual('user1')
+      expect(response.user.api_key).toEqual(user.api_key)
       expect(response.user.telegram_account).toEqual('12345')
     })
   })

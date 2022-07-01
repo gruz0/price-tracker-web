@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { useRouter } from 'next/router'
-import { Button, Form, Segment } from 'semantic-ui-react'
+import { Button, Form } from 'semantic-ui-react'
 import ErrorWrapper from '../../components/ErrorWrapper'
 import { changeUserPassword } from '../../lib/settings'
 
@@ -50,52 +50,50 @@ export default function ChangePassword({ token, authenticate }) {
         <ErrorWrapper header="Не удалось изменить пароль" error={error} />
       )}
 
-      <Form size="large" onSubmit={handleChangePassword}>
-        <Segment>
-          <Form.Input
-            id="current_password"
-            fluid
-            icon="lock"
-            iconPosition="left"
-            placeholder="Текущий пароль"
-            type="password"
-            required
-            autoComplete="current-password"
-            value={fields.current_password}
-            onChange={handleInputChange}
-          />
+      <Form onSubmit={handleChangePassword}>
+        <Form.Input
+          id="current_password"
+          fluid
+          icon="lock"
+          iconPosition="left"
+          placeholder="Текущий пароль"
+          type="password"
+          required
+          autoComplete="current-password"
+          value={fields.current_password}
+          onChange={handleInputChange}
+        />
 
-          <Form.Input
-            id="new_password"
-            fluid
-            icon="lock"
-            iconPosition="left"
-            placeholder="Новый пароль"
-            type="password"
-            required
-            autoComplete="new-password"
-            value={fields.new_password}
-            onChange={handleInputChange}
-          />
+        <Form.Input
+          id="new_password"
+          fluid
+          icon="lock"
+          iconPosition="left"
+          placeholder="Новый пароль"
+          type="password"
+          required
+          autoComplete="new-password"
+          value={fields.new_password}
+          onChange={handleInputChange}
+        />
 
-          <Form.Input
-            id="new_password_confirmation"
-            fluid
-            icon="lock"
-            iconPosition="left"
-            placeholder="Подтверждение пароля"
-            type="password"
-            required
-            autoComplete="new-password"
-            value={fields.new_password_confirmation}
-            onChange={handleInputChange}
-            loading={isSubmitting}
-          />
+        <Form.Input
+          id="new_password_confirmation"
+          fluid
+          icon="lock"
+          iconPosition="left"
+          placeholder="Подтверждение пароля"
+          type="password"
+          required
+          autoComplete="new-password"
+          value={fields.new_password_confirmation}
+          onChange={handleInputChange}
+          loading={isSubmitting}
+        />
 
-          <Button primary fluid size="large" disabled={isSubmitting}>
-            Изменить пароль
-          </Button>
-        </Segment>
+        <Button primary fluid size="large" disabled={isSubmitting}>
+          Изменить пароль
+        </Button>
       </Form>
     </>
   )

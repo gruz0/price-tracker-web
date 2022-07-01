@@ -8,6 +8,13 @@ on:
 jobs:
   lint:
     runs-on: ubuntu-latest
+
+    env:
+      RAILS_ENV: test
+      DATABASE_URL: postgres://app:password@localhost/app_test
+      TZ: Europe/Moscow
+      PGTZ: UTC
+
     steps:
       - uses: actions/checkout@v2
 

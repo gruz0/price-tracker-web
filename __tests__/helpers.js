@@ -36,6 +36,10 @@ export const mockPOSTRequest = (body = {}) => {
   })
 }
 
+export const mockGETRequest = () => {
+  return createMocks({ method: 'GET' })
+}
+
 export const mockAuthorizedGETRequest = (token, query = {}) => {
   return createMocks({
     method: 'GET',
