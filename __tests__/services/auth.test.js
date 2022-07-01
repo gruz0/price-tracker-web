@@ -2,6 +2,7 @@ import prisma from '../../src/lib/prisma'
 const uuid = require('uuid')
 import {
   createUser,
+  findUserByApiKey,
   findUserById,
   findUserByLogin,
   findUserByLoginAndPassword,
@@ -13,31 +14,34 @@ import {
 } from '../../src/services/auth'
 import { cleanDatabase } from '../helpers'
 
+let user
+
 beforeEach(async () => {
   await cleanDatabase(prisma)
+
+  user = await createUser('user1', 'password', 'myTelegram')
 })
 
 describe('findUserById', () => {
   describe('when user does not exist', () => {
     it('returns null', async () => {
-      const user = await findUserById(uuid.v4())
+      const existedUser = await findUserById(uuid.v4())
 
-      expect(user).toBeNull()
+      expect(existedUser).toBeNull()
     })
   })
 
   describe('when user exists', () => {
     it('returns user', async () => {
-      const user = await createUser('user1', 'password')
-
       const existedUser = await findUserById(user.id)
 
       expect(existedUser.id).toEqual(user.id)
       expect(existedUser.login).toEqual(user.login)
       expect(existedUser.token).toEqual(user.token)
+      expect(existedUser.api_key).toEqual(user.api_key)
       expect(existedUser.telegram_account).toEqual(user.telegram_account)
-      expect(user.created_at).toBeInstanceOf(Date)
-      expect(user.updated_at).toBeInstanceOf(Date)
+      expect(existedUser.created_at).toBeInstanceOf(Date)
+      expect(existedUser.updated_at).toBeInstanceOf(Date)
       expect(existedUser.password).toBeUndefined()
     })
   })
@@ -65,21 +69,66 @@ describe('findUserByToken', () => {
   })
   describe('when user does not exist', () => {
     it('returns null', async () => {
-      const user = await findUserByToken(uuid.v4())
+      const existedUser = await findUserByToken(uuid.v4())
 
-      expect(user).toBeNull()
+      expect(existedUser).toBeNull()
     })
   })
 
   describe('when user exists', () => {
     it('returns user', async () => {
-      const user = await createUser('user1', 'password')
-
       const existedUser = await findUserByToken(` ${user.token.toUpperCase()} `)
 
       expect(existedUser.id).toEqual(user.id)
       expect(existedUser.login).toEqual(user.login)
+      expect(existedUser.token).toEqual(user.token)
+      expect(existedUser.api_key).toEqual(user.api_key)
+      expect(existedUser.telegram_account).toEqual(user.telegram_account)
+      expect(existedUser.created_at).toEqual(user.created_at)
+      expect(existedUser.updated_at).toEqual(user.updated_at)
+      expect(existedUser.password).toBeUndefined()
+    })
+  })
+})
+
+describe('findUserByApiKey', () => {
+  describe('when token is missing', () => {
+    it('raises error', async () => {
+      try {
+        await findUserByApiKey()
+      } catch (e) {
+        expect(e.message).toMatch('Не заполнен api_key')
+      }
+    })
+  })
+
+  describe('when token is empty', () => {
+    it('raises error', async () => {
+      try {
+        await findUserByApiKey(' ')
+      } catch (e) {
+        expect(e.message).toMatch('Не заполнен api_key')
+      }
+    })
+  })
+  describe('when user does not exist', () => {
+    it('returns null', async () => {
+      const existedUser = await findUserByApiKey(uuid.v4())
+
+      expect(existedUser).toBeNull()
+    })
+  })
+
+  describe('when user exists', () => {
+    it('returns user', async () => {
+      const existedUser = await findUserByApiKey(
+        ` ${user.api_key.toUpperCase()} `
+      )
+
+      expect(existedUser.id).toEqual(user.id)
+      expect(existedUser.login).toEqual(user.login)
       expect(existedUser.token).toEqual(user.token.toLowerCase())
+      expect(existedUser.api_key).toEqual(user.api_key)
       expect(existedUser.telegram_account).toEqual(user.telegram_account)
       expect(existedUser.created_at).toEqual(user.created_at)
       expect(existedUser.updated_at).toEqual(user.updated_at)
@@ -111,21 +160,20 @@ describe('findUserByLogin', () => {
 
   describe('when user does not exist', () => {
     it('returns null', async () => {
-      const user = await findUserByLogin(uuid.v4())
+      const existedUser = await findUserByLogin(uuid.v4())
 
-      expect(user).toBeNull()
+      expect(existedUser).toBeNull()
     })
   })
 
   describe('when user exists', () => {
     it('returns user', async () => {
-      const user = await createUser('user1', 'password')
-
-      const existedUser = await findUserByLogin(' USER1 ')
+      const existedUser = await findUserByLogin(` ${user.login.toUpperCase()} `)
 
       expect(existedUser.id).toEqual(user.id)
       expect(existedUser.login).toEqual('user1')
       expect(existedUser.token).toEqual(user.token)
+      expect(existedUser.api_key).toEqual(user.api_key)
       expect(existedUser.telegram_account).toEqual(user.telegram_account)
       expect(existedUser.created_at).toEqual(user.created_at)
       expect(existedUser.updated_at).toEqual(user.updated_at)
@@ -157,18 +205,16 @@ describe('findUserByLoginAndPassword', () => {
 
   describe('when user does not exist', () => {
     it('returns null', async () => {
-      const user = await findUserByLoginAndPassword('zxc')
+      const existedUser = await findUserByLoginAndPassword('zxc')
 
-      expect(user).toBeNull()
+      expect(existedUser).toBeNull()
     })
   })
 
   describe('when password is missing', () => {
     it('raises error', async () => {
-      await createUser('user1', 'password')
-
       try {
-        await findUserByLoginAndPassword('user1')
+        await findUserByLoginAndPassword(user.login)
       } catch (e) {
         expect(e.message).toMatch('Пароль пользователя пустой')
       }
@@ -178,20 +224,19 @@ describe('findUserByLoginAndPassword', () => {
   describe('when user exists', () => {
     describe('when password is not valid', () => {
       it('returns null', async () => {
-        await createUser('user1', 'password')
+        const existedUser = await findUserByLoginAndPassword(
+          user.login,
+          'invalid'
+        )
 
-        const user = await findUserByLoginAndPassword('user1', 'invalid')
-
-        expect(user).toBeNull()
+        expect(existedUser).toBeNull()
       })
     })
 
     describe('when password is valid', () => {
       it('returns user', async () => {
-        const user = await createUser('user1', 'password')
-
         const existedUser = await findUserByLoginAndPassword(
-          ' USER1 ',
+          ` ${user.login.toUpperCase()} `,
           'password'
         )
 
@@ -230,17 +275,17 @@ describe('findUserByTelegramAccount', () => {
 
   describe('when user does not exist', () => {
     it('returns null', async () => {
-      const user = await findUserByTelegramAccount('zxc')
+      const existedUser = await findUserByTelegramAccount('zxc')
 
-      expect(user).toBeNull()
+      expect(existedUser).toBeNull()
     })
   })
 
   describe('when user exists', () => {
     it('returns user', async () => {
-      const user = await createUser('user1', 'password', 'myTelegram')
-
-      const existedUser = await findUserByTelegramAccount(' MYTelegram ')
+      const existedUser = await findUserByTelegramAccount(
+        ` ${user.telegram_account.toUpperCase()} `
+      )
 
       expect(existedUser.id).toEqual(user.id)
       expect(existedUser.login).toEqual(user.login)
@@ -277,7 +322,7 @@ describe('createUser', () => {
   describe('when password is missing', () => {
     it('raises error', async () => {
       try {
-        await createUser('user1')
+        await createUser('user2')
       } catch (e) {
         expect(e.message).toMatch('Пароль пустой')
       }
@@ -287,7 +332,7 @@ describe('createUser', () => {
   describe('when password is empty', () => {
     it('raises error', async () => {
       try {
-        await createUser('user1', ' ')
+        await createUser('user2', ' ')
       } catch (e) {
         expect(e.message).toMatch('Пароль пустой')
       }
@@ -296,12 +341,12 @@ describe('createUser', () => {
 
   describe('when user exists', () => {
     it('raises error', async () => {
-      await createUser('user1', 'password')
+      await createUser('user2', 'password')
 
       try {
-        await createUser(' USER1 ', 'password')
+        await createUser(' USER2 ', 'password')
       } catch (e) {
-        expect(e.message).toMatch('Пользователь с логином user1 уже существует')
+        expect(e.message).toMatch('Пользователь с логином user2 уже существует')
       }
     })
   })
@@ -309,46 +354,47 @@ describe('createUser', () => {
   describe('when user does not exist', () => {
     describe('when login and password only provided', () => {
       it('returns user', async () => {
-        const user = await createUser(' USER1 ', 'password')
+        const newUser = await createUser(' USER2 ', 'password')
 
-        expect(user).not.toBeNull()
-        expect(user.id).toBeDefined()
-        expect(user.login).toEqual('user1')
-        expect(user.token).toEqual(user.token)
-        expect(user.telegram_account).toBeNull()
-        expect(user.created_at).toBeInstanceOf(Date)
-        expect(user.updated_at).toBeInstanceOf(Date)
-        expect(user.password).toBeUndefined()
+        expect(newUser).not.toBeNull()
+        expect(newUser.id).toBeDefined()
+        expect(newUser.login).toEqual('user2')
+        expect(newUser.token).toEqual(newUser.token)
+        expect(newUser.telegram_account).toBeNull()
+        expect(newUser.created_at).toBeInstanceOf(Date)
+        expect(newUser.updated_at).toBeInstanceOf(Date)
+        expect(newUser.password).toBeUndefined()
       })
 
       it('encrypts password', async () => {
-        const user = await createUser(' USER1 ', 'password')
+        const newUser = await createUser(' USER2 ', 'password')
 
         const existedUser = await findUserByLoginAndPassword(
-          ' USER1 ',
+          ' USER2 ',
           'password'
         )
 
-        expect(user.id).toEqual(existedUser.id)
+        expect(newUser.id).toEqual(existedUser.id)
       })
     })
 
     describe('when login, password and telegram_account provided', () => {
       it('returns user', async () => {
-        const user = await createUser(
-          ' USER1 ',
+        const newUser = await createUser(
+          ' USER2 ',
           'password',
-          ' myTelegramAccount '
+          ' myTelegramAccount2 '
         )
 
-        expect(user).not.toBeNull()
-        expect(user.id).toBeDefined()
-        expect(user.login).toEqual('user1')
-        expect(user.token).toBeDefined()
-        expect(user.telegram_account).toEqual('mytelegramaccount')
-        expect(user.created_at).toBeInstanceOf(Date)
-        expect(user.updated_at).toBeInstanceOf(Date)
-        expect(user.password).toBeUndefined()
+        expect(newUser).not.toBeNull()
+        expect(newUser.id).toBeDefined()
+        expect(newUser.login).toEqual('user2')
+        expect(newUser.token).toBeDefined()
+        expect(newUser.api_key).toBeDefined()
+        expect(newUser.telegram_account).toEqual('mytelegramaccount2')
+        expect(newUser.created_at).toBeInstanceOf(Date)
+        expect(newUser.updated_at).toBeInstanceOf(Date)
+        expect(newUser.password).toBeUndefined()
       })
     })
   })
@@ -386,12 +432,6 @@ describe('updateUserPasswordAndToken', () => {
   })
 
   describe('when user exists', () => {
-    let user
-
-    beforeEach(async () => {
-      user = await createUser('user1', 'password')
-    })
-
     describe('when password is missing', () => {
       it('raises error', async () => {
         try {
@@ -472,8 +512,6 @@ describe('updateUserToken', () => {
 
   describe('when user exists', () => {
     it('updates token', async () => {
-      const user = await createUser('user1', 'password')
-
       await updateUserToken(user.id)
 
       expect(await findUserByToken(user.token)).toBeNull()
@@ -525,8 +563,6 @@ describe('updateUserTelegramAccount', () => {
   describe('when user exists', () => {
     describe('when telegram_account is not set', () => {
       it('sets telegram_account to null', async () => {
-        const user = await createUser('user1', 'password', 'myTelegramAccount')
-
         await updateUserTelegramAccount(user.id, '')
 
         expect(
@@ -544,8 +580,6 @@ describe('updateUserTelegramAccount', () => {
     })
 
     it('updates telegram_account', async () => {
-      const user = await createUser('user1', 'password', 'myTelegramAccount')
-
       await updateUserTelegramAccount(user.id, 'newTelegramAccount')
 
       expect(await findUserByTelegramAccount(user.telegram_account)).toBeNull()

@@ -1,10 +1,10 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
-}
-
-generator client {
-  provider = "prisma-client-js"
 }
 
 model Crawler {
@@ -37,9 +37,10 @@ model User {
   created_at            DateTime                  @default(now())
   updated_at            DateTime                  @updatedAt
   last_sign_in_at       DateTime                  @default(now())
+  api_key               String                    @unique(map: "users_api_key") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   queued_products       ProductQueue[]
-  products              UserProduct[]
   product_subscriptions UserProductSubscription[]
+  products              UserProduct[]
 
   @@map("users")
 }
@@ -48,11 +49,11 @@ model ProductQueue {
   id                  String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   url                 String   @db.VarChar(255)
   url_hash            String   @db.VarChar(255)
-  requested_by        User     @relation(fields: [requested_by_id], references: [id])
   requested_by_id     String   @db.Uuid
   skip_for_crawler_id String?  @db.Uuid
   created_at          DateTime @default(now())
   updated_at          DateTime @updatedAt
+  requested_by        User     @relation(fields: [requested_by_id], references: [id])
 
   @@unique([url, url_hash, requested_by_id])
   @@map("products_queue")
@@ -68,8 +69,8 @@ model Product {
   created_at         DateTime                  @default(now())
   updated_at         DateTime                  @updatedAt
   history            ProductHistory[]
-  followed_by_users  UserProduct[]
   user_subscriptions UserProductSubscription[]
+  followed_by_users  UserProduct[]
 
   @@map("products")
 }
@@ -81,24 +82,24 @@ model ProductHistory {
   discount_price Float?
   status         String   @db.VarChar(32)
   in_stock       Boolean  @default(false)
-  product        Product  @relation(fields: [product_id], references: [id])
   product_id     String   @db.Uuid
-  crawler        Crawler  @relation(fields: [crawler_id], references: [id])
   crawler_id     String   @db.Uuid
   created_at     DateTime @default(now())
+  crawler        Crawler  @relation(fields: [crawler_id], references: [id])
+  product        Product  @relation(fields: [product_id], references: [id])
 
   @@map("product_history")
 }
 
 model UserProduct {
   id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  user       User     @relation(fields: [user_id], references: [id])
   user_id    String   @db.Uuid
-  product    Product  @relation(fields: [product_id], references: [id])
   product_id String   @db.Uuid
   favorited  Boolean  @default(false)
   price      Float
   created_at DateTime @default(now())
+  product    Product  @relation(fields: [product_id], references: [id])
+  user       User     @relation(fields: [user_id], references: [id])
 
   @@unique([user_id, product_id])
   @@map("user_products")
@@ -106,14 +107,14 @@ model UserProduct {
 
 model UserProductSubscription {
   id                String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  user              User     @relation(fields: [user_id], references: [id])
   user_id           String   @db.Uuid
-  product           Product  @relation(fields: [product_id], references: [id])
   product_id        String   @db.Uuid
   subscription_type String   @db.VarChar(64)
   payload           Json?
   created_at        DateTime @default(now())
   updated_at        DateTime @updatedAt
+  product           Product  @relation(fields: [product_id], references: [id])
+  user              User     @relation(fields: [user_id], references: [id])
 
   @@unique([user_id, product_id, subscription_type])
   @@map("user_product_subscriptions")

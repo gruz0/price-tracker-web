@@ -13,6 +13,7 @@ run: # Run dev server
 	@${NPM_RUN} dev
 
 lint: # Run lint
+	@${NPM_RUN} lint:prisma
 	@${NPM_RUN} lint
 
 test: # Run test

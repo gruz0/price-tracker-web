@@ -51,7 +51,6 @@ export const isStatusSupported = (status) => {
   return SUPPORTED_PRODUCT_STATUSES.includes(status)
 }
 
-// TODO: Добавить тесты
 export const buildUserResponse = (user) => {
   if (!user) throw new Error('Пустой пользователь')
 
@@ -60,6 +59,7 @@ export const buildUserResponse = (user) => {
     user: {
       id: user.id,
       login: user.login,
+      api_key: user.api_key,
       telegram_account: user.telegram_account,
     },
   }

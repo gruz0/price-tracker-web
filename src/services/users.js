@@ -53,7 +53,7 @@ export const getUserProductWithActualStateAndHistory = async (
       where status = 'ok'
       order by product_id, created_at desc
     ) last_product_history on last_product_history.product_id = up.product_id
-    where up.user_id = ${userId} and up.product_id = ${productId}
+    where up.user_id = ${userId}::UUID and up.product_id = ${productId}::UUID
     order by price_updated_at DESC
   `
 
@@ -103,7 +103,7 @@ export const getUserProductsWithActualState = async (userId) => {
       from product_history
       order by product_id, created_at desc
     ) last_product_history on last_product_history.product_id = up.product_id
-    where up.user_id = ${userId}
+    where up.user_id = ${userId}::UUID
     order by price_updated_at DESC
   `
 

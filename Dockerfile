@@ -31,11 +31,11 @@ COPY . .
 
 RUN npm install && \
     npm run prisma:generate_client && \
-    cp -Rv node_modules prod_node_modules
+    cp -R node_modules prod_node_modules
 
 # Production image, copy all the files and run next
 FROM node:17.9-alpine AS runner
-RUN apk add --update --no-cache curl=7.80.0-r1
+RUN apk add --update --no-cache curl=7.80.0-r2
 
 WORKDIR /app
 

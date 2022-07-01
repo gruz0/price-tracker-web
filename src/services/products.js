@@ -42,12 +42,12 @@ export const getProductHistoryGroupedByLastRecordByDate = async (
     INNER JOIN (
       SELECT MAX(created_at) AS created_at
       FROM product_history
-      WHERE product_id = ${productId} AND status IN ('ok', 'not_found')
+      WHERE product_id = ${productId}::UUID AND status IN ('ok', 'not_found')
       GROUP BY DATE(created_at)
       ORDER BY created_at DESC
       LIMIT ${limit}
     ) sub ON sub.created_at = ph.created_at
-    WHERE ph.product_id = ${productId} AND status IN ('ok', 'not_found')
+    WHERE ph.product_id = ${productId}::UUID AND status IN ('ok', 'not_found')
     ORDER BY ph.created_at DESC
   `
 
@@ -90,7 +90,7 @@ export const getTelegramAccountsSubscribedToProductChangeStatusToInStock =
         and u.telegram_account <> ''
         and ups.subscription_type = 'on_change_status_to_in_stock'
         and ph.in_stock = false
-        and ups.product_id = ${productId}
+        and ups.product_id = ${productId}::UUID
     `
   }
 
