@@ -540,3 +540,23 @@ export const YOU_ARE_ALREADY_HAVE_THIS_PRODUCT = {
   status: 'you_are_already_have_this_product',
   message: 'У вас уже есть этот товар, можно открыть карточку в Chartik',
 }
+
+export const MISSING_APP = {
+  status: 'missing_app',
+  message: 'Отсутствует app в запросе',
+}
+
+export const MISSING_VERSION = {
+  status: 'missing_version',
+  message: 'Отсутствует version в запросе',
+}
+
+export const MISSING_MESSAGE = {
+  status: 'missing_message',
+  message: 'Отсутствует message в запросе',
+}
+
+export const ERROR_REPORT_CREATED = {
+  status: 'error_report_created',
+  message: 'Отчёт об ошибке создан. Спасибо!',
+}
