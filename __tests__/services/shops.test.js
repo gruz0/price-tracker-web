@@ -129,6 +129,15 @@ describe('isSingleProductURL', () => {
           isSingleProductURL(shopName, 'https://www.ozon.ru/product/42/')
         ).toEqual(true)
       })
+
+      it('returns true', () => {
+        expect(
+          isSingleProductURL(
+            shopName,
+            'https://www.ozon.ru/products/441313301?sh=y6SDCxnYGA&from=share_ios'
+          )
+        ).toEqual(true)
+      })
     })
 
     describe('when not a single product URL', () => {

@@ -6,7 +6,7 @@ const shops = {
     domain: 'www.ozon.ru',
     alternateDomains: ['ozon.ru', 'm.ozon.ru'],
     searchPath: '/search?text=',
-    singleProductPattern: '/product/.+',
+    singleProductPattern: '/products?/.+',
   },
   lamoda: {
     name: 'lamoda',
