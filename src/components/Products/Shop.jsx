@@ -7,14 +7,14 @@ export default function Shop({ product }) {
       <a
         target="_blank"
         rel="noopener noreferrer"
-        title="Открыть страницу товара в магазине"
+        title={`Открыть страницу товара в магазине ${product.shop}`}
       >
         <Image
           src={'/' + product.shop + '.ico'}
           width={24}
           height={24}
           rounded
-          alt="Открыть страницу товара в магазине"
+          alt={`Открыть страницу товара в магазине ${product.shop}`}
         />
       </a>
     </Link>
