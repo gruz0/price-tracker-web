@@ -18,7 +18,6 @@ import {
   getProductLatestValidPriceFromHistory,
 } from '../../../../services/products'
 import { findUserByApiKey } from '../../../../services/auth'
-import { getUserProduct } from '../../../../services/users'
 
 import {
   METHOD_NOT_ALLOWED,
@@ -42,6 +41,7 @@ import {
   YOU_ARE_ALREADY_HAVE_THIS_PRODUCT,
 } from '../../../../lib/messages'
 import { isEmptyString, isValidUUID } from '../../../../lib/validators'
+import { UserProductsService } from '../../../../services/user_products_service'
 
 const handler = async (req, res) => {
   if (req.method !== 'POST') {
@@ -221,13 +221,16 @@ const handler = async (req, res) => {
   let userProduct
 
   try {
-    userProduct = await getUserProduct(user.id, product.id)
+    userProduct = await UserProductsService.getByUserIdAndProductId(
+      user.id,
+      product.id
+    )
   } catch (err) {
     console.error({ err })
 
     Sentry.withScope(function (scope) {
       scope.setContext('args', { user, product })
-      scope.setTag('section', 'getUserProduct')
+      scope.setTag('section', 'UserProductsService.getByUserIdAndProductId')
       scope.setUser({ user })
       Sentry.captureException(err)
     })

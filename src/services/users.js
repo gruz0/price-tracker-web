@@ -122,36 +122,6 @@ export const addProductToUser = async (userId, productId, productPrice) => {
   })
 }
 
-export const getUserProduct = async (userId, productId) => {
-  const userProduct = await prisma.userProduct.findFirst({
-    where: {
-      product_id: productId,
-      user_id: userId,
-    },
-    include: {
-      product: {
-        select: {
-          title: true,
-          shop: true,
-        },
-      },
-    },
-  })
-
-  if (!userProduct) {
-    return null
-  }
-
-  return {
-    id: userProduct.product_id,
-    price: userProduct.price,
-    created_at: userProduct.created_at,
-    favorited: userProduct.favorited,
-    title: userProduct.product.title,
-    shop: userProduct.product.shop,
-  }
-}
-
 // TODO: Add tests
 export const removeProductWithSubscriptionsFromUser = async (
   userId,

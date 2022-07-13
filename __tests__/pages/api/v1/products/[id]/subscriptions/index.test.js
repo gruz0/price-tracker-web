@@ -408,7 +408,7 @@ describe(`POST ${ENDPOINT}`, () => {
 
     describe('when product_id missing', () => {
       test('returns error', async () => {
-        const { req, res } = mockAuthorizedDELETERequest(user.token, {})
+        const { req, res } = mockAuthorizedPOSTRequest(user.token, {})
 
         await handler(req, res)
 
@@ -419,7 +419,7 @@ describe(`POST ${ENDPOINT}`, () => {
 
     describe('when product does not exist', () => {
       test('returns error', async () => {
-        const { req, res } = mockAuthorizedDELETERequest(user.token, {
+        const { req, res } = mockAuthorizedPOSTRequest(user.token, {
           id: uuid.v4(),
         })
 
@@ -441,7 +441,7 @@ describe(`POST ${ENDPOINT}`, () => {
           },
         })
 
-        const { req, res } = mockAuthorizedDELETERequest(user.token, {
+        const { req, res } = mockAuthorizedPOSTRequest(user.token, {
           id: product.id,
         })
 

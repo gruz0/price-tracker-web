@@ -1,6 +1,8 @@
 import { createMocks } from 'node-mocks-http'
 
 export const cleanDatabase = async (prisma) => {
+  const deleteUserProductsGroupItem = prisma.userProductsGroupItem.deleteMany()
+  const deleteUserProductsGroup = prisma.userProductsGroup.deleteMany()
   const deleteUserProductSubscription =
     prisma.userProductSubscription.deleteMany()
   const deleteProductQueue = prisma.productQueue.deleteMany()
@@ -12,6 +14,8 @@ export const cleanDatabase = async (prisma) => {
   const deleteBot = prisma.bot.deleteMany()
 
   await prisma.$transaction([
+    deleteUserProductsGroupItem,
+    deleteUserProductsGroup,
     deleteUserProductSubscription,
     deleteProductQueue,
     deleteUserProduct,

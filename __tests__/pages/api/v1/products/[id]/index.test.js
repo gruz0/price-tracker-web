@@ -143,8 +143,11 @@ describe(`GET ${ENDPOINT}`, () => {
     })
 
     describe('when all is good', () => {
-      test('returns products with shops', async () => {
-        const product = await prisma.product.create({
+      let product
+      let userProduct
+
+      beforeEach(async () => {
+        product = await prisma.product.create({
           data: {
             title: 'Product',
             url: 'https://domain.tld',
@@ -153,7 +156,7 @@ describe(`GET ${ENDPOINT}`, () => {
           },
         })
 
-        const userProduct = await prisma.userProduct.create({
+        userProduct = await prisma.userProduct.create({
           data: {
             user_id: user.id,
             product_id: product.id,
@@ -162,56 +165,156 @@ describe(`GET ${ENDPOINT}`, () => {
             created_at: new Date('2022-06-11 12:34:56'),
           },
         })
+      })
 
-        const { req, res } = mockAuthorizedGETRequest(user.token, {
-          id: product.id,
-        })
-
-        await handler(req, res)
-
-        expect(parseJSON(res)).toEqual({
-          product: {
+      describe('when product is not in groups', () => {
+        test('returns products with shops', async () => {
+          const { req, res } = mockAuthorizedGETRequest(user.token, {
             id: product.id,
-            price: userProduct.price,
-            title: product.title,
-            favorited: true,
-            created_at: '2022-06-11T09:34:56.000Z',
-            shop: 'shop',
-          },
-          shops: {
-            goldapple: {
-              domain: 'goldapple.ru',
-              name: 'goldapple',
-              search_path: '/catalogsearch/result?q=',
+          })
+
+          await handler(req, res)
+
+          expect(parseJSON(res)).toEqual({
+            product: {
+              id: product.id,
+              user_product_id: userProduct.id,
+              price: userProduct.price,
+              title: product.title,
+              favorited: true,
+              created_at: '2022-06-11T09:34:56.000Z',
+              shop: 'shop',
             },
-            lamoda: {
-              domain: 'www.lamoda.ru',
-              name: 'lamoda',
-              search_path: '/catalogsearch/result/?q=',
+            groups: [],
+            shops: {
+              goldapple: {
+                domain: 'goldapple.ru',
+                name: 'goldapple',
+                search_path: '/catalogsearch/result?q=',
+              },
+              lamoda: {
+                domain: 'www.lamoda.ru',
+                name: 'lamoda',
+                search_path: '/catalogsearch/result/?q=',
+              },
+              ozon: {
+                domain: 'www.ozon.ru',
+                name: 'ozon',
+                search_path: '/search?text=',
+              },
+              sbermegamarket: {
+                domain: 'sbermegamarket.ru',
+                name: 'sbermegamarket',
+                search_path: '/catalog/?q=',
+              },
+              store77: {
+                domain: 'store77.net',
+                name: 'store77',
+                search_path: '/search/?q=',
+              },
+              wildberries: {
+                domain: 'www.wildberries.ru',
+                name: 'wildberries',
+                search_path: '/catalog/0/search.aspx?sort=popular&search=',
+              },
             },
-            ozon: {
-              domain: 'www.ozon.ru',
-              name: 'ozon',
-              search_path: '/search?text=',
-            },
-            sbermegamarket: {
-              domain: 'sbermegamarket.ru',
-              name: 'sbermegamarket',
-              search_path: '/catalog/?q=',
-            },
-            store77: {
-              domain: 'store77.net',
-              name: 'store77',
-              search_path: '/search/?q=',
-            },
-            wildberries: {
-              domain: 'www.wildberries.ru',
-              name: 'wildberries',
-              search_path: '/catalog/0/search.aspx?sort=popular&search=',
-            },
-          },
+          })
+          expect(res._getStatusCode()).toBe(200)
         })
-        expect(res._getStatusCode()).toBe(200)
+      })
+
+      describe('when product is in groups', () => {
+        test('returns products with shops and groups', async () => {
+          const userProductGroup1 = await prisma.userProductsGroup.create({
+            data: {
+              user_id: user.id,
+              title: 'Product Group 1',
+            },
+          })
+
+          const userProductGroup2 = await prisma.userProductsGroup.create({
+            data: {
+              user_id: user.id,
+              title: 'Product Group 2',
+            },
+          })
+
+          await prisma.userProductsGroupItem.createMany({
+            data: [
+              {
+                user_id: user.id,
+                user_products_group_id: userProductGroup1.id,
+                user_product_id: userProduct.id,
+              },
+              {
+                user_id: user.id,
+                user_products_group_id: userProductGroup2.id,
+                user_product_id: userProduct.id,
+              },
+            ],
+          })
+
+          const { req, res } = mockAuthorizedGETRequest(user.token, {
+            id: product.id,
+          })
+
+          await handler(req, res)
+
+          expect(parseJSON(res)).toEqual({
+            product: {
+              id: product.id,
+              user_product_id: userProduct.id,
+              price: userProduct.price,
+              title: product.title,
+              favorited: true,
+              created_at: '2022-06-11T09:34:56.000Z',
+              shop: 'shop',
+            },
+            groups: [
+              {
+                id: userProductGroup1.id,
+                title: userProductGroup1.title,
+              },
+              {
+                id: userProductGroup2.id,
+                title: userProductGroup2.title,
+              },
+            ],
+            shops: {
+              goldapple: {
+                domain: 'goldapple.ru',
+                name: 'goldapple',
+                search_path: '/catalogsearch/result?q=',
+              },
+              lamoda: {
+                domain: 'www.lamoda.ru',
+                name: 'lamoda',
+                search_path: '/catalogsearch/result/?q=',
+              },
+              ozon: {
+                domain: 'www.ozon.ru',
+                name: 'ozon',
+                search_path: '/search?text=',
+              },
+              sbermegamarket: {
+                domain: 'sbermegamarket.ru',
+                name: 'sbermegamarket',
+                search_path: '/catalog/?q=',
+              },
+              store77: {
+                domain: 'store77.net',
+                name: 'store77',
+                search_path: '/search/?q=',
+              },
+              wildberries: {
+                domain: 'www.wildberries.ru',
+                name: 'wildberries',
+                search_path: '/catalog/0/search.aspx?sort=popular&search=',
+              },
+            },
+          })
+          expect(res._getStatusCode()).toBe(200)
+        })
       })
     })
   })
@@ -293,6 +396,7 @@ describe(`DELETE ${ENDPOINT}`, () => {
 
     describe('when all is good', () => {
       let product
+      let userProduct
 
       beforeEach(async () => {
         product = await prisma.product.create({
@@ -304,7 +408,7 @@ describe(`DELETE ${ENDPOINT}`, () => {
           },
         })
 
-        await prisma.userProduct.create({
+        userProduct = await prisma.userProduct.create({
           data: {
             user_id: user.id,
             product_id: product.id,
@@ -380,6 +484,88 @@ describe(`DELETE ${ENDPOINT}`, () => {
             })
 
           expect(existedUserProductSubscription).toBeNull()
+        })
+      })
+
+      describe('when user product is in group', () => {
+        let userProductsGroup
+        let userProduct2
+        let userProductsGroupItem2
+
+        beforeEach(async () => {
+          userProductsGroup = await prisma.userProductsGroup.create({
+            data: {
+              user_id: user.id,
+              title: 'Group Title',
+            },
+          })
+
+          await prisma.userProductsGroupItem.create({
+            data: {
+              user_id: user.id,
+              user_products_group_id: userProductsGroup.id,
+              user_product_id: userProduct.id,
+            },
+          })
+
+          const product2 = await prisma.product.create({
+            data: {
+              title: 'Product2',
+              url: 'https://domain2.tld',
+              url_hash: 'hash2',
+              shop: 'shop',
+            },
+          })
+
+          userProduct2 = await prisma.userProduct.create({
+            data: {
+              user_id: user.id,
+              product_id: product2.id,
+              price: 35,
+            },
+          })
+
+          userProductsGroupItem2 = await prisma.userProductsGroupItem.create({
+            data: {
+              user_id: user.id,
+              user_products_group_id: userProductsGroup.id,
+              user_product_id: userProduct2.id,
+            },
+          })
+        })
+
+        test('removes product from items', async () => {
+          const { req, res } = mockAuthorizedDELETERequest(user.token, {
+            id: product.id,
+          })
+
+          await handler(req, res)
+
+          expect(res._getStatusCode()).toBe(200)
+          expect(parseJSON(res)).toEqual({})
+
+          const existedUserProductsGroupItems =
+            await prisma.userProductsGroupItem.findMany()
+
+          expect(existedUserProductsGroupItems).toEqual([
+            userProductsGroupItem2,
+          ])
+        })
+
+        test('does not remove user products group', async () => {
+          const { req, res } = mockAuthorizedDELETERequest(user.token, {
+            id: product.id,
+          })
+
+          await handler(req, res)
+
+          expect(res._getStatusCode()).toBe(200)
+          expect(parseJSON(res)).toEqual({})
+
+          const existedUserProductsGroups =
+            await prisma.userProductsGroup.findMany()
+
+          expect(existedUserProductsGroups).toEqual([userProductsGroup])
         })
       })
     })

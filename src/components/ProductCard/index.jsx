@@ -11,6 +11,7 @@ import {
 } from 'semantic-ui-react'
 import { useRouter } from 'next/router'
 import Statistics from './Statistics'
+import ProductGroups from './ProductGroups'
 import SearchInOtherShops from './SearchInOtherShops'
 import Chart from './Chart'
 import PriceTable from './PriceTable'
@@ -27,7 +28,7 @@ import {
 } from '../../lib/subscriptions'
 import { removeProductFromUser } from '../../lib/products'
 
-export default function ProductCard({ product, shops, isSmallScreen }) {
+export default function ProductCard({ product, shops, groups, isSmallScreen }) {
   const router = useRouter()
   const { user, token, logout } = useAuth()
   const { data, isLoading, error } = useProductHistory(product.id, token)
@@ -225,6 +226,8 @@ export default function ProductCard({ product, shops, isSmallScreen }) {
               content={`Перейти в магазин ${product.shop}`}
               icon="linkify"
             />
+
+            {groups.length > 0 && <ProductGroups groups={groups} />}
 
             <SearchInOtherShops product={product} shops={shops} />
           </Menu>

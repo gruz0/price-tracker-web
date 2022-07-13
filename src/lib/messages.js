@@ -560,3 +560,98 @@ export const ERROR_REPORT_CREATED = {
   status: 'error_report_created',
   message: 'Отчёт об ошибке создан. Спасибо!',
 }
+
+export const UNABLE_TO_GET_USER_PRODUCTS_GROUPS = {
+  status: 'unable_to_get_user_products_groups',
+  message: 'Не удалось получить список групп товаров пользователя',
+}
+
+export const MISSING_USER_PRODUCTS_GROUP_TITLE = {
+  status: 'missing_user_products_group_title',
+  message: 'Отсутствует title в запросе',
+}
+
+export const USER_PRODUCTS_GROUP_CREATED = {
+  status: 'user_products_group_created',
+  message: 'Группа товаров создана',
+}
+
+export const UNABLE_TO_CREATE_USER_PRODUCTS_GROUP = {
+  status: 'unable_to_create_user_products_group',
+  message: 'Не удалось создать группу товаров пользователя',
+}
+
+export const MISSING_PRODUCTS_GROUP_ID = {
+  status: 'missing_products_group_id',
+  message: 'Отсутствует products_group_id в запросе',
+}
+
+export const INVALID_PRODUCTS_GROUP_UUID = {
+  status: 'invalid_products_group_uuid',
+  message: 'ID группы товаров должен быть UUID',
+}
+
+export const UNABLE_TO_FIND_USER_PRODUCTS_GROUP = {
+  status: 'unable_to_find_user_products_group',
+  message: 'Не удалось найти группу товаров пользователя',
+}
+
+export const UNABLE_TO_GET_PRODUCTS_FROM_USER_PRODUCTS_GROUP = {
+  status: 'unable_to_get_products_from_user_products_group',
+  message: 'Не удалось найти товары в группе товаров пользователя',
+}
+
+export const PRODUCTS_GROUP_DOES_NOT_EXIST = {
+  status: 'products_group_does_not_exist',
+  message: 'Группа товаров не существует',
+}
+
+export const MISSING_USER_PRODUCT_ID = {
+  status: 'missing_user_product_id',
+  message: 'Отсутствует user_product_id',
+}
+
+export const INVALID_USER_PRODUCT_UUID = {
+  status: 'invalid_user_product_uuid',
+  message: 'ID товара пользователя должен быть UUID',
+}
+
+export const UNABLE_TO_FIND_USER_PRODUCT = {
+  status: 'unable_to_find_user_product',
+  message: 'Не удалось найти товар пользователя',
+}
+
+export const UNABLE_TO_CHECK_ITEM_PRESENCE_IN_PRODUCTS_GROUP = {
+  status: 'UNABLE_TO_CHECK_ITEM_PRESENCE_IN_PRODUCTS_GROUP',
+  message: 'Не удалось найти товар пользователя в группе товаров',
+}
+
+export const USER_PRODUCT_DOES_NOT_EXIST = {
+  status: 'user_product_does_not_exist',
+  message: 'Товар пользователя не существует',
+}
+
+export const USER_PRODUCT_ALREADY_EXISTS_IN_PRODUCTS_GROUP = {
+  status: 'user_product_already_exists_in_products_group',
+  message: 'Товар уже имеется в группе товаров',
+}
+
+export const USER_PRODUCT_HAS_BEEN_ADDED_TO_PRODUCTS_GROUP = {
+  status: 'user_product_has_been_added_to_products_group',
+  message: 'Товар успешно добавлен в группу',
+}
+
+export const UNABLE_TO_ADD_USER_PRODUCT_TO_PRODUCTS_GROUP = {
+  status: 'unable_to_add_user_product_to_products_group',
+  message: 'Не удалось добавить товар в группу',
+}
+
+export const USER_PRODUCTS_GROUP_DELETED = {
+  status: 'user_products_group_deleted',
+  message: 'Группа товаров удалена',
+}
+
+export const UNABLE_TO_DELETE_USER_PRODUCTS_GROUP = {
+  status: 'unable_to_delete_user_products_group',
+  message: 'Не удалось удалить группу товаров пользователя',
+}

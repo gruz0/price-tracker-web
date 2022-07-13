@@ -15,10 +15,15 @@ describe('users', () => {
   let user1
   let user2
   let user2ProductQueue
-  let user2product1
-  let user2product2
-  let user2product1Subscription
-  let user2product2Subscription
+  let user1Product1
+  let user2Product1
+  let user2Product2
+  let user2Product1Subscription
+  let user2Product2Subscription
+  let user1ProductsGroup1
+  let user2ProductsGroup1
+  let user2ProductsGroup1Item1
+  let user2ProductsGroup1Item2
 
   const deleteUser1 = async () => {
     await prisma.user.delete({
@@ -99,7 +104,7 @@ describe('users', () => {
       },
     })
 
-    await prisma.userProduct.create({
+    user1Product1 = await prisma.userProduct.create({
       data: {
         user_id: user1.id,
         product_id: product1.id,
@@ -108,7 +113,7 @@ describe('users', () => {
       },
     })
 
-    user2product1 = await prisma.userProduct.create({
+    user2Product1 = await prisma.userProduct.create({
       data: {
         user_id: user2.id,
         product_id: product1.id,
@@ -117,7 +122,7 @@ describe('users', () => {
       },
     })
 
-    user2product2 = await prisma.userProduct.create({
+    user2Product2 = await prisma.userProduct.create({
       data: {
         user_id: user2.id,
         product_id: product2.id,
@@ -134,7 +139,7 @@ describe('users', () => {
       },
     })
 
-    user2product1Subscription = await prisma.userProductSubscription.create({
+    user2Product1Subscription = await prisma.userProductSubscription.create({
       data: {
         user_id: user2.id,
         product_id: product1.id,
@@ -142,11 +147,49 @@ describe('users', () => {
       },
     })
 
-    user2product2Subscription = await prisma.userProductSubscription.create({
+    user2Product2Subscription = await prisma.userProductSubscription.create({
       data: {
         user_id: user2.id,
         product_id: product2.id,
         subscription_type: 'subscription1',
+      },
+    })
+
+    user1ProductsGroup1 = await prisma.userProductsGroup.create({
+      data: {
+        user_id: user1.id,
+        title: 'Products Group 1',
+      },
+    })
+
+    user2ProductsGroup1 = await prisma.userProductsGroup.create({
+      data: {
+        user_id: user2.id,
+        title: 'Products Group 2',
+      },
+    })
+
+    await prisma.userProductsGroupItem.create({
+      data: {
+        user_id: user1.id,
+        user_products_group_id: user1ProductsGroup1.id,
+        user_product_id: user1Product1.id,
+      },
+    })
+
+    user2ProductsGroup1Item1 = await prisma.userProductsGroupItem.create({
+      data: {
+        user_id: user2.id,
+        user_products_group_id: user2ProductsGroup1.id,
+        user_product_id: user2Product1.id,
+      },
+    })
+
+    user2ProductsGroup1Item2 = await prisma.userProductsGroupItem.create({
+      data: {
+        user_id: user2.id,
+        user_products_group_id: user2ProductsGroup1.id,
+        user_product_id: user2Product2.id,
       },
     })
   })
@@ -154,59 +197,67 @@ describe('users', () => {
   test('removes user1 related records from user_product_subscriptions', async () => {
     await deleteUser1()
 
-    const userProductSubscriptions =
-      await prisma.userProductSubscription.findMany()
+    const result = await prisma.userProductSubscription.findMany()
 
-    expect(userProductSubscriptions.length).toEqual(2)
-    expect(userProductSubscriptions[0].id).toEqual(user2product1Subscription.id)
-    expect(userProductSubscriptions[1].id).toEqual(user2product2Subscription.id)
+    expect(result).toEqual([
+      user2Product1Subscription,
+      user2Product2Subscription,
+    ])
   })
 
   test('removes user1 related records from user_products', async () => {
     await deleteUser1()
 
-    const userProducts = await prisma.userProduct.findMany()
+    const result = await prisma.userProduct.findMany()
 
-    expect(userProducts.length).toEqual(2)
-    expect(userProducts[0].id).toEqual(user2product1.id)
-    expect(userProducts[1].id).toEqual(user2product2.id)
+    expect(result).toEqual([user2Product1, user2Product2])
   })
 
   test('removes user1 related records from products_queue', async () => {
     await deleteUser1()
 
-    const queuedProducts = await prisma.productQueue.findMany()
+    const result = await prisma.productQueue.findMany()
 
-    expect(queuedProducts.length).toEqual(1)
-    expect(queuedProducts[0].id).toEqual(user2ProductQueue.id)
+    expect(result).toEqual([user2ProductQueue])
+  })
+
+  test('removes user1 related records from user_products_groups', async () => {
+    await deleteUser1()
+
+    const result = await prisma.userProductsGroup.findMany()
+
+    expect(result).toEqual([user2ProductsGroup1])
+  })
+
+  test('removes user1 related records from user_products_group_items', async () => {
+    await deleteUser1()
+
+    const result = await prisma.userProductsGroupItem.findMany()
+
+    expect(result).toEqual([user2ProductsGroup1Item1, user2ProductsGroup1Item2])
   })
 
   test('does not remove product_history', async () => {
     await deleteUser1()
 
-    const productHistories = await prisma.productHistory.findMany()
+    const result = await prisma.productHistory.findMany()
 
-    expect(productHistories.length).toEqual(2)
-    expect(productHistories[0].id).toEqual(product1History.id)
-    expect(productHistories[1].id).toEqual(product2History.id)
+    expect(result).toEqual([product1History, product2History])
   })
 
   test('does not remove products', async () => {
     await deleteUser1()
 
-    const products = await prisma.product.findMany()
+    const result = await prisma.product.findMany()
 
-    expect(products.length).toEqual(2)
-    expect(products[0].id).toEqual(product1.id)
-    expect(products[1].id).toEqual(product2.id)
+    expect(result).toEqual([product1, product2])
   })
 
   test('does not remove crawlers', async () => {
     await deleteUser1()
 
-    const crawlers = await prisma.crawler.findMany()
+    const result = await prisma.crawler.findMany()
 
-    expect(crawlers.length).toEqual(1)
-    expect(crawlers[0].id).toEqual(crawler1.id)
+    expect(result).toEqual([crawler1])
   })
 })

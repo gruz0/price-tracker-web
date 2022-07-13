@@ -29,18 +29,20 @@ model Bot {
 }
 
 model User {
-  id                    String                    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  login                 String                    @unique @db.VarChar(255)
-  password              String                    @db.VarChar(255)
-  token                 String                    @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  telegram_account      String?                   @db.VarChar(255)
-  created_at            DateTime                  @default(now())
-  updated_at            DateTime                  @updatedAt
-  last_sign_in_at       DateTime                  @default(now())
-  api_key               String                    @unique(map: "users_api_key") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  queued_products       ProductQueue[]
-  product_subscriptions UserProductSubscription[]
-  products              UserProduct[]
+  id                        String                    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  login                     String                    @unique @db.VarChar(255)
+  password                  String                    @db.VarChar(255)
+  token                     String                    @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  telegram_account          String?                   @db.VarChar(255)
+  created_at                DateTime                  @default(now())
+  updated_at                DateTime                  @updatedAt
+  last_sign_in_at           DateTime                  @default(now())
+  api_key                   String                    @unique(map: "users_api_key") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  queued_products           ProductQueue[]
+  product_subscriptions     UserProductSubscription[]
+  products                  UserProduct[]
+  user_products_group_items UserProductsGroupItem[]
+  user_products_groups      UserProductsGroup[]
 
   @@map("users")
 }
@@ -92,14 +94,15 @@ model ProductHistory {
 }
 
 model UserProduct {
-  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  user_id    String   @db.Uuid
-  product_id String   @db.Uuid
-  favorited  Boolean  @default(false)
-  price      Float
-  created_at DateTime @default(now())
-  product    Product  @relation(fields: [product_id], references: [id], onDelete: Cascade)
-  user       User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  id                        String                  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id                   String                  @db.Uuid
+  product_id                String                  @db.Uuid
+  favorited                 Boolean                 @default(false)
+  price                     Float
+  created_at                DateTime                @default(now())
+  product                   Product                 @relation(fields: [product_id], references: [id], onDelete: Cascade)
+  user                      User                    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  user_products_group_items UserProductsGroupItem[]
 
   @@unique([user_id, product_id])
   @@map("user_products")
@@ -118,4 +121,32 @@ model UserProductSubscription {
 
   @@unique([user_id, product_id, subscription_type])
   @@map("user_product_subscriptions")
+}
+
+model UserProductsGroup {
+  id                        String                  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id                   String                  @db.Uuid
+  title                     String                  @db.VarChar(512)
+  image                     String?                 @db.VarChar(255)
+  created_at                DateTime                @default(now())
+  updated_at                DateTime                @updatedAt
+  user                      User                    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  user_products_group_items UserProductsGroupItem[]
+
+  @@map("user_products_groups")
+}
+
+model UserProductsGroupItem {
+  id                     String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id                String            @db.Uuid
+  user_products_group_id String            @db.Uuid
+  user_product_id        String            @db.Uuid
+  created_at             DateTime          @default(now())
+  updated_at             DateTime          @updatedAt
+  user                   User              @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  user_product           UserProduct       @relation(fields: [user_product_id], references: [id], onDelete: Cascade)
+  user_products_group    UserProductsGroup @relation(fields: [user_products_group_id], references: [id], onDelete: Cascade)
+
+  @@unique([user_id, user_products_group_id, user_product_id])
+  @@map("user_products_group_items")
 }

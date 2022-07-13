@@ -60,6 +60,12 @@ function AuthDetails() {
         </Link>
       </Menu.Item>
 
+      <Menu.Item active={router.pathname == '/products_groups'}>
+        <Link href="/products_groups">
+          <a>Группы товаров</a>
+        </Link>
+      </Menu.Item>
+
       <Menu.Menu position="right">
         <Menu.Item icon>
           {user.telegram_account && user.telegram_account !== '' ? (

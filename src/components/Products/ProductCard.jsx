@@ -3,7 +3,7 @@ import { Card, List, Divider, Image } from 'semantic-ui-react'
 import Link from 'next/link'
 import { formatDateTime } from '../../lib/formatDate'
 import PriceLabel from './PriceLabel'
-import InStock from './InStockIcon'
+import { TrueFalseIcon } from '../TrueFalseIcon'
 import Shop from './Shop'
 
 export default function ProductCard({ product }) {
@@ -71,7 +71,7 @@ export default function ProductCard({ product }) {
             <PriceLabel product={product} />
           </List.Item>
           <List.Item>
-            <InStock in_stock={product.in_stock} />
+            <TrueFalseIcon value={product.in_stock} />
           </List.Item>
         </List>
       </Card.Content>
