@@ -6,10 +6,6 @@ import { findUserByApiKey } from '../../../../services/auth'
 
 import {
   METHOD_NOT_ALLOWED,
-  MISSING_AUTHORIZATION_HEADER,
-  MISSING_BEARER_KEY,
-  MISSING_API_KEY,
-  INVALID_API_KEY_UUID,
   API_KEY_DOES_NOT_EXIST,
   UNABLE_TO_FIND_USER_BY_API_KEY,
   MISSING_VERSION,
@@ -17,32 +13,21 @@ import {
   MISSING_APP,
   ERROR_REPORT_CREATED,
 } from '../../../../lib/messages'
-import { isEmptyString, isValidUUID } from '../../../../lib/validators'
+import { isEmptyString } from '../../../../lib/validators'
+import { validateBearerToken } from '../../../../lib/auth_helpers'
 
 const handler = async (req, res) => {
   if (req.method !== 'POST') {
     return responseJSON(res, 405, METHOD_NOT_ALLOWED)
   }
 
-  const { authorization } = req.headers
+  const tokenResult = validateBearerToken(req.headers)
 
-  if (!authorization) {
-    return responseJSON(res, 401, MISSING_AUTHORIZATION_HEADER)
+  if (typeof tokenResult !== 'string') {
+    return responseJSON(res, tokenResult.code, tokenResult.error)
   }
 
-  if (!authorization.startsWith('Bearer ')) {
-    return responseJSON(res, 401, MISSING_BEARER_KEY)
-  }
-
-  const api_key = authorization.replace(/^Bearer /, '').trim()
-
-  if (api_key.length === 0) {
-    return responseJSON(res, 401, MISSING_API_KEY)
-  }
-
-  if (!isValidUUID(api_key)) {
-    return responseJSON(res, 400, INVALID_API_KEY_UUID)
-  }
+  const api_key = tokenResult
 
   let user
 

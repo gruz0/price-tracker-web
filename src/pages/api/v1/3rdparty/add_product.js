@@ -23,10 +23,6 @@ import { addProductToUser } from '../../../../services/users'
 
 import {
   METHOD_NOT_ALLOWED,
-  MISSING_AUTHORIZATION_HEADER,
-  MISSING_BEARER_KEY,
-  MISSING_API_KEY,
-  INVALID_API_KEY_UUID,
   API_KEY_DOES_NOT_EXIST,
   REDIRECT_TO_PRODUCT_PAGE,
   UNABLE_TO_GET_USER_PRODUCT,
@@ -44,33 +40,22 @@ import {
   MISSING_URL,
   UNABLE_TO_FIND_USER_BY_API_KEY,
 } from '../../../../lib/messages'
-import { isEmptyString, isValidUUID } from '../../../../lib/validators'
+import { isEmptyString } from '../../../../lib/validators'
 import { UserProductsService } from '../../../../services/user_products_service'
+import { validateBearerToken } from '../../../../lib/auth_helpers'
 
 const handler = async (req, res) => {
   if (req.method !== 'POST') {
     return responseJSON(res, 405, METHOD_NOT_ALLOWED)
   }
 
-  const { authorization } = req.headers
+  const tokenResult = validateBearerToken(req.headers)
 
-  if (!authorization) {
-    return responseJSON(res, 401, MISSING_AUTHORIZATION_HEADER)
+  if (typeof tokenResult !== 'string') {
+    return responseJSON(res, tokenResult.code, tokenResult.error)
   }
 
-  if (!authorization.startsWith('Bearer ')) {
-    return responseJSON(res, 401, MISSING_BEARER_KEY)
-  }
-
-  const api_key = authorization.replace(/^Bearer /, '').trim()
-
-  if (api_key.length === 0) {
-    return responseJSON(res, 401, MISSING_API_KEY)
-  }
-
-  if (!isValidUUID(api_key)) {
-    return responseJSON(res, 400, INVALID_API_KEY_UUID)
-  }
+  const api_key = tokenResult
 
   let user
 

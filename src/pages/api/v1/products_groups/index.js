@@ -12,7 +12,7 @@ import {
   UNABLE_TO_CREATE_USER_PRODUCTS_GROUP,
 } from '../../../../lib/messages'
 import { isEmptyString } from '../../../../lib/validators'
-import { validateUserToken } from '../../../../lib/auth_helpers'
+import { validateBearerToken } from '../../../../lib/auth_helpers'
 import { findUserByToken } from '../../../../services/auth'
 
 const handler = async (req, res) => {
@@ -20,7 +20,7 @@ const handler = async (req, res) => {
     return responseJSON(res, 405, METHOD_NOT_ALLOWED)
   }
 
-  const tokenResult = validateUserToken(req.headers)
+  const tokenResult = validateBearerToken(req.headers)
 
   if (typeof tokenResult !== 'string') {
     return responseJSON(res, tokenResult.code, tokenResult.error)

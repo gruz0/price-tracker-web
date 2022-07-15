@@ -26,14 +26,14 @@ import {
 } from '../../../../../../lib/messages'
 import { isEmptyString, isValidUUID } from '../../../../../../lib/validators'
 import { UserProductsService } from '../../../../../../services/user_products_service'
-import { validateUserToken } from '../../../../../../lib/auth_helpers'
+import { validateBearerToken } from '../../../../../../lib/auth_helpers'
 
 const handler = async (req, res) => {
   if (!['DELETE'].includes(req.method)) {
     return responseJSON(res, 405, METHOD_NOT_ALLOWED)
   }
 
-  const tokenResult = validateUserToken(req.headers)
+  const tokenResult = validateBearerToken(req.headers)
 
   if (typeof tokenResult !== 'string') {
     return responseJSON(res, tokenResult.code, tokenResult.error)

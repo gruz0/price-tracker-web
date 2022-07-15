@@ -7,7 +7,7 @@ import {
 import { isEmptyString, isValidUUID } from './validators'
 
 // TODO: Добавить тесты
-export const validateUserToken = ({ authorization }) => {
+export const validateBearerToken = ({ authorization }) => {
   if (!authorization) {
     return {
       code: 401,
