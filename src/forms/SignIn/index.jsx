@@ -3,6 +3,15 @@ import { useRouter } from 'next/router'
 import { Button, Form, Message, Segment } from 'semantic-ui-react'
 import { useAuth } from '../../hooks'
 
+// NOTE: Сюда мы попадаем в случае, если пользователь перешёл по ссылке товара в системе, но не был залогинен.
+// В этом случае в query параметрах будет ключ next со ссылкой на внутреннюю страницу.
+const getNextURLToRedirect = ({ query }) => {
+  const isNextURLValid =
+    query.next && query.next.startsWith('/') && !query.next.startsWith('//')
+
+  return isNextURLValid ? query.next : '/products'
+}
+
 export default function SignIn() {
   const { signIn, authenticate } = useAuth()
   const router = useRouter()
@@ -27,7 +36,7 @@ export default function SignIn() {
       if (response.ok) {
         await authenticate(json.token)
 
-        router.push('/products')
+        router.push(getNextURLToRedirect(router))
       } else {
         setErrors(json.message)
       }
