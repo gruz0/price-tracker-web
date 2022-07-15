@@ -8,11 +8,6 @@ export const INVALID_TOKEN_UUID = {
   message: 'Токен должен быть UUID',
 }
 
-export const INVALID_API_KEY_UUID = {
-  status: 'invalid_api_key_uuid',
-  message: 'Ключ API должен быть UUID',
-}
-
 export const API_KEY_DOES_NOT_EXIST = {
   status: 'api_key_does_not_exist',
   message: 'Ключ API не существует',
@@ -46,11 +41,6 @@ export const MISSING_BEARER_KEY = {
 export const MISSING_TOKEN = {
   status: 'missing_token',
   message: 'Отсутствует токен',
-}
-
-export const MISSING_API_KEY = {
-  status: 'missing_api_key',
-  message: 'Отсутствует ключ API',
 }
 
 export const MISSING_USER_ID = {

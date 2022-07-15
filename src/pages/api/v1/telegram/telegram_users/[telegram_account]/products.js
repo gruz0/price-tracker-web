@@ -2,13 +2,9 @@ import { withSentry } from '@sentry/nextjs'
 import * as Sentry from '@sentry/nextjs'
 
 import { findUserByTelegramAccount } from '../../../../../../services/auth'
-import { isEmptyString, isValidUUID } from '../../../../../../lib/validators'
+import { isEmptyString } from '../../../../../../lib/validators'
 import {
   METHOD_NOT_ALLOWED,
-  MISSING_AUTHORIZATION_HEADER,
-  MISSING_BEARER_KEY,
-  MISSING_TOKEN,
-  INVALID_TOKEN_UUID,
   UNABLE_TO_FIND_BOT_BY_TOKEN,
   BOT_DOES_NOT_EXIST,
   MISSING_TELEGRAM_ACCOUNT,
@@ -49,31 +45,20 @@ import {
 } from '../../../../../../services/products'
 import { addProductToUser } from '../../../../../../services/users'
 import { UserProductsService } from '../../../../../../services/user_products_service'
+import { validateBearerToken } from '../../../../../../lib/auth_helpers'
 
 const handler = async (req, res) => {
   if (req.method !== 'POST') {
     return responseJSON(res, 405, METHOD_NOT_ALLOWED)
   }
 
-  const { authorization } = req.headers
+  const tokenResult = validateBearerToken(req.headers)
 
-  if (isEmptyString(authorization)) {
-    return responseJSON(res, 401, MISSING_AUTHORIZATION_HEADER)
+  if (typeof tokenResult !== 'string') {
+    return responseJSON(res, tokenResult.code, tokenResult.error)
   }
 
-  if (!authorization.startsWith('Bearer ')) {
-    return responseJSON(res, 401, MISSING_BEARER_KEY)
-  }
-
-  const token = authorization.replace(/^Bearer/, '').trim()
-
-  if (token.length === 0) {
-    return responseJSON(res, 401, MISSING_TOKEN)
-  }
-
-  if (!isValidUUID(token)) {
-    return responseJSON(res, 400, INVALID_TOKEN_UUID)
-  }
+  const token = tokenResult
 
   let bot
 

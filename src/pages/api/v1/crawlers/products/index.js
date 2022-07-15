@@ -4,10 +4,6 @@ import * as Sentry from '@sentry/nextjs'
 import { isEmptyString, isValidUUID } from '../../../../../lib/validators'
 import {
   METHOD_NOT_ALLOWED,
-  MISSING_AUTHORIZATION_HEADER,
-  MISSING_BEARER_KEY,
-  MISSING_TOKEN,
-  INVALID_TOKEN_UUID,
   UNABLE_TO_GET_PRODUCTS_WITH_OUTDATED_PRICE,
   UNABLE_TO_FIND_CRAWLER_BY_TOKEN,
   CRAWLER_DOES_NOT_EXIST,
@@ -47,31 +43,20 @@ import { findUserById } from '../../../../../services/auth'
 import { findProductByURLHash } from '../../../../../services/products'
 import { addProductToUser } from '../../../../../services/users'
 import { responseJSON, isStatusSupported } from '../../../../../lib/helpers'
+import { validateBearerToken } from '../../../../../lib/auth_helpers'
 
 const handler = async (req, res) => {
   if (!['POST', 'GET'].includes(req.method)) {
     return responseJSON(res, 405, METHOD_NOT_ALLOWED)
   }
 
-  const { authorization } = req.headers
+  const tokenResult = validateBearerToken(req.headers)
 
-  if (isEmptyString(authorization)) {
-    return responseJSON(res, 401, MISSING_AUTHORIZATION_HEADER)
+  if (typeof tokenResult !== 'string') {
+    return responseJSON(res, tokenResult.code, tokenResult.error)
   }
 
-  if (!authorization.startsWith('Bearer ')) {
-    return responseJSON(res, 401, MISSING_BEARER_KEY)
-  }
-
-  const token = authorization.replace(/^Bearer/, '').trim()
-
-  if (token.length === 0) {
-    return responseJSON(res, 401, MISSING_TOKEN)
-  }
-
-  if (!isValidUUID(token)) {
-    return responseJSON(res, 400, INVALID_TOKEN_UUID)
-  }
+  const token = tokenResult
 
   let crawler
 

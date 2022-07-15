@@ -6,8 +6,8 @@ import {
   METHOD_NOT_ALLOWED,
   MISSING_AUTHORIZATION_HEADER,
   MISSING_BEARER_KEY,
-  MISSING_API_KEY,
-  INVALID_API_KEY_UUID,
+  MISSING_TOKEN,
+  INVALID_TOKEN_UUID,
   API_KEY_DOES_NOT_EXIST,
   MISSING_URL,
   INVALID_URL,
@@ -45,8 +45,8 @@ const whenNotAuthorized = (method) => {
     )
 
     whenMissingBearer(method, handler, MISSING_BEARER_KEY)
-    whenMissingToken(method, handler, MISSING_API_KEY)
-    whenTokenIsNotUUID(method, handler, 400, INVALID_API_KEY_UUID)
+    whenMissingToken(method, handler, MISSING_TOKEN)
+    whenTokenIsNotUUID(method, handler, 400, INVALID_TOKEN_UUID)
     whenTokenNotFound(method, handler, 403, API_KEY_DOES_NOT_EXIST)
   })
 }
