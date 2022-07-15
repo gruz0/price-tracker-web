@@ -47,10 +47,8 @@ import {
   findProductByURLHash,
   getProductLatestValidPriceFromHistory,
 } from '../../../../../../services/products'
-import {
-  addProductToUser,
-  getUserProduct,
-} from '../../../../../../services/users'
+import { addProductToUser } from '../../../../../../services/users'
+import { UserProductsService } from '../../../../../../services/user_products_service'
 
 const handler = async (req, res) => {
   if (req.method !== 'POST') {
@@ -283,13 +281,16 @@ const handler = async (req, res) => {
   let userProduct
 
   try {
-    userProduct = await getUserProduct(user.id, product.id)
+    userProduct = await UserProductsService.getByUserIdAndProductId(
+      user.id,
+      product.id
+    )
   } catch (err) {
     console.error({ err })
 
     Sentry.withScope(function (scope) {
       scope.setContext('args', { user, product })
-      scope.setTag('section', 'getUserProduct')
+      scope.setTag('section', 'UserProductsService.getByUserIdAndProductId')
       scope.setTag('bot_id', botId)
       scope.setUser({ user })
       Sentry.captureException(err)

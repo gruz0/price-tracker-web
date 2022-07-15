@@ -4,16 +4,9 @@ import * as Sentry from '@sentry/nextjs'
 import { findUserByToken } from '../../../../../services/auth'
 import { findProductById } from '../../../../../services/products'
 import { responseJSON } from '../../../../../lib/helpers'
-import {
-  getUserProduct,
-  getUserProductWithActualStateAndHistory,
-} from '../../../../../services/users'
+import { getUserProductWithActualStateAndHistory } from '../../../../../services/users'
 import {
   METHOD_NOT_ALLOWED,
-  MISSING_AUTHORIZATION_HEADER,
-  MISSING_BEARER_KEY,
-  MISSING_TOKEN,
-  INVALID_TOKEN_UUID,
   UNABLE_TO_FIND_USER_BY_TOKEN,
   FORBIDDEN,
   MISSING_PRODUCT_ID,
@@ -25,31 +18,21 @@ import {
   UNABLE_TO_GET_PRODUCT_HISTORY,
 } from '../../../../../lib/messages'
 import { isEmptyString, isValidUUID } from '../../../../../lib/validators'
+import { validateUserToken } from '../../../../../lib/auth_helpers'
+import { UserProductsService } from '../../../../../services/user_products_service'
 
 const handler = async (req, res) => {
   if (req.method !== 'GET') {
     return responseJSON(res, 405, METHOD_NOT_ALLOWED)
   }
 
-  const { authorization } = req.headers
+  const tokenResult = validateUserToken(req.headers)
 
-  if (!authorization) {
-    return responseJSON(res, 401, MISSING_AUTHORIZATION_HEADER)
+  if (typeof tokenResult !== 'string') {
+    return responseJSON(res, tokenResult.code, tokenResult.error)
   }
 
-  if (!authorization.startsWith('Bearer ')) {
-    return responseJSON(res, 401, MISSING_BEARER_KEY)
-  }
-
-  const token = authorization.replace(/^Bearer /, '').trim()
-
-  if (token.length === 0) {
-    return responseJSON(res, 401, MISSING_TOKEN)
-  }
-
-  if (!isValidUUID(token)) {
-    return responseJSON(res, 400, INVALID_TOKEN_UUID)
-  }
+  const token = tokenResult
 
   let user
 
@@ -59,6 +42,7 @@ const handler = async (req, res) => {
     console.error({ err })
 
     Sentry.withScope(function (scope) {
+      scope.setContext('args', { token })
       scope.setTag('section', 'findUserByToken')
       Sentry.captureException(err)
     })
@@ -104,13 +88,16 @@ const handler = async (req, res) => {
   let userProduct
 
   try {
-    userProduct = await getUserProduct(user.id, product.id)
+    userProduct = await UserProductsService.getByUserIdAndProductId(
+      user.id,
+      product.id
+    )
   } catch (err) {
     console.error({ err })
 
     Sentry.withScope(function (scope) {
       scope.setContext('args', { user, product })
-      scope.setTag('section', 'getUserProduct')
+      scope.setTag('section', 'UserProductsService.getByUserIdAndProductId')
       scope.setUser({ user })
       Sentry.captureException(err)
     })

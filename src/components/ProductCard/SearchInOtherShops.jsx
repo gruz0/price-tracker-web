@@ -20,7 +20,7 @@ export default function SearchInOtherShops({ product, shops }) {
                 <Image
                   alt={`Найти в ${shop.name}`}
                   src={`/${shop.name}.ico`}
-                  size="32"
+                  size="small"
                   avatar
                   verticalAlign="middle"
                 />

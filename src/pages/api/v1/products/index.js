@@ -21,16 +21,11 @@ import {
 import { findUserByToken } from '../../../../services/auth'
 import {
   addProductToUser,
-  getUserProduct,
   getUserProductsWithActualState,
 } from '../../../../services/users'
 
 import {
   METHOD_NOT_ALLOWED,
-  MISSING_AUTHORIZATION_HEADER,
-  MISSING_BEARER_KEY,
-  MISSING_TOKEN,
-  INVALID_TOKEN_UUID,
   FORBIDDEN,
   REDIRECT_TO_PRODUCT_PAGE,
   UNABLE_TO_FIND_USER_BY_TOKEN,
@@ -49,32 +44,22 @@ import {
   SHOP_IS_NOT_SUPPORTED_YET,
   MISSING_URL,
 } from '../../../../lib/messages'
-import { isEmptyString, isValidUUID } from '../../../../lib/validators'
+import { isEmptyString } from '../../../../lib/validators'
+import { UserProductsService } from '../../../../services/user_products_service'
+import { validateUserToken } from '../../../../lib/auth_helpers'
 
 const handler = async (req, res) => {
   if (!['POST', 'GET'].includes(req.method)) {
     return responseJSON(res, 405, METHOD_NOT_ALLOWED)
   }
 
-  const { authorization } = req.headers
+  const tokenResult = validateUserToken(req.headers)
 
-  if (!authorization) {
-    return responseJSON(res, 401, MISSING_AUTHORIZATION_HEADER)
+  if (typeof tokenResult !== 'string') {
+    return responseJSON(res, tokenResult.code, tokenResult.error)
   }
 
-  if (!authorization.startsWith('Bearer ')) {
-    return responseJSON(res, 401, MISSING_BEARER_KEY)
-  }
-
-  const token = authorization.replace(/^Bearer /, '').trim()
-
-  if (token.length === 0) {
-    return responseJSON(res, 401, MISSING_TOKEN)
-  }
-
-  if (!isValidUUID(token)) {
-    return responseJSON(res, 400, INVALID_TOKEN_UUID)
-  }
+  const token = tokenResult
 
   let user
 
@@ -267,13 +252,16 @@ const handler = async (req, res) => {
   let userProduct
 
   try {
-    userProduct = await getUserProduct(user.id, product.id)
+    userProduct = await UserProductsService.getByUserIdAndProductId(
+      user.id,
+      product.id
+    )
   } catch (err) {
     console.error({ err })
 
     Sentry.withScope(function (scope) {
       scope.setContext('args', { user, product })
-      scope.setTag('section', 'getUserProduct')
+      scope.setTag('section', 'UserProductsService.getByUserIdAndProductId')
       scope.setUser({ user })
       Sentry.captureException(err)
     })

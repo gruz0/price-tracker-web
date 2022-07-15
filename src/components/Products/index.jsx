@@ -10,7 +10,7 @@ import {
 } from 'semantic-ui-react'
 import ProductsTable from './ProductsTable'
 import ProductsCards from './ProductsCards'
-import PaginationComponent from './Pagination'
+import PaginationComponent from '../Pagination'
 
 export default function ProductsList({ products, isSmallScreen }) {
   const [view, setView] = useState(isSmallScreen ? 'card' : 'table')
@@ -170,23 +170,8 @@ export default function ProductsList({ products, isSmallScreen }) {
 
       {!isSmallScreen && <Divider hidden />}
 
-      {view === 'table' && (
-        <ProductsTable
-          products={filteredProducts}
-          showPagination={showPagination}
-          totalPages={totalPages}
-          changePage={changePage}
-        />
-      )}
-
-      {view === 'card' && (
-        <ProductsCards
-          products={filteredProducts}
-          showPagination={showPagination}
-          totalPages={totalPages}
-          changePage={changePage}
-        />
-      )}
+      {view === 'table' && <ProductsTable products={filteredProducts} />}
+      {view === 'card' && <ProductsCards products={filteredProducts} />}
 
       {showPagination && (
         <>

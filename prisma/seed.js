@@ -73,6 +73,8 @@ const usersData = [
 async function main() {
   console.log(`Start seeding ...`)
 
+  const deleteUserProductsGroupItem = prisma.userProductsGroupItem.deleteMany()
+  const deleteUserProductsGroup = prisma.userProductsGroup.deleteMany()
   const deleteUserProductSubscription =
     prisma.userProductSubscription.deleteMany()
   const deleteProductQueue = prisma.productQueue.deleteMany()
@@ -84,6 +86,8 @@ async function main() {
   const deleteBot = prisma.bot.deleteMany()
 
   await prisma.$transaction([
+    deleteUserProductsGroupItem,
+    deleteUserProductsGroup,
     deleteUserProductSubscription,
     deleteProductQueue,
     deleteUserProduct,
@@ -127,7 +131,7 @@ async function main() {
     console.log(`Created user with id: ${user.id}`)
   }
 
-  await prisma.userProduct.create({
+  const userProduct1 = await prisma.userProduct.create({
     data: {
       user_id: users[0].id,
       product_id: products[0].id,
@@ -136,13 +140,35 @@ async function main() {
     },
   })
 
-  await prisma.userProduct.create({
+  const userProduct2 = await prisma.userProduct.create({
     data: {
       user_id: users[0].id,
       product_id: products[1].id,
       price: 99.9,
       favorited: false,
     },
+  })
+
+  const userProductsGroup = await prisma.userProductsGroup.create({
+    data: {
+      user_id: users[0].id,
+      title: 'Products Group',
+    },
+  })
+
+  await prisma.userProductsGroupItem.createMany({
+    data: [
+      {
+        user_id: users[0].id,
+        user_products_group_id: userProductsGroup.id,
+        user_product_id: userProduct1.id,
+      },
+      {
+        user_id: users[0].id,
+        user_products_group_id: userProductsGroup.id,
+        user_product_id: userProduct2.id,
+      },
+    ],
   })
 
   console.log(`Seeding finished.`)

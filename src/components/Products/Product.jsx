@@ -3,7 +3,7 @@ import { Table } from 'semantic-ui-react'
 import Link from 'next/link'
 import { formatDateTime } from '../../lib/formatDate'
 import PriceLabel from './PriceLabel'
-import InStock from './InStockIcon'
+import { TrueFalseIcon } from '../TrueFalseIcon'
 import Shop from './Shop'
 
 export default function Product({ product }) {
@@ -25,7 +25,7 @@ export default function Product({ product }) {
       <Table.Cell>{product.lowest_price_ever}</Table.Cell>
 
       <Table.Cell textAlign="center">
-        <InStock in_stock={product.in_stock} />
+        <TrueFalseIcon value={product.in_stock} />
       </Table.Cell>
 
       {/*

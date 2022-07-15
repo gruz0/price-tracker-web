@@ -32,6 +32,7 @@ const Screen = () => {
             <ProductCard
               product={data.product}
               shops={data.shops}
+              groups={data.groups}
               isSmallScreen={isSmallScreen}
             />
           )}
