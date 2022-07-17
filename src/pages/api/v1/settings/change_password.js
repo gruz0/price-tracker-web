@@ -1,13 +1,11 @@
 import { withSentry } from '@sentry/nextjs'
 import * as Sentry from '@sentry/nextjs'
-
 import {
   findUserByToken,
   findUserByLoginAndPassword,
   updateUserPasswordAndToken,
 } from '../../../../services/auth'
 import { isEmptyString } from '../../../../lib/validators'
-
 import {
   METHOD_NOT_ALLOWED,
   CURRENT_PASSWORD_IS_NOT_VALID,
@@ -21,9 +19,11 @@ import {
   UNABLE_TO_FIND_USER,
   UNABLE_TO_FIND_USER_BY_TOKEN,
   UNABLE_TO_UPDATE_USER_PASSWORD_AND_TOKEN,
+  UNABLE_TO_UPDATE_USER_LAST_ACTIVITY,
 } from '../../../../lib/messages'
 import { buildUserResponse, responseJSON } from '../../../../lib/helpers'
 import { validateBearerToken } from '../../../../lib/auth_helpers'
+import { UsersService } from '../../../../services/users'
 
 const handler = async (req, res) => {
   if (req.method !== 'POST') {
@@ -56,6 +56,20 @@ const handler = async (req, res) => {
 
   if (!userByToken) {
     return responseJSON(res, 403, FORBIDDEN)
+  }
+
+  try {
+    await UsersService.updateLastActivity(userByToken.id)
+  } catch (err) {
+    console.error({ err })
+
+    Sentry.withScope(function (scope) {
+      scope.setContext('args', { userByToken })
+      scope.setTag('section', 'UsersService.updateLastActivity')
+      Sentry.captureException(err)
+    })
+
+    return responseJSON(res, 500, UNABLE_TO_UPDATE_USER_LAST_ACTIVITY)
   }
 
   const { current_password, new_password, new_password_confirmation } = req.body

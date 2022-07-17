@@ -19,6 +19,7 @@ import {
 } from '../../../../../src/lib/messages'
 import {
   cleanDatabase,
+  ensureUserLastActivityHasBeenUpdated,
   mockAuthorizedPOSTRequest,
   parseJSON,
 } from '../../../../helpers'
@@ -220,19 +221,28 @@ describe(`POST ${ENDPOINT}`, () => {
     })
 
     describe('when product exists', () => {
+      let product
+      let crawler
+
+      beforeEach(async () => {
+        product = await prisma.product.create({
+          data: {
+            title: 'Product',
+            url: 'https://www.ozon.ru/product/42',
+            url_hash:
+              '7bb40729dde6700a1540e342904e73696d3ffdb5ed222b7c4a69d3181d78d87f',
+            shop: 'shop',
+          },
+        })
+
+        crawler = await prisma.crawler.create({
+          data: { location: 'location' },
+        })
+      })
+
       describe('when user has this product', () => {
         describe('when used alternate url', () => {
           test('does nothing', async () => {
-            const product = await prisma.product.create({
-              data: {
-                title: 'Product',
-                url: 'https://www.ozon.ru/product/42',
-                url_hash:
-                  '7bb40729dde6700a1540e342904e73696d3ffdb5ed222b7c4a69d3181d78d87f',
-                shop: 'shop',
-              },
-            })
-
             await prisma.userProduct.create({
               data: {
                 user_id: user.id,
@@ -260,16 +270,6 @@ describe(`POST ${ENDPOINT}`, () => {
         })
 
         test('does nothing', async () => {
-          const product = await prisma.product.create({
-            data: {
-              title: 'Product',
-              url: 'https://www.ozon.ru/product/42',
-              url_hash:
-                '7bb40729dde6700a1540e342904e73696d3ffdb5ed222b7c4a69d3181d78d87f',
-              shop: 'shop',
-            },
-          })
-
           await prisma.userProduct.create({
             data: {
               user_id: user.id,
@@ -298,16 +298,6 @@ describe(`POST ${ENDPOINT}`, () => {
 
       describe('without history', () => {
         test('returns error', async () => {
-          const product = await prisma.product.create({
-            data: {
-              title: 'Product',
-              url: 'https://www.ozon.ru/product/42',
-              url_hash:
-                '7bb40729dde6700a1540e342904e73696d3ffdb5ed222b7c4a69d3181d78d87f',
-              shop: 'shop',
-            },
-          })
-
           const { req, res } = mockAuthorizedPOSTRequest(
             user.api_key,
             {},
@@ -327,20 +317,6 @@ describe(`POST ${ENDPOINT}`, () => {
 
       describe('when there is only one record in history with status not ok', () => {
         test('returns error', async () => {
-          const product = await prisma.product.create({
-            data: {
-              title: 'Product',
-              url: 'https://www.ozon.ru/product/42',
-              url_hash:
-                '7bb40729dde6700a1540e342904e73696d3ffdb5ed222b7c4a69d3181d78d87f',
-              shop: 'shop',
-            },
-          })
-
-          const crawler = await prisma.crawler.create({
-            data: { location: 'location' },
-          })
-
           await prisma.productHistory.create({
             data: {
               product_id: product.id,
@@ -372,20 +348,6 @@ describe(`POST ${ENDPOINT}`, () => {
 
       describe('with valid history', () => {
         test('adds product to user with discount price', async () => {
-          const product = await prisma.product.create({
-            data: {
-              title: 'Product',
-              url: 'https://www.ozon.ru/product/42',
-              url_hash:
-                '7bb40729dde6700a1540e342904e73696d3ffdb5ed222b7c4a69d3181d78d87f',
-              shop: 'shop',
-            },
-          })
-
-          const crawler = await prisma.crawler.create({
-            data: { location: 'location' },
-          })
-
           await prisma.productHistory.createMany({
             data: [
               {
@@ -438,20 +400,6 @@ describe(`POST ${ENDPOINT}`, () => {
         })
 
         test('adds product to user with original price', async () => {
-          const product = await prisma.product.create({
-            data: {
-              title: 'Product',
-              url: 'https://www.ozon.ru/product/42',
-              url_hash:
-                '7bb40729dde6700a1540e342904e73696d3ffdb5ed222b7c4a69d3181d78d87f',
-              shop: 'shop',
-            },
-          })
-
-          const crawler = await prisma.crawler.create({
-            data: { location: 'location' },
-          })
-
           await prisma.productHistory.createMany({
             data: [
               {
@@ -500,6 +448,46 @@ describe(`POST ${ENDPOINT}`, () => {
           expect(userProducts.length).toEqual(1)
           expect(userProducts[0].product_id).toEqual(product.id)
           expect(userProducts[0].price).toEqual(99)
+        })
+
+        test('updates last_activity_at', async () => {
+          await prisma.productHistory.createMany({
+            data: [
+              {
+                product_id: product.id,
+                original_price: 42,
+                discount_price: 35,
+                in_stock: true,
+                status: 'not_found',
+                title: 'Title',
+                crawler_id: crawler.id,
+              },
+              {
+                product_id: product.id,
+                original_price: 99,
+                discount_price: 87,
+                in_stock: true,
+                status: 'ok',
+                title: 'Title',
+                crawler_id: crawler.id,
+                created_at: new Date('2021-01-01'),
+              },
+            ],
+          })
+
+          const { req, res } = mockAuthorizedPOSTRequest(
+            user.api_key,
+            {},
+            {
+              url: product.url,
+            }
+          )
+
+          await handler(req, res)
+
+          expect(res._getStatusCode()).toBe(201)
+
+          await ensureUserLastActivityHasBeenUpdated(user)
         })
       })
     })

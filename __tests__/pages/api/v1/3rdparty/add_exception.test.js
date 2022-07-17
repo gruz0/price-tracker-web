@@ -1,5 +1,4 @@
 import prisma from '../../../../../src/lib/prisma'
-
 import { createMocks } from 'node-mocks-http'
 import handler from '../../../../../src/pages/api/v1/3rdparty/add_exception'
 import {
@@ -16,6 +15,7 @@ import {
 } from '../../../../../src/lib/messages'
 import {
   cleanDatabase,
+  ensureUserLastActivityHasBeenUpdated,
   mockAuthorizedPOSTRequest,
   parseJSON,
 } from '../../../../helpers'
@@ -151,6 +151,24 @@ describe(`POST ${ENDPOINT}`, () => {
             message: 'description',
           },
         })
+      })
+
+      test('updates last_activity_at', async () => {
+        const { req, res } = mockAuthorizedPOSTRequest(
+          user.api_key,
+          {},
+          {
+            app: 'chrome-extension',
+            version: '1.0.0',
+            message: 'description',
+          }
+        )
+
+        await handler(req, res)
+
+        expect(res._getStatusCode()).toBe(201)
+
+        await ensureUserLastActivityHasBeenUpdated(user)
       })
     })
 

@@ -645,3 +645,8 @@ export const UNABLE_TO_DELETE_USER_PRODUCTS_GROUP = {
   status: 'unable_to_delete_user_products_group',
   message: 'Не удалось удалить группу товаров пользователя',
 }
+
+export const UNABLE_TO_UPDATE_USER_LAST_ACTIVITY = {
+  status: 'unable_to_update_user_last_activity',
+  message: 'Не удалось обновить дату последней активности пользователя',
+}

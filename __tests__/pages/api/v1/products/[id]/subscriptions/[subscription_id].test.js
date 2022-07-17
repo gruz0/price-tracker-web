@@ -1,6 +1,4 @@
 import prisma from '../../../../../../../src/lib/prisma'
-const uuid = require('uuid')
-
 import { createMocks } from 'node-mocks-http'
 import handler from '../../../../../../../src/pages/api/v1/products/[id]/subscriptions/[subscription_id]'
 import {
@@ -20,6 +18,7 @@ import {
 } from '../../../../../../../src/lib/messages'
 import {
   cleanDatabase,
+  ensureUserLastActivityHasBeenUpdated,
   mockAuthorizedDELETERequest,
   parseJSON,
 } from '../../../../../../helpers'
@@ -30,6 +29,7 @@ import {
   whenTokenIsNotUUID,
   whenTokenNotFound,
 } from '../../../../../../matchers'
+const uuid = require('uuid')
 
 const ENDPOINT = '/api/v1/products/[id]/subscriptions/[subscription_id]'
 
@@ -123,9 +123,11 @@ describe(`DELETE ${ENDPOINT}`, () => {
       })
     })
 
-    describe('when user does not have product', () => {
-      test('returns error', async () => {
-        const product = await prisma.product.create({
+    describe('when product exists', () => {
+      let product
+
+      beforeEach(async () => {
+        product = await prisma.product.create({
           data: {
             title: 'Product',
             url: 'https://domain.tld',
@@ -133,182 +135,197 @@ describe(`DELETE ${ENDPOINT}`, () => {
             shop: 'shop',
           },
         })
-
-        const { req, res } = mockAuthorizedDELETERequest(user.token, {
-          id: product.id,
-        })
-
-        await handler(req, res)
-
-        expect(parseJSON(res)).toEqual(USER_DOES_NOT_HAVE_PRODUCT)
-        expect(res._getStatusCode()).toBe(404)
       })
-    })
 
-    describe('when subscription_id missing', () => {
-      test('returns error', async () => {
-        const product = await prisma.product.create({
-          data: {
-            title: 'Product',
-            url: 'https://domain.tld',
-            url_hash: 'hash',
-            shop: 'shop',
-          },
+      describe('when user does not have product', () => {
+        test('returns error', async () => {
+          const { req, res } = mockAuthorizedDELETERequest(user.token, {
+            id: product.id,
+          })
+
+          await handler(req, res)
+
+          expect(parseJSON(res)).toEqual(USER_DOES_NOT_HAVE_PRODUCT)
+          expect(res._getStatusCode()).toBe(404)
         })
-
-        await prisma.userProduct.create({
-          data: {
-            user_id: user.id,
-            product_id: product.id,
-            price: 42,
-          },
-        })
-
-        const { req, res } = mockAuthorizedDELETERequest(user.token, {
-          id: product.id,
-        })
-
-        await handler(req, res)
-
-        expect(parseJSON(res)).toEqual(MISSING_SUBSCRIPTION_ID)
-        expect(res._getStatusCode()).toBe(400)
       })
-    })
 
-    describe('when subscription_id is not a valid UUID', () => {
-      test('returns error', async () => {
-        const product = await prisma.product.create({
-          data: {
-            title: 'Product',
-            url: 'https://domain.tld',
-            url_hash: 'hash',
-            shop: 'shop',
-          },
+      describe('when subscription_id missing', () => {
+        test('returns error', async () => {
+          await prisma.userProduct.create({
+            data: {
+              user_id: user.id,
+              product_id: product.id,
+              price: 42,
+            },
+          })
+
+          const { req, res } = mockAuthorizedDELETERequest(user.token, {
+            id: product.id,
+          })
+
+          await handler(req, res)
+
+          expect(parseJSON(res)).toEqual(MISSING_SUBSCRIPTION_ID)
+          expect(res._getStatusCode()).toBe(400)
         })
-
-        await prisma.userProduct.create({
-          data: {
-            user_id: user.id,
-            product_id: product.id,
-            price: 42,
-          },
-        })
-
-        const { req, res } = mockAuthorizedDELETERequest(user.token, {
-          id: product.id,
-          subscription_id: 'qwe',
-        })
-
-        await handler(req, res)
-
-        expect(parseJSON(res)).toEqual(INVALID_SUBSCRIPTION_UUID)
-        expect(res._getStatusCode()).toBe(400)
       })
-    })
 
-    describe('when subscription_id does not exist', () => {
-      test('returns error', async () => {
-        const product = await prisma.product.create({
-          data: {
-            title: 'Product',
-            url: 'https://domain.tld',
-            url_hash: 'hash',
-            shop: 'shop',
-          },
+      describe('when subscription_id is not a valid UUID', () => {
+        test('returns error', async () => {
+          await prisma.userProduct.create({
+            data: {
+              user_id: user.id,
+              product_id: product.id,
+              price: 42,
+            },
+          })
+
+          const { req, res } = mockAuthorizedDELETERequest(user.token, {
+            id: product.id,
+            subscription_id: 'qwe',
+          })
+
+          await handler(req, res)
+
+          expect(parseJSON(res)).toEqual(INVALID_SUBSCRIPTION_UUID)
+          expect(res._getStatusCode()).toBe(400)
         })
-
-        await prisma.userProduct.create({
-          data: {
-            user_id: user.id,
-            product_id: product.id,
-            price: 42,
-          },
-        })
-
-        const { req, res } = mockAuthorizedDELETERequest(user.token, {
-          id: product.id,
-          subscription_id: uuid.v4(),
-        })
-
-        await handler(req, res)
-
-        expect(parseJSON(res)).toEqual(USER_DOES_NOT_HAVE_PRODUCT_SUBSCRIPTION)
-        expect(res._getStatusCode()).toBe(404)
       })
-    })
 
-    describe('when user has product subscription', () => {
-      test('removes subscription', async () => {
-        const product = await prisma.product.create({
-          data: {
-            title: 'Product',
-            url: 'https://domain.tld',
-            url_hash: 'hash',
-            shop: 'shop',
-          },
+      describe('when subscription_id does not exist', () => {
+        test('returns error', async () => {
+          await prisma.userProduct.create({
+            data: {
+              user_id: user.id,
+              product_id: product.id,
+              price: 42,
+            },
+          })
+
+          const { req, res } = mockAuthorizedDELETERequest(user.token, {
+            id: product.id,
+            subscription_id: uuid.v4(),
+          })
+
+          await handler(req, res)
+
+          expect(parseJSON(res)).toEqual(
+            USER_DOES_NOT_HAVE_PRODUCT_SUBSCRIPTION
+          )
+          expect(res._getStatusCode()).toBe(404)
         })
+      })
 
-        await prisma.userProduct.create({
-          data: {
-            user_id: user.id,
-            product_id: product.id,
-            price: 42,
-          },
-        })
+      describe('when user has product subscription', () => {
+        test('removes subscription', async () => {
+          await prisma.userProduct.create({
+            data: {
+              user_id: user.id,
+              product_id: product.id,
+              price: 42,
+            },
+          })
 
-        const userProductSubscription1 =
+          const userProductSubscription1 =
+            await prisma.userProductSubscription.create({
+              data: {
+                user_id: user.id,
+                product_id: product.id,
+                subscription_type: 'subscription1',
+              },
+            })
+
           await prisma.userProductSubscription.create({
             data: {
               user_id: user.id,
               product_id: product.id,
-              subscription_type: 'subscription1',
+              subscription_type: 'subscription2',
+              payload: {
+                some: 'content',
+              },
             },
           })
 
-        await prisma.userProductSubscription.create({
-          data: {
-            user_id: user.id,
-            product_id: product.id,
-            subscription_type: 'subscription2',
-            payload: {
-              some: 'content',
-            },
-          },
+          const { req, res } = mockAuthorizedDELETERequest(user.token, {
+            id: product.id,
+            subscription_id: userProductSubscription1.id,
+          })
+
+          await handler(req, res)
+
+          expect(parseJSON(res)).toEqual({})
+          expect(res._getStatusCode()).toBe(200)
+
+          const subscription1 = await prisma.userProductSubscription.findUnique(
+            {
+              where: {
+                user_id_product_id_subscription_type: {
+                  user_id: user.id,
+                  product_id: product.id,
+                  subscription_type: 'subscription1',
+                },
+              },
+            }
+          )
+
+          expect(subscription1).toBeNull()
+
+          const subscription2 = await prisma.userProductSubscription.findUnique(
+            {
+              where: {
+                user_id_product_id_subscription_type: {
+                  user_id: user.id,
+                  product_id: product.id,
+                  subscription_type: 'subscription2',
+                },
+              },
+            }
+          )
+
+          expect(subscription2).not.toBeNull()
         })
 
-        const { req, res } = mockAuthorizedDELETERequest(user.token, {
-          id: product.id,
-          subscription_id: userProductSubscription1.id,
-        })
-
-        await handler(req, res)
-
-        expect(parseJSON(res)).toEqual({})
-        expect(res._getStatusCode()).toBe(200)
-
-        const subscription1 = await prisma.userProductSubscription.findUnique({
-          where: {
-            user_id_product_id_subscription_type: {
+        test('updates last_activity_at', async () => {
+          await prisma.userProduct.create({
+            data: {
               user_id: user.id,
               product_id: product.id,
-              subscription_type: 'subscription1',
+              price: 42,
             },
-          },
-        })
+          })
 
-        expect(subscription1).toBeNull()
+          const userProductSubscription1 =
+            await prisma.userProductSubscription.create({
+              data: {
+                user_id: user.id,
+                product_id: product.id,
+                subscription_type: 'subscription1',
+              },
+            })
 
-        const subscription2 = await prisma.userProductSubscription.findUnique({
-          where: {
-            user_id_product_id_subscription_type: {
+          await prisma.userProductSubscription.create({
+            data: {
               user_id: user.id,
               product_id: product.id,
               subscription_type: 'subscription2',
+              payload: {
+                some: 'content',
+              },
             },
-          },
-        })
+          })
 
-        expect(subscription2).not.toBeNull()
+          const { req, res } = mockAuthorizedDELETERequest(user.token, {
+            id: product.id,
+            subscription_id: userProductSubscription1.id,
+          })
+
+          await handler(req, res)
+
+          expect(res._getStatusCode()).toBe(200)
+
+          await ensureUserLastActivityHasBeenUpdated(user)
+        })
       })
     })
   })

@@ -1,6 +1,5 @@
 import { withSentry } from '@sentry/nextjs'
 import * as Sentry from '@sentry/nextjs'
-
 import { findUserByToken } from '../../../../../../services/auth'
 import {
   findProductById,
@@ -30,10 +29,12 @@ import {
   SUBSCRIPTION_TYPE_IS_NOT_VALID,
   UNABLE_TO_GET_USER_PRODUCT_SUBSCRIPTIONS,
   UNABLE_TO_REMOVE_USER_PRODUCT_SUBSCRIPTIONS,
+  UNABLE_TO_UPDATE_USER_LAST_ACTIVITY,
 } from '../../../../../../lib/messages'
 import { isEmptyString, isValidUUID } from '../../../../../../lib/validators'
 import { validateBearerToken } from '../../../../../../lib/auth_helpers'
 import { UserProductsService } from '../../../../../../services/user_products_service'
+import { UsersService } from '../../../../../../services/users'
 
 const handler = async (req, res) => {
   if (!['POST', 'GET', 'DELETE'].includes(req.method)) {
@@ -66,6 +67,20 @@ const handler = async (req, res) => {
 
   if (!user) {
     return responseJSON(res, 403, FORBIDDEN)
+  }
+
+  try {
+    await UsersService.updateLastActivity(user.id)
+  } catch (err) {
+    console.error({ err })
+
+    Sentry.withScope(function (scope) {
+      scope.setContext('args', { user })
+      scope.setTag('section', 'UsersService.updateLastActivity')
+      Sentry.captureException(err)
+    })
+
+    return responseJSON(res, 500, UNABLE_TO_UPDATE_USER_LAST_ACTIVITY)
   }
 
   const productId = req.query.id

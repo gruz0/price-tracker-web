@@ -1,9 +1,7 @@
 import { withSentry } from '@sentry/nextjs'
 import * as Sentry from '@sentry/nextjs'
-
 import { responseJSON } from '../../../../lib/helpers'
 import { findUserByApiKey } from '../../../../services/auth'
-
 import {
   METHOD_NOT_ALLOWED,
   API_KEY_DOES_NOT_EXIST,
@@ -12,9 +10,11 @@ import {
   MISSING_MESSAGE,
   MISSING_APP,
   ERROR_REPORT_CREATED,
+  UNABLE_TO_UPDATE_USER_LAST_ACTIVITY,
 } from '../../../../lib/messages'
 import { isEmptyString } from '../../../../lib/validators'
 import { validateBearerToken } from '../../../../lib/auth_helpers'
+import { UsersService } from '../../../../services/users'
 
 const handler = async (req, res) => {
   if (req.method !== 'POST') {
@@ -47,6 +47,20 @@ const handler = async (req, res) => {
 
   if (!user) {
     return responseJSON(res, 403, API_KEY_DOES_NOT_EXIST)
+  }
+
+  try {
+    await UsersService.updateLastActivity(user.id)
+  } catch (err) {
+    console.error({ err })
+
+    Sentry.withScope(function (scope) {
+      scope.setContext('args', { user })
+      scope.setTag('section', 'UsersService.updateLastActivity')
+      Sentry.captureException(err)
+    })
+
+    return responseJSON(res, 500, UNABLE_TO_UPDATE_USER_LAST_ACTIVITY)
   }
 
   const { app, version, message, meta } = req.body

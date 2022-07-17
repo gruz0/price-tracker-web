@@ -1,5 +1,4 @@
 import prisma from '../../../../../src/lib/prisma'
-
 import { createMocks } from 'node-mocks-http'
 import handler from '../../../../../src/pages/api/v1/products_groups/index'
 import {
@@ -14,6 +13,7 @@ import {
 } from '../../../../../src/lib/messages'
 import {
   cleanDatabase,
+  ensureUserLastActivityHasBeenUpdated,
   mockAuthorizedGETRequest,
   mockAuthorizedPOSTRequest,
   parseJSON,
@@ -87,11 +87,19 @@ describe(`GET ${ENDPOINT}`, () => {
         await handler(req, res)
 
         expect(res._getStatusCode()).toBe(200)
+        expect(parseJSON(res)).toEqual({
+          products_groups: [],
+        })
+      })
 
-        const json = parseJSON(res)
-        const result = json.products_groups
+      test('updates last_activity_at', async () => {
+        const { req, res } = mockAuthorizedGETRequest(user.token)
 
-        expect(result.length).toEqual(0)
+        await handler(req, res)
+
+        expect(res._getStatusCode()).toBe(200)
+
+        await ensureUserLastActivityHasBeenUpdated(user)
       })
     })
 
@@ -205,6 +213,22 @@ describe(`POST ${ENDPOINT}`, () => {
           ...USER_PRODUCTS_GROUP_CREATED,
           location: '/products_groups/' + userProductsGroups[0].id,
         })
+      })
+
+      test('updates last_activity_at', async () => {
+        const { req, res } = mockAuthorizedPOSTRequest(
+          user.token,
+          {},
+          {
+            title: ' Food for pets ',
+          }
+        )
+
+        await handler(req, res)
+
+        expect(res._getStatusCode()).toBe(201)
+
+        await ensureUserLastActivityHasBeenUpdated(user)
       })
     })
   })
