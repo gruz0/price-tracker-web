@@ -1,6 +1,4 @@
 import prisma from '../../../../../../src/lib/prisma'
-const uuid = require('uuid')
-
 import { createMocks } from 'node-mocks-http'
 import handler from '../../../../../../src/pages/api/v1/products_groups/[id]'
 import {
@@ -22,6 +20,7 @@ import {
 } from '../../../../../../src/lib/messages'
 import {
   cleanDatabase,
+  ensureUserLastActivityHasBeenUpdated,
   mockAuthorizedDELETERequest,
   mockAuthorizedGETRequest,
   mockAuthorizedPOSTRequest,
@@ -34,6 +33,7 @@ import {
   whenTokenIsNotUUID,
   whenTokenNotFound,
 } from '../../../../../matchers'
+const uuid = require('uuid')
 
 const ENDPOINT = '/api/v1/products_groups/[id]'
 
@@ -126,12 +126,20 @@ describe(`GET ${ENDPOINT}`, () => {
     })
 
     describe('when products group exists', () => {
-      test('returns error', async () => {
+      let product1
+      let product2
+      let product3
+      let product1LastHistory
+      let product2LastHistory
+      let userProduct3
+      let userProductsGroup1
+
+      beforeEach(async () => {
         const crawler = await prisma.crawler.create({
           data: { location: 'location' },
         })
 
-        const product1 = await prisma.product.create({
+        product1 = await prisma.product.create({
           data: {
             title: 'Product 1',
             url: 'https://domain1.tld',
@@ -151,7 +159,7 @@ describe(`GET ${ENDPOINT}`, () => {
           },
         })
 
-        const product1LastHistory = await prisma.productHistory.create({
+        product1LastHistory = await prisma.productHistory.create({
           data: {
             product_id: product1.id,
             original_price: 42,
@@ -162,7 +170,7 @@ describe(`GET ${ENDPOINT}`, () => {
           },
         })
 
-        const product2 = await prisma.product.create({
+        product2 = await prisma.product.create({
           data: {
             title: 'Product 2',
             url: 'https://domain2.tld',
@@ -182,7 +190,7 @@ describe(`GET ${ENDPOINT}`, () => {
           },
         })
 
-        const product2LastHistory = await prisma.productHistory.create({
+        product2LastHistory = await prisma.productHistory.create({
           data: {
             product_id: product2.id,
             original_price: 41,
@@ -193,7 +201,7 @@ describe(`GET ${ENDPOINT}`, () => {
           },
         })
 
-        const product3 = await prisma.product.create({
+        product3 = await prisma.product.create({
           data: {
             title: 'Product 3',
             url: 'https://domain3.tld',
@@ -218,7 +226,7 @@ describe(`GET ${ENDPOINT}`, () => {
           },
         })
 
-        const userProduct3 = await prisma.userProduct.create({
+        userProduct3 = await prisma.userProduct.create({
           data: {
             user_id: user.id,
             product_id: product3.id,
@@ -226,7 +234,7 @@ describe(`GET ${ENDPOINT}`, () => {
           },
         })
 
-        const userProductsGroup1 = await prisma.userProductsGroup.create({
+        userProductsGroup1 = await prisma.userProductsGroup.create({
           data: {
             user_id: user.id,
             title: 'Group Title 1',
@@ -288,7 +296,9 @@ describe(`GET ${ENDPOINT}`, () => {
             price: 100,
           },
         })
+      })
 
+      test('returns result', async () => {
         const { req, res } = mockAuthorizedGETRequest(user.token, {
           id: userProductsGroup1.id,
         })
@@ -334,6 +344,18 @@ describe(`GET ${ENDPOINT}`, () => {
             },
           ],
         })
+      })
+
+      test('updates last_activity_at', async () => {
+        const { req, res } = mockAuthorizedGETRequest(user.token, {
+          id: userProductsGroup1.id,
+        })
+
+        await handler(req, res)
+
+        expect(res._getStatusCode()).toBe(200)
+
+        await ensureUserLastActivityHasBeenUpdated(user)
       })
     })
   })
@@ -576,6 +598,24 @@ describe(`POST ${ENDPOINT}`, () => {
             )
             expect(groupItems[0].user_product_id).toEqual(userProduct.id)
           })
+
+          test('updates last_activity_at', async () => {
+            const { req, res } = mockAuthorizedPOSTRequest(
+              user.token,
+              {
+                id: userProductsGroup.id,
+              },
+              {
+                user_product_id: userProduct.id,
+              }
+            )
+
+            await handler(req, res)
+
+            expect(res._getStatusCode()).toBe(201)
+
+            await ensureUserLastActivityHasBeenUpdated(user)
+          })
         })
       })
     })
@@ -670,6 +710,8 @@ describe(`DELETE ${ENDPOINT}`, () => {
       })
 
       describe('with items in products group', () => {
+        let productsGroup2Item
+
         beforeEach(async () => {
           const product = await prisma.product.create({
             data: {
@@ -695,9 +737,7 @@ describe(`DELETE ${ENDPOINT}`, () => {
               user_product_id: userProduct.id,
             },
           })
-        })
 
-        test('removes items related to products group', async () => {
           const userProductsGroup2 = await prisma.userProductsGroup.create({
             data: {
               user_id: user.id,
@@ -722,14 +762,16 @@ describe(`DELETE ${ENDPOINT}`, () => {
             },
           })
 
-          const productsGroup2Item = await prisma.userProductsGroupItem.create({
+          productsGroup2Item = await prisma.userProductsGroupItem.create({
             data: {
               user_id: user.id,
               user_products_group_id: userProductsGroup2.id,
               user_product_id: userProduct2.id,
             },
           })
+        })
 
+        test('removes items related to products group', async () => {
           const { req, res } = mockAuthorizedDELETERequest(user.token, {
             id: userProductsGroup.id,
           })
@@ -742,6 +784,18 @@ describe(`DELETE ${ENDPOINT}`, () => {
           const userProductsGroupItems =
             await prisma.userProductsGroupItem.findMany()
           expect(userProductsGroupItems).toEqual([productsGroup2Item])
+        })
+
+        test('updates last_activity_at', async () => {
+          const { req, res } = mockAuthorizedDELETERequest(user.token, {
+            id: userProductsGroup.id,
+          })
+
+          await handler(req, res)
+
+          expect(res._getStatusCode()).toBe(200)
+
+          await ensureUserLastActivityHasBeenUpdated(user)
         })
       })
     })

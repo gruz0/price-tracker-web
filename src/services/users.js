@@ -1,6 +1,16 @@
 import prisma from '../lib/prisma'
-
+import { validateUserId } from '../lib/validators'
+import { UserRepository } from '../repositories/user_repository'
 import { getProductHistoryGroupedByLastRecordByDate } from './products'
+
+export const UsersService = {
+  // TODO: Добавить тесты
+  updateLastActivity: async (userId) => {
+    validateUserId(userId)
+
+    await UserRepository.updateLastActivity(userId)
+  },
+}
 
 // TODO: Add tests
 export const getUserProductWithActualStateAndHistory = async (

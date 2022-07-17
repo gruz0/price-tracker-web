@@ -1,6 +1,4 @@
 import prisma from '../../../../../../src/lib/prisma'
-const uuid = require('uuid')
-
 import { createMocks } from 'node-mocks-http'
 import handler from '../../../../../../src/pages/api/v1/products/[id]'
 import {
@@ -17,6 +15,7 @@ import {
 } from '../../../../../../src/lib/messages'
 import {
   cleanDatabase,
+  ensureUserLastActivityHasBeenUpdated,
   mockAuthorizedDELETERequest,
   mockAuthorizedGETRequest,
   parseJSON,
@@ -28,6 +27,7 @@ import {
   whenTokenIsNotUUID,
   whenTokenNotFound,
 } from '../../../../../matchers'
+const uuid = require('uuid')
 
 const ENDPOINT = '/api/v1/products/[id]'
 
@@ -220,6 +220,18 @@ describe(`GET ${ENDPOINT}`, () => {
             },
           })
           expect(res._getStatusCode()).toBe(200)
+        })
+
+        test('updates last_activity_at', async () => {
+          const { req, res } = mockAuthorizedGETRequest(user.token, {
+            id: product.id,
+          })
+
+          await handler(req, res)
+
+          expect(res._getStatusCode()).toBe(200)
+
+          await ensureUserLastActivityHasBeenUpdated(user)
         })
       })
 
@@ -451,6 +463,18 @@ describe(`DELETE ${ENDPOINT}`, () => {
         })
 
         expect(existedUserProduct).toBeNull()
+      })
+
+      test('updates last_activity_at', async () => {
+        const { req, res } = mockAuthorizedDELETERequest(user.token, {
+          id: product.id,
+        })
+
+        await handler(req, res)
+
+        expect(res._getStatusCode()).toBe(200)
+
+        await ensureUserLastActivityHasBeenUpdated(user)
       })
 
       describe('when user has product subscriptions', () => {

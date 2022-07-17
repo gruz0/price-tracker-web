@@ -37,6 +37,7 @@ model User {
   created_at                DateTime                  @default(now())
   updated_at                DateTime                  @updatedAt
   last_sign_in_at           DateTime                  @default(now())
+  last_activity_at          DateTime                  @default(now())
   api_key                   String                    @unique(map: "users_api_key") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   queued_products           ProductQueue[]
   product_subscriptions     UserProductSubscription[]

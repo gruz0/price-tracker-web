@@ -1,6 +1,9 @@
 import prisma from '../../../../src/lib/prisma'
-
-import { cleanDatabase, mockAuthorizedGETRequest } from '../../../helpers'
+import {
+  cleanDatabase,
+  ensureUserLastActivityHasBeenUpdated,
+  mockAuthorizedGETRequest,
+} from '../../../helpers'
 import { createMocks } from 'node-mocks-http'
 import handler from '../../../../src/pages/api/v1/me'
 import {
@@ -12,7 +15,6 @@ import {
   FORBIDDEN,
 } from '../../../../src/lib/messages'
 import { parseJSON } from '../../../helpers'
-import { encryptPassword } from '../../../../src/lib/security'
 import {
   whenMissingAuthorizationHeader,
   whenMissingBearer,
@@ -20,7 +22,6 @@ import {
   whenTokenIsNotUUID,
   whenTokenNotFound,
 } from '../../../matchers'
-const uuid = require('uuid')
 
 const ENDPOINT = '/api/v1/me'
 
@@ -67,13 +68,10 @@ describe(`GET ${ENDPOINT}`, () => {
 
   describe('when user exists', () => {
     test('returns response', async () => {
-      const userId = uuid.v4()
-
       const user = await prisma.user.create({
         data: {
-          id: userId,
           login: 'user1',
-          password: encryptPassword(userId, 'user1', 'password'),
+          password: 'password',
           telegram_account: '12345',
         },
       })
@@ -91,6 +89,24 @@ describe(`GET ${ENDPOINT}`, () => {
       expect(response.user.login).toEqual('user1')
       expect(response.user.api_key).toEqual(user.api_key)
       expect(response.user.telegram_account).toEqual('12345')
+    })
+
+    test('updates last_activity_at', async () => {
+      const user = await prisma.user.create({
+        data: {
+          login: 'user1',
+          password: 'password',
+          telegram_account: '12345',
+        },
+      })
+
+      const { req, res } = mockAuthorizedGETRequest(user.token)
+
+      await handler(req, res)
+
+      expect(res._getStatusCode()).toBe(200)
+
+      await ensureUserLastActivityHasBeenUpdated(user)
     })
   })
 })

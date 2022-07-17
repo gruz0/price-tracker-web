@@ -3,6 +3,7 @@ const uuid = require('uuid')
 
 import {
   cleanDatabase,
+  ensureUserLastActivityHasBeenUpdated,
   mockAuthorizedPUTRequest,
 } from '../../../../../../helpers'
 import { createMocks } from 'node-mocks-http'
@@ -259,14 +260,18 @@ describe(`PUT ${ENDPOINT}`, () => {
   })
 
   describe('when user does not have telegram account', () => {
-    test('sets telegram account', async () => {
-      const user = await prisma.user.create({
+    let user
+
+    beforeEach(async () => {
+      user = await prisma.user.create({
         data: {
           login: 'user1',
           password: 'password',
         },
       })
+    })
 
+    test('sets telegram account', async () => {
       const { req, res } = mockAuthorizedPUTRequest(
         bot.token,
         {
@@ -286,13 +291,6 @@ describe(`PUT ${ENDPOINT}`, () => {
     })
 
     test('returns response', async () => {
-      const user = await prisma.user.create({
-        data: {
-          login: 'user1',
-          password: 'password',
-        },
-      })
-
       const { req, res } = mockAuthorizedPUTRequest(
         bot.token,
         {
@@ -311,6 +309,24 @@ describe(`PUT ${ENDPOINT}`, () => {
         telegram_account: '1',
       })
       expect(res._getStatusCode()).toBe(200)
+    })
+
+    test('updates last_activity_at', async () => {
+      const { req, res } = mockAuthorizedPUTRequest(
+        bot.token,
+        {
+          user_id: user.id,
+        },
+        {
+          telegram_account: '1',
+        }
+      )
+
+      await handler(req, res)
+
+      expect(res._getStatusCode()).toBe(200)
+
+      await ensureUserLastActivityHasBeenUpdated(user)
     })
   })
 })

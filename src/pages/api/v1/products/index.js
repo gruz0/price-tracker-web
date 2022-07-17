@@ -1,6 +1,5 @@
 import { withSentry } from '@sentry/nextjs'
 import * as Sentry from '@sentry/nextjs'
-
 import {
   isValidUrl,
   calculateHash,
@@ -12,7 +11,6 @@ import {
   isSingleProductURL,
   replaceHostWithOriginalShopDomain,
 } from '../../../../services/shops'
-
 import {
   findProductByURLHash,
   addNewProductToQueue,
@@ -22,8 +20,8 @@ import { findUserByToken } from '../../../../services/auth'
 import {
   addProductToUser,
   getUserProductsWithActualState,
+  UsersService,
 } from '../../../../services/users'
-
 import {
   METHOD_NOT_ALLOWED,
   FORBIDDEN,
@@ -43,6 +41,7 @@ import {
   UNABLE_TO_ADD_PRODUCT_TO_USER_RIGHT_NOW_BECAUSE_OF_MISSING_PRICE,
   SHOP_IS_NOT_SUPPORTED_YET,
   MISSING_URL,
+  UNABLE_TO_UPDATE_USER_LAST_ACTIVITY,
 } from '../../../../lib/messages'
 import { isEmptyString } from '../../../../lib/validators'
 import { UserProductsService } from '../../../../services/user_products_service'
@@ -79,6 +78,20 @@ const handler = async (req, res) => {
 
   if (!user) {
     return responseJSON(res, 403, FORBIDDEN)
+  }
+
+  try {
+    await UsersService.updateLastActivity(user.id)
+  } catch (err) {
+    console.error({ err })
+
+    Sentry.withScope(function (scope) {
+      scope.setContext('args', { user })
+      scope.setTag('section', 'UsersService.updateLastActivity')
+      Sentry.captureException(err)
+    })
+
+    return responseJSON(res, 500, UNABLE_TO_UPDATE_USER_LAST_ACTIVITY)
   }
 
   if (req.method === 'GET') {

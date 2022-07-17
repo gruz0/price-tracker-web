@@ -1,6 +1,4 @@
 import prisma from '../../../../../../../src/lib/prisma'
-const uuid = require('uuid')
-
 import { createMocks } from 'node-mocks-http'
 import handler from '../../../../../../../src/pages/api/v1/products/[id]/subscriptions'
 import {
@@ -21,6 +19,7 @@ import {
 } from '../../../../../../../src/lib/messages'
 import {
   cleanDatabase,
+  ensureUserLastActivityHasBeenUpdated,
   mockAuthorizedDELETERequest,
   mockAuthorizedGETRequest,
   mockAuthorizedPOSTRequest,
@@ -33,6 +32,7 @@ import {
   whenTokenIsNotUUID,
   whenTokenNotFound,
 } from '../../../../../../matchers'
+const uuid = require('uuid')
 
 const ENDPOINT = '/api/v1/products/[id]/subscriptions'
 
@@ -314,9 +314,11 @@ describe(`DELETE ${ENDPOINT}`, () => {
       })
     })
 
-    describe('when user has product subscriptions', () => {
-      test('removes subscriptions', async () => {
-        const product = await prisma.product.create({
+    describe('when user has product', () => {
+      let product
+
+      beforeEach(async () => {
+        product = await prisma.product.create({
           data: {
             title: 'Product',
             url: 'https://domain.tld',
@@ -324,68 +326,90 @@ describe(`DELETE ${ENDPOINT}`, () => {
             shop: 'shop',
           },
         })
+      })
 
-        await prisma.userProduct.create({
-          data: {
-            user_id: user.id,
-            product_id: product.id,
-            price: 42,
-          },
-        })
-
-        await prisma.userProductSubscription.create({
-          data: {
-            id: uuid.v4(),
-            user_id: user.id,
-            product_id: product.id,
-            subscription_type: 'subscription1',
-          },
-        })
-
-        await prisma.userProductSubscription.create({
-          data: {
-            id: uuid.v4(),
-            user_id: user.id,
-            product_id: product.id,
-            subscription_type: 'subscription2',
-            payload: {
-              some: 'content',
+      describe('when user has product subscriptions', () => {
+        beforeEach(async () => {
+          await prisma.userProduct.create({
+            data: {
+              user_id: user.id,
+              product_id: product.id,
+              price: 42,
             },
-          },
-        })
+          })
 
-        const { req, res } = mockAuthorizedDELETERequest(user.token, {
-          id: product.id,
-        })
-
-        await handler(req, res)
-
-        expect(parseJSON(res)).toEqual({})
-        expect(res._getStatusCode()).toBe(200)
-
-        const subscription1 = await prisma.userProductSubscription.findUnique({
-          where: {
-            user_id_product_id_subscription_type: {
+          await prisma.userProductSubscription.create({
+            data: {
+              id: uuid.v4(),
               user_id: user.id,
               product_id: product.id,
               subscription_type: 'subscription1',
             },
-          },
-        })
+          })
 
-        expect(subscription1).toBeNull()
-
-        const subscription2 = await prisma.userProductSubscription.findUnique({
-          where: {
-            user_id_product_id_subscription_type: {
+          await prisma.userProductSubscription.create({
+            data: {
+              id: uuid.v4(),
               user_id: user.id,
               product_id: product.id,
               subscription_type: 'subscription2',
+              payload: {
+                some: 'content',
+              },
             },
-          },
+          })
         })
 
-        expect(subscription2).toBeNull()
+        test('removes subscriptions', async () => {
+          const { req, res } = mockAuthorizedDELETERequest(user.token, {
+            id: product.id,
+          })
+
+          await handler(req, res)
+
+          expect(parseJSON(res)).toEqual({})
+          expect(res._getStatusCode()).toBe(200)
+
+          const subscription1 = await prisma.userProductSubscription.findUnique(
+            {
+              where: {
+                user_id_product_id_subscription_type: {
+                  user_id: user.id,
+                  product_id: product.id,
+                  subscription_type: 'subscription1',
+                },
+              },
+            }
+          )
+
+          expect(subscription1).toBeNull()
+
+          const subscription2 = await prisma.userProductSubscription.findUnique(
+            {
+              where: {
+                user_id_product_id_subscription_type: {
+                  user_id: user.id,
+                  product_id: product.id,
+                  subscription_type: 'subscription2',
+                },
+              },
+            }
+          )
+
+          expect(subscription2).toBeNull()
+        })
+
+        test('updates last_activity_at', async () => {
+          const { req, res } = mockAuthorizedDELETERequest(user.token, {
+            id: product.id,
+          })
+
+          await handler(req, res)
+
+          expect(res._getStatusCode()).toBe(200)
+
+          await ensureUserLastActivityHasBeenUpdated(user)
+        })
       })
     })
   })
@@ -430,9 +454,11 @@ describe(`POST ${ENDPOINT}`, () => {
       })
     })
 
-    describe('when user does not have product', () => {
-      test('returns error', async () => {
-        const product = await prisma.product.create({
+    describe('when product exists', () => {
+      let product
+
+      beforeEach(async () => {
+        product = await prisma.product.create({
           data: {
             title: 'Product',
             url: 'https://domain.tld',
@@ -440,294 +466,194 @@ describe(`POST ${ENDPOINT}`, () => {
             shop: 'shop',
           },
         })
-
-        const { req, res } = mockAuthorizedPOSTRequest(user.token, {
-          id: product.id,
-        })
-
-        await handler(req, res)
-
-        expect(parseJSON(res)).toEqual(USER_DOES_NOT_HAVE_PRODUCT)
-        expect(res._getStatusCode()).toBe(404)
       })
-    })
 
-    describe('when user does not have telegram account', () => {
-      test('returns error', async () => {
-        const product = await prisma.product.create({
-          data: {
-            title: 'Product',
-            url: 'https://domain.tld',
-            url_hash: 'hash',
-            shop: 'shop',
-          },
-        })
-
-        await prisma.userProduct.create({
-          data: {
-            user_id: user.id,
-            product_id: product.id,
-            price: 42,
-          },
-        })
-
-        const { req, res } = mockAuthorizedPOSTRequest(user.token, {
-          id: product.id,
-        })
-
-        await handler(req, res)
-
-        expect(parseJSON(res)).toEqual(
-          USER_DOES_NOT_HAVE_LINKED_TELEGRAM_ACCOUNT
-        )
-        expect(res._getStatusCode()).toBe(400)
-      })
-    })
-
-    describe('when subscription_type missing', () => {
-      test('returns error', async () => {
-        await prisma.user.update({
-          where: {
-            id: user.id,
-          },
-          data: {
-            telegram_account: 'qwe',
-          },
-        })
-
-        const product = await prisma.product.create({
-          data: {
-            title: 'Product',
-            url: 'https://domain.tld',
-            url_hash: 'hash',
-            shop: 'shop',
-          },
-        })
-
-        await prisma.userProduct.create({
-          data: {
-            user_id: user.id,
-            product_id: product.id,
-            price: 42,
-          },
-        })
-
-        const { req, res } = mockAuthorizedPOSTRequest(user.token, {
-          id: product.id,
-        })
-
-        await handler(req, res)
-
-        expect(parseJSON(res)).toEqual(MISSING_SUBSCRIPTION_TYPE)
-        expect(res._getStatusCode()).toBe(400)
-      })
-    })
-
-    describe('when subscription_type is not supported', () => {
-      test('returns error', async () => {
-        await prisma.user.update({
-          where: {
-            id: user.id,
-          },
-          data: {
-            telegram_account: 'qwe',
-          },
-        })
-
-        const product = await prisma.product.create({
-          data: {
-            title: 'Product',
-            url: 'https://domain.tld',
-            url_hash: 'hash',
-            shop: 'shop',
-          },
-        })
-
-        await prisma.userProduct.create({
-          data: {
-            user_id: user.id,
-            product_id: product.id,
-            price: 42,
-          },
-        })
-
-        const { req, res } = mockAuthorizedPOSTRequest(
-          user.token,
-          {
+      describe('when user does not have product', () => {
+        test('returns error', async () => {
+          const { req, res } = mockAuthorizedPOSTRequest(user.token, {
             id: product.id,
-          },
-          {
-            subscription_type: 'unknown',
-          }
-        )
-
-        await handler(req, res)
-
-        expect(parseJSON(res)).toEqual(SUBSCRIPTION_TYPE_IS_NOT_VALID)
-        expect(res._getStatusCode()).toBe(422)
-      })
-    })
-
-    describe('when user has subscription for the product', () => {
-      test('does nothing', async () => {
-        await prisma.user.update({
-          where: {
-            id: user.id,
-          },
-          data: {
-            telegram_account: 'qwe',
-          },
-        })
-
-        const product = await prisma.product.create({
-          data: {
-            title: 'Product',
-            url: 'https://domain.tld',
-            url_hash: 'hash',
-            shop: 'shop',
-          },
-        })
-
-        await prisma.userProduct.create({
-          data: {
-            user_id: user.id,
-            product_id: product.id,
-            price: 42,
-          },
-        })
-
-        await prisma.userProductSubscription.create({
-          data: {
-            user_id: user.id,
-            product_id: product.id,
-            subscription_type: 'on_change_status_to_in_stock',
-          },
-        })
-
-        const { req, res } = mockAuthorizedPOSTRequest(
-          user.token,
-          {
-            id: product.id,
-          },
-          {
-            subscription_type: 'on_change_status_to_in_stock',
-          }
-        )
-
-        await handler(req, res)
-
-        expect(parseJSON(res)).toEqual(
-          USER_ALREADY_SUBSCRIBED_TO_SUBSCRIPTION_TYPE
-        )
-        expect(res._getStatusCode()).toBe(200)
-      })
-    })
-
-    describe('when user does not have subscription for the product', () => {
-      test('returns response', async () => {
-        await prisma.user.update({
-          where: {
-            id: user.id,
-          },
-          data: {
-            telegram_account: 'qwe',
-          },
-        })
-
-        const product = await prisma.product.create({
-          data: {
-            title: 'Product',
-            url: 'https://domain.tld',
-            url_hash: 'hash',
-            shop: 'shop',
-          },
-        })
-
-        await prisma.userProduct.create({
-          data: {
-            user_id: user.id,
-            product_id: product.id,
-            price: 42,
-          },
-        })
-
-        const { req, res } = mockAuthorizedPOSTRequest(
-          user.token,
-          {
-            id: product.id,
-          },
-          {
-            subscription_type: 'on_change_status_to_in_stock',
-          }
-        )
-
-        await handler(req, res)
-
-        const response = parseJSON(res)
-        expect(response.id).not.toBeNull()
-        expect(response.subscription_type).toEqual(
-          'on_change_status_to_in_stock'
-        )
-        expect(response.user_id).toEqual(user.id)
-        expect(response.product_id).toEqual(product.id)
-        expect(response.payload).toEqual({})
-
-        expect(res._getStatusCode()).toBe(201)
-      })
-
-      test('adds subscription', async () => {
-        await prisma.user.update({
-          where: {
-            id: user.id,
-          },
-          data: {
-            telegram_account: 'qwe',
-          },
-        })
-
-        const product = await prisma.product.create({
-          data: {
-            title: 'Product',
-            url: 'https://domain.tld',
-            url_hash: 'hash',
-            shop: 'shop',
-          },
-        })
-
-        await prisma.userProduct.create({
-          data: {
-            user_id: user.id,
-            product_id: product.id,
-            price: 42,
-          },
-        })
-
-        const { req, res } = mockAuthorizedPOSTRequest(
-          user.token,
-          {
-            id: product.id,
-          },
-          {
-            subscription_type: 'on_change_status_to_in_stock',
-          }
-        )
-
-        await handler(req, res)
-
-        expect(res._getStatusCode()).toBe(201)
-
-        const createdSubscription =
-          await prisma.userProductSubscription.findUnique({
-            where: {
-              user_id_product_id_subscription_type: {
-                product_id: product.id,
-                user_id: user.id,
-                subscription_type: 'on_change_status_to_in_stock',
-              },
-            },
           })
 
-        expect(createdSubscription).not.toBeNull()
+          await handler(req, res)
+
+          expect(parseJSON(res)).toEqual(USER_DOES_NOT_HAVE_PRODUCT)
+          expect(res._getStatusCode()).toBe(404)
+        })
+      })
+
+      describe('when user has product', () => {
+        beforeEach(async () => {
+          await prisma.userProduct.create({
+            data: {
+              user_id: user.id,
+              product_id: product.id,
+              price: 42,
+            },
+          })
+        })
+
+        describe('when user does not have telegram account', () => {
+          test('returns error', async () => {
+            const { req, res } = mockAuthorizedPOSTRequest(user.token, {
+              id: product.id,
+            })
+
+            await handler(req, res)
+
+            expect(parseJSON(res)).toEqual(
+              USER_DOES_NOT_HAVE_LINKED_TELEGRAM_ACCOUNT
+            )
+            expect(res._getStatusCode()).toBe(400)
+          })
+        })
+
+        describe('when user has telegram account', () => {
+          beforeEach(async () => {
+            await prisma.user.update({
+              where: {
+                id: user.id,
+              },
+              data: {
+                telegram_account: 'qwe',
+              },
+            })
+          })
+
+          describe('when subscription_type missing', () => {
+            test('returns error', async () => {
+              const { req, res } = mockAuthorizedPOSTRequest(user.token, {
+                id: product.id,
+              })
+
+              await handler(req, res)
+
+              expect(parseJSON(res)).toEqual(MISSING_SUBSCRIPTION_TYPE)
+              expect(res._getStatusCode()).toBe(400)
+            })
+          })
+
+          describe('when subscription_type is not supported', () => {
+            test('returns error', async () => {
+              const { req, res } = mockAuthorizedPOSTRequest(
+                user.token,
+                {
+                  id: product.id,
+                },
+                {
+                  subscription_type: 'unknown',
+                }
+              )
+
+              await handler(req, res)
+
+              expect(parseJSON(res)).toEqual(SUBSCRIPTION_TYPE_IS_NOT_VALID)
+              expect(res._getStatusCode()).toBe(422)
+            })
+          })
+
+          describe('when user has subscription for the product', () => {
+            test('does nothing', async () => {
+              await prisma.userProductSubscription.create({
+                data: {
+                  user_id: user.id,
+                  product_id: product.id,
+                  subscription_type: 'on_change_status_to_in_stock',
+                },
+              })
+
+              const { req, res } = mockAuthorizedPOSTRequest(
+                user.token,
+                {
+                  id: product.id,
+                },
+                {
+                  subscription_type: 'on_change_status_to_in_stock',
+                }
+              )
+
+              await handler(req, res)
+
+              expect(parseJSON(res)).toEqual(
+                USER_ALREADY_SUBSCRIBED_TO_SUBSCRIPTION_TYPE
+              )
+              expect(res._getStatusCode()).toBe(200)
+            })
+          })
+
+          describe('when user does not have subscription for the product', () => {
+            test('returns response', async () => {
+              const { req, res } = mockAuthorizedPOSTRequest(
+                user.token,
+                {
+                  id: product.id,
+                },
+                {
+                  subscription_type: 'on_change_status_to_in_stock',
+                }
+              )
+
+              await handler(req, res)
+
+              const response = parseJSON(res)
+              expect(response.id).not.toBeNull()
+              expect(response.subscription_type).toEqual(
+                'on_change_status_to_in_stock'
+              )
+              expect(response.user_id).toEqual(user.id)
+              expect(response.product_id).toEqual(product.id)
+              expect(response.payload).toEqual({})
+
+              expect(res._getStatusCode()).toBe(201)
+            })
+
+            test('adds subscription', async () => {
+              const { req, res } = mockAuthorizedPOSTRequest(
+                user.token,
+                {
+                  id: product.id,
+                },
+                {
+                  subscription_type: 'on_change_status_to_in_stock',
+                }
+              )
+
+              await handler(req, res)
+
+              expect(res._getStatusCode()).toBe(201)
+
+              const createdSubscription =
+                await prisma.userProductSubscription.findUnique({
+                  where: {
+                    user_id_product_id_subscription_type: {
+                      product_id: product.id,
+                      user_id: user.id,
+                      subscription_type: 'on_change_status_to_in_stock',
+                    },
+                  },
+                })
+
+              expect(createdSubscription).not.toBeNull()
+            })
+
+            test('updates last_activity_at', async () => {
+              const { req, res } = mockAuthorizedPOSTRequest(
+                user.token,
+                {
+                  id: product.id,
+                },
+                {
+                  subscription_type: 'on_change_status_to_in_stock',
+                }
+              )
+
+              await handler(req, res)
+
+              expect(res._getStatusCode()).toBe(201)
+
+              await ensureUserLastActivityHasBeenUpdated(user)
+            })
+          })
+        })
       })
     })
   })

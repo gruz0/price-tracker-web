@@ -1,6 +1,9 @@
 import prisma from '../../../../../src/lib/prisma'
-
-import { cleanDatabase, mockAuthorizedPOSTRequest } from '../../../../helpers'
+import {
+  cleanDatabase,
+  ensureUserLastActivityHasBeenUpdated,
+  mockAuthorizedPOSTRequest,
+} from '../../../../helpers'
 import { createMocks } from 'node-mocks-http'
 import handler from '../../../../../src/pages/api/v1/settings/change_password'
 import {
@@ -260,6 +263,24 @@ describe(`POST ${ENDPOINT}`, () => {
       expect(response.user.id).toEqual(user.id)
       expect(response.user.login).toEqual('user1')
       expect(response.user.telegram_account).toEqual('12345')
+    })
+
+    test('updates last_activity_at', async () => {
+      const { req, res } = mockAuthorizedPOSTRequest(
+        user.token,
+        {},
+        {
+          current_password: 'password',
+          new_password: 'qwezxc123',
+          new_password_confirmation: 'qwezxc123',
+        }
+      )
+
+      await handler(req, res)
+
+      expect(res._getStatusCode()).toBe(200)
+
+      await ensureUserLastActivityHasBeenUpdated(user)
     })
   })
 })

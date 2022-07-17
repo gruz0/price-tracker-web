@@ -1,3 +1,4 @@
+import prisma from '../src/lib/prisma'
 import { createMocks } from 'node-mocks-http'
 
 export const cleanDatabase = async (prisma) => {
@@ -84,4 +85,14 @@ export const mockAuthorizedDELETERequest = (token, query = {}) => {
       authorization: `Bearer ${token}`,
     },
   })
+}
+
+export const ensureUserLastActivityHasBeenUpdated = async (user) => {
+  const existedUser = await prisma.user.findUnique({
+    where: {
+      id: user.id,
+    },
+  })
+
+  expect(+existedUser.last_activity_at).toBeGreaterThan(+user.last_activity_at)
 }

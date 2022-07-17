@@ -20,6 +20,7 @@ import {
 } from '../../../../../src/lib/messages'
 import {
   cleanDatabase,
+  ensureUserLastActivityHasBeenUpdated,
   mockAuthorizedPOSTRequest,
   parseJSON,
 } from '../../../../helpers'
@@ -168,18 +169,27 @@ describe(`POST ${ENDPOINT}`, () => {
     })
 
     describe('when product exists', () => {
+      let product
+      let crawler
+
+      beforeEach(async () => {
+        product = await prisma.product.create({
+          data: {
+            title: 'Product',
+            url: 'https://www.ozon.ru/product/42',
+            url_hash:
+              '7bb40729dde6700a1540e342904e73696d3ffdb5ed222b7c4a69d3181d78d87f',
+            shop: 'shop',
+          },
+        })
+
+        crawler = await prisma.crawler.create({
+          data: { location: 'location' },
+        })
+      })
+
       describe('when user does not have product', () => {
         test('returns status', async () => {
-          const product = await prisma.product.create({
-            data: {
-              title: 'Product',
-              url: 'https://www.ozon.ru/product/42',
-              url_hash:
-                '7bb40729dde6700a1540e342904e73696d3ffdb5ed222b7c4a69d3181d78d87f',
-              shop: 'shop',
-            },
-          })
-
           const { req, res } = mockAuthorizedPOSTRequest(
             user.api_key,
             {},
@@ -195,25 +205,27 @@ describe(`POST ${ENDPOINT}`, () => {
           )
           expect(res._getStatusCode()).toBe(200)
         })
+
+        test('updates last_activity_at', async () => {
+          const { req, res } = mockAuthorizedPOSTRequest(
+            user.api_key,
+            {},
+            {
+              url: product.url,
+            }
+          )
+
+          await handler(req, res)
+
+          expect(res._getStatusCode()).toBe(200)
+
+          await ensureUserLastActivityHasBeenUpdated(user)
+        })
       })
 
       describe('when user has this product', () => {
         describe('when product has history', () => {
           test('returns actual product status', async () => {
-            const crawler = await prisma.crawler.create({
-              data: { location: 'location' },
-            })
-
-            const product = await prisma.product.create({
-              data: {
-                title: 'Product',
-                url: 'https://www.ozon.ru/product/42',
-                url_hash:
-                  '7bb40729dde6700a1540e342904e73696d3ffdb5ed222b7c4a69d3181d78d87f',
-                shop: 'shop',
-              },
-            })
-
             await prisma.userProduct.create({
               data: {
                 user_id: user.id,
@@ -260,16 +272,6 @@ describe(`POST ${ENDPOINT}`, () => {
 
         describe('when product does not have history', () => {
           test('returns error', async () => {
-            const product = await prisma.product.create({
-              data: {
-                title: 'Product',
-                url: 'https://www.ozon.ru/product/42',
-                url_hash:
-                  '7bb40729dde6700a1540e342904e73696d3ffdb5ed222b7c4a69d3181d78d87f',
-                shop: 'shop',
-              },
-            })
-
             await prisma.userProduct.create({
               data: {
                 user_id: user.id,

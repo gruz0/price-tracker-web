@@ -21,6 +21,7 @@ import {
   UNABLE_TO_ADD_USER_PRODUCT_TO_PRODUCTS_GROUP,
   UNABLE_TO_DELETE_USER_PRODUCTS_GROUP,
   USER_PRODUCTS_GROUP_DELETED,
+  UNABLE_TO_UPDATE_USER_LAST_ACTIVITY,
 } from '../../../../../lib/messages'
 import { isEmptyString, isValidUUID } from '../../../../../lib/validators'
 import { UserProductsGroupsService } from '../../../../../services/user_products_groups_service'
@@ -28,6 +29,7 @@ import { UserProductsGroupService } from '../../../../../services/user_products_
 import { UserProductsService } from '../../../../../services/user_products_service'
 import { validateBearerToken } from '../../../../../lib/auth_helpers'
 import { findUserByToken } from '../../../../../services/auth'
+import { UsersService } from '../../../../../services/users'
 
 const handler = async (req, res) => {
   if (!['GET', 'POST', 'DELETE'].includes(req.method)) {
@@ -60,6 +62,20 @@ const handler = async (req, res) => {
 
   if (!user) {
     return responseJSON(res, 403, FORBIDDEN)
+  }
+
+  try {
+    await UsersService.updateLastActivity(user.id)
+  } catch (err) {
+    console.error({ err })
+
+    Sentry.withScope(function (scope) {
+      scope.setContext('args', { user })
+      scope.setTag('section', 'UsersService.updateLastActivity')
+      Sentry.captureException(err)
+    })
+
+    return responseJSON(res, 500, UNABLE_TO_UPDATE_USER_LAST_ACTIVITY)
   }
 
   const productsGroupId = req.query.id

@@ -1,6 +1,5 @@
 import { withSentry } from '@sentry/nextjs'
 import * as Sentry from '@sentry/nextjs'
-
 import {
   findUserById,
   findUserByTelegramAccount,
@@ -19,10 +18,12 @@ import {
   USER_WITH_TELEGRAM_ACCOUNT_ALREADY_EXISTS,
   UNABLE_TO_FIND_USER_BY_TELEGRAM_ACCOUNT,
   UNABLE_TO_UPDATE_USER_TELEGRAM_ACCOUNT,
+  UNABLE_TO_UPDATE_USER_LAST_ACTIVITY,
 } from '../../../../../../lib/messages'
 import { findBotByToken } from '../../../../../../services/bots'
 import { responseJSON } from '../../../../../../lib/helpers'
 import { validateBearerToken } from '../../../../../../lib/auth_helpers'
+import { UsersService } from '../../../../../../services/users'
 
 const handler = async (req, res) => {
   if (req.method !== 'PUT') {
@@ -88,6 +89,20 @@ const handler = async (req, res) => {
 
   if (!user) {
     return responseJSON(res, 404, USER_DOES_NOT_EXIST)
+  }
+
+  try {
+    await UsersService.updateLastActivity(user.id)
+  } catch (err) {
+    console.error({ err })
+
+    Sentry.withScope(function (scope) {
+      scope.setContext('args', { user })
+      scope.setTag('section', 'UsersService.updateLastActivity')
+      Sentry.captureException(err)
+    })
+
+    return responseJSON(res, 500, UNABLE_TO_UPDATE_USER_LAST_ACTIVITY)
   }
 
   const { telegram_account } = req.body

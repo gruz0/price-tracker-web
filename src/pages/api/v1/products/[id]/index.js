@@ -1,11 +1,12 @@
 import { withSentry } from '@sentry/nextjs'
 import * as Sentry from '@sentry/nextjs'
-
 import { findUserByToken } from '../../../../../services/auth'
 import { findProductById } from '../../../../../services/products'
-import { removeProductWithSubscriptionsFromUser } from '../../../../../services/users'
+import {
+  removeProductWithSubscriptionsFromUser,
+  UsersService,
+} from '../../../../../services/users'
 import { responseJSON } from '../../../../../lib/helpers'
-
 import {
   METHOD_NOT_ALLOWED,
   UNABLE_TO_FIND_USER_BY_TOKEN,
@@ -17,6 +18,7 @@ import {
   UNABLE_TO_GET_USER_PRODUCT,
   USER_DOES_NOT_HAVE_PRODUCT,
   UNABLE_TO_REMOVE_USER_PRODUCT_WITH_SUBSCRIPTIONS,
+  UNABLE_TO_UPDATE_USER_LAST_ACTIVITY,
 } from '../../../../../lib/messages'
 import { isEmptyString, isValidUUID } from '../../../../../lib/validators'
 import { getShops } from '../../../../../services/shops'
@@ -54,6 +56,20 @@ const handler = async (req, res) => {
 
   if (!user) {
     return responseJSON(res, 403, FORBIDDEN)
+  }
+
+  try {
+    await UsersService.updateLastActivity(user.id)
+  } catch (err) {
+    console.error({ err })
+
+    Sentry.withScope(function (scope) {
+      scope.setContext('args', { user })
+      scope.setTag('section', 'UsersService.updateLastActivity')
+      Sentry.captureException(err)
+    })
+
+    return responseJSON(res, 500, UNABLE_TO_UPDATE_USER_LAST_ACTIVITY)
   }
 
   const productId = req.query.id
