@@ -1,4 +1,4 @@
-import React, { useContext } from 'react'
+import React from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import {
@@ -9,16 +9,11 @@ import {
   Header,
   List,
 } from 'semantic-ui-react'
-
 import priceFeltDownImage from '../../../public/landing/price-felt-down.png'
 import productsCardViewImage from '../../../public/landing/products-card-view.png'
 import productsTableViewImage from '../../../public/landing/products-table-view.png'
 
-import DisplayContext from '../../context/display-context'
-
-const Screen = () => {
-  const { isSmallScreen } = useContext(DisplayContext)
-
+export const LandingScreen = ({ isSmallScreen }) => {
   const MyH3 = ({ children }) => (
     <Header as="h3" style={{ fontSize: isSmallScreen ? '1.5em' : '2em' }}>
       {children}
@@ -239,7 +234,8 @@ const Screen = () => {
           <List.Item>
             <List.Icon name="dont" />
             <List.Content>
-              Мы не обрабатываем товары, которые помечены в маркетплейсах как 18+
+              Мы не обрабатываем товары, которые помечены в маркетплейсах как
+              18+
             </List.Content>
           </List.Item>
         </List>
@@ -255,5 +251,3 @@ const Screen = () => {
     </>
   )
 }
-
-export default Screen

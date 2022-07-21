@@ -1,20 +1,18 @@
 import { Message, Table, List } from 'semantic-ui-react'
-import GroupItem from './GroupItem'
+import { GroupItem } from './GroupItem'
 
-export default function GroupItems({ groupItems }) {
+export const GroupItems = ({ groupItems }) => {
   return (
     <>
       <Message>
         <Message.Header>Порядок отображения товаров</Message.Header>
-        <p>
-          <List ordered>
-            <List.Item>
-              Сначала показываются товары, которые существуют в маркетплейсах
-            </List.Item>
-            <List.Item>Затем товары в наличии</List.Item>
-            <List.Item>И потом по цене по возрастанию</List.Item>
-          </List>
-        </p>
+        <List ordered>
+          <List.Item>
+            Сначала показываются товары, которые существуют в маркетплейсах
+          </List.Item>
+          <List.Item>Затем товары в наличии</List.Item>
+          <List.Item>И потом по цене по возрастанию</List.Item>
+        </List>
       </Message>
 
       <Table>

@@ -1,11 +1,6 @@
-import React, { useState, useContext } from 'react'
+import React, { useState } from 'react'
 import Image from 'next/image'
 import { Divider, Accordion, Icon, Header } from 'semantic-ui-react'
-
-import DisplayContext from '../../../context/display-context'
-import { useAuth } from '../../../hooks'
-import JustOneSecond from '../../../components/JustOneSecond'
-
 import copyProductLinkFromTheBrowserImage from '../../../../public/images/help/copy-product-link-from-the-browser.png'
 import addNewProductToChartikDesktopBrowserImage from '../../../../public/images/help/add-new-product-to-chartik-desktop-browser.png'
 import addNewProductToChartikMobileBrowserImage from '../../../../public/images/help/add-new-product-to-chartik-mobile-browser.jpg'
@@ -14,14 +9,20 @@ import wildberriesMobileAppShareIconImage from '../../../../public/images/help/w
 import iPhoneCopyLinkImage from '../../../../public/images/help/iphone-copy-link.jpg'
 import productHasBeenAddedImage from '../../../../public/images/help/product-has-been-added.jpg'
 import telegramMessageImage from '../../../../public/images/help/telegram-message.jpg'
+import { useAuth } from '../../../hooks'
+import JustOneSecond from '../../../components/JustOneSecond'
+import ErrorWrapper from '../../../components/ErrorWrapper'
 
-const Screen = () => {
-  const { user } = useAuth()
+export const HelpScreen = ({ isSmallScreen }) => {
+  const { isLoading: userLoading, isAuthenticated, user } = useAuth()
   const [activeIndex, setActiveIndex] = useState(-1)
-  const { isSmallScreen } = useContext(DisplayContext)
 
-  if (!user) {
-    return <JustOneSecond />
+  if (userLoading) {
+    return <JustOneSecond title="Загружаем пользователя..." />
+  }
+
+  if (!isAuthenticated) {
+    return <ErrorWrapper header="Пожалуйста, войдите в систему" />
   }
 
   const MyDivider = () => (
@@ -361,5 +362,3 @@ const Screen = () => {
     </>
   )
 }
-
-export default Screen

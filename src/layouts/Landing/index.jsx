@@ -2,16 +2,21 @@ import React from 'react'
 import Head from 'next/head'
 import Script from 'next/script'
 import { Container, Segment } from 'semantic-ui-react'
-import Header from '../../components/Header'
-import Footer from '../../components/Footer'
+import { Header } from '../../components/Header'
+import { Footer } from '../../components/Footer'
 
 import 'semantic-ui-css/semantic.min.css'
 
 const yandexMetrika = '88919188'
 const googleAnalytics = 'G-FY73JCKE1R'
 
-const LandingLayout = ({ children, meta = {} }) => {
+export const LandingLayout = ({ children, meta = {} }) => {
   const { title, description } = meta
+
+  const productName = 'Chartik'
+  const productURL = 'https://chartik.ru'
+
+  const pageTitle = title ? `${title} | ${productName}` : productName
 
   const defaultDescription =
     'Узнавайте об изменении цен и наличии любимых товаров быстрее всех!'
@@ -19,26 +24,29 @@ const LandingLayout = ({ children, meta = {} }) => {
   return (
     <>
       <Head>
-        <title>{title || 'Chartik'}</title>
+        <title>{pageTitle}</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <meta name="description" content={description || defaultDescription} />
 
-        <meta property="og:title" content={title} />
+        <meta property="og:title" content={pageTitle} />
         <meta property="og:description" content={description} />
-        <meta property="og:url" content="https://chartik.ru/" />
+        <meta property="og:url" content={productURL} />
         <meta property="og:type" content="website" />
-        <meta property="og:image" content="https://chartik.ru/chartik.png" />
+        <meta property="og:image" content={`${productURL}/chartik.png`} />
         <meta property="og:image:type" content="image/png" />
         <meta property="og:image:width" content="1600" />
         <meta property="og:image:height" content="900" />
-        <meta property="og:image:alt" content={`${title} | ${description}`} />
+        <meta
+          property="og:image:alt"
+          content={`${pageTitle} | ${description}`}
+        />
 
         <meta name="twitter:card" content="summary_large_image" />
-        <meta property="twitter:domain" content="chartik.ru" />
-        <meta property="twitter:url" content="https://chartik.ru/" />
-        <meta name="twitter:title" content={title} />
+        <meta property="twitter:domain" content="@chartik_ru" />
+        <meta property="twitter:url" content={productURL} />
+        <meta name="twitter:title" content={pageTitle} />
         <meta name="twitter:description" content={description} />
-        <meta name="twitter:image" content="https://chartik.ru/chartik.png" />
+        <meta name="twitter:image" content={`${productURL}/chartik.png`} />
 
         <link rel="icon" type="image/png" href="/favicon.png"></link>
 
@@ -89,5 +97,3 @@ const LandingLayout = ({ children, meta = {} }) => {
     </>
   )
 }
-
-export default LandingLayout

@@ -1,23 +1,39 @@
 import React, { useEffect, useContext } from 'react'
+import ErrorWrapper from '../../components/ErrorWrapper'
+import JustOneSecond from '../../components/JustOneSecond'
 import DisplayContext from '../../context/display-context'
-import UsersLayout from '../../layouts/Users'
-import ProductsScreen from '../../screens/users/products/index'
+import { useAuth } from '../../hooks'
+import { LandingLayout } from '../../layouts/Landing'
+import { UsersLayout } from '../../layouts/Users'
+import { ProductsScreen } from '../../screens/users/products/index'
 
 const Page = () => {
-  const { setSmallScreen } = useContext(DisplayContext)
+  const { isLoading: userLoading, isAuthenticated } = useAuth()
+  const { isSmallScreen, setSmallScreen } = useContext(DisplayContext)
 
   useEffect(() => {
     setSmallScreen(window.matchMedia('(max-width: 700px)').matches)
   }, [])
 
+  if (userLoading) {
+    return (
+      <LandingLayout>
+        <JustOneSecond title="Загружаем пользователя..." />
+      </LandingLayout>
+    )
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <LandingLayout>
+        <ErrorWrapper header="Пожалуйста, войдите в систему" />
+      </LandingLayout>
+    )
+  }
+
   return (
-    <UsersLayout
-      meta={{
-        title: 'Товары | Chartik',
-        description: 'Покупайте вовремя!',
-      }}
-    >
-      <ProductsScreen />
+    <UsersLayout meta={{ title: 'Товары' }}>
+      <ProductsScreen isSmallScreen={isSmallScreen} />
     </UsersLayout>
   )
 }

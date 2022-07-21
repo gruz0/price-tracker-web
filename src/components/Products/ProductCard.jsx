@@ -2,11 +2,11 @@ import React from 'react'
 import { Card, List, Divider, Image } from 'semantic-ui-react'
 import Link from 'next/link'
 import { formatDateTime } from '../../lib/formatDate'
-import PriceLabel from './PriceLabel'
+import { PriceLabel } from './PriceLabel'
 import { TrueFalseIcon } from '../TrueFalseIcon'
 import Shop from './Shop'
 
-export default function ProductCard({ product }) {
+export const ProductCard = ({ product }) => {
   const formattedDate = formatDateTime(product.price_updated_at)
 
   const imagePath = product.image && '/uploads/' + product.image

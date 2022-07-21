@@ -2,7 +2,7 @@ import React from 'react'
 import { Icon, Statistic } from 'semantic-ui-react'
 import { formatTime } from '../../lib/formatDate'
 
-export default function Statistics({ product, isSmallScreen }) {
+export const Statistics = ({ product, isSmallScreen }) => {
   return (
     <Statistic.Group
       size="small"

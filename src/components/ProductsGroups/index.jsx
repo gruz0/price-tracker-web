@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react'
 import { Divider } from 'semantic-ui-react'
-import ProductsGroups from './ProductsGroups'
-import PaginationComponent from '../Pagination'
+import { ProductsGroupsTable } from './ProductsGroupsTable'
+import { Pagination } from '../Pagination'
 
-export default function ProductsGroupsList({ productsGroups, isSmallScreen }) {
+export const ProductsGroups = ({ productsGroups, isSmallScreen }) => {
   const recordsPerPage = 10
 
   const [filteredProductsGroups, setFilteredProductsGroups] = useState([])
@@ -37,13 +37,13 @@ export default function ProductsGroupsList({ productsGroups, isSmallScreen }) {
 
   return (
     <>
-      <ProductsGroups productsGroups={filteredProductsGroups} />
+      <ProductsGroupsTable productsGroups={filteredProductsGroups} />
 
       {showPagination && (
         <>
           <Divider hidden />
 
-          <PaginationComponent
+          <Pagination
             showPagination={showPagination}
             totalPages={totalPages}
             changePage={changePage}

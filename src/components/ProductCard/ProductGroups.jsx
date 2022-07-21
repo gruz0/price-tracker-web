@@ -1,6 +1,6 @@
 import { Menu, Dropdown } from 'semantic-ui-react'
 
-export default function ProductGroups({ groups }) {
+export const ProductGroups = ({ groups }) => {
   return (
     <Menu.Menu>
       <Dropdown item text="Этот товар находится в группе товаров">

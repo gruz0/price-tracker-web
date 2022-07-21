@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { Image } from 'semantic-ui-react'
 
-export default function Shop({ product }) {
+export const Shop = ({ product }) => {
   return (
     <Link href={product.url} passHref>
       <a

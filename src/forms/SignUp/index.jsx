@@ -3,7 +3,7 @@ import { useRouter } from 'next/router'
 import { Button, Form, Message, Segment } from 'semantic-ui-react'
 import { useAuth } from '../../hooks'
 
-export default function SignUp() {
+export const SignUp = () => {
   const { signUp, authenticate } = useAuth()
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)

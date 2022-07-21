@@ -3,7 +3,7 @@ import { Table } from 'semantic-ui-react'
 import Link from 'next/link'
 import { formatDateTime } from '../../lib/formatDate'
 
-export default function ProductsGroup({ productsGroup }) {
+export const ProductsGroup = ({ productsGroup }) => {
   const formattedDate = formatDateTime(productsGroup.created_at)
 
   return (

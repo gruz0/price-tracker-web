@@ -1,39 +1,48 @@
-import React, { useEffect, useContext } from 'react'
-
+import React from 'react'
 import { Divider, Message } from 'semantic-ui-react'
-
-import Products from '../../../../components/Products'
 import ErrorWrapper from '../../../../components/ErrorWrapper'
 import JustOneSecond from '../../../../components/JustOneSecond'
+import Products from '../../../../components/Products'
+import { AddNewProduct } from '../../../../forms/AddNewProduct'
 import { useAuth } from '../../../../hooks'
-import AddNewProduct from '../../../../forms/AddNewProduct'
 import useProducts from '../../../../hooks/useProducts'
-import DisplayContext from '../../../../context/display-context'
-
+import { isEmptyString } from '../../../../lib/validators'
 import { Brief } from './Brief'
 
-const Screen = () => {
-  const { user, token, logout } = useAuth()
-  const { data, isLoading, error } = useProducts(token)
-  const { isSmallScreen } = useContext(DisplayContext)
+export const ProductsScreen = ({ isSmallScreen }) => {
+  const { isLoading: userLoading, isAuthenticated, user, token } = useAuth()
+  const {
+    data: productsResponse,
+    isLoading: productsLoading,
+    error: productsError,
+  } = useProducts(token)
 
-  useEffect(() => {
-    if (error && error?.info?.status === 'forbidden') {
-      return logout()
-    }
-  }, [error])
-
-  if (error) {
-    return <ErrorWrapper header="Не удалось загрузить товары" error={error} />
+  if (userLoading) {
+    return <JustOneSecond title="Загружаем пользователя..." />
   }
 
-  if (!user || isLoading || !data?.products) {
-    return <JustOneSecond />
+  if (!isAuthenticated) {
+    return <ErrorWrapper header="Пожалуйста, войдите в систему" />
   }
+
+  if (productsLoading) {
+    return <JustOneSecond title="Загружаем товары..." />
+  }
+
+  if (productsError) {
+    return (
+      <ErrorWrapper
+        header="Не удалось загрузить товары"
+        error={productsError}
+      />
+    )
+  }
+
+  const products = productsResponse.products
 
   return (
     <>
-      {!user.telegram_account || user.telegram_account === '' ? (
+      {isEmptyString(user.telegram_account) ? (
         <Brief user={user} />
       ) : (
         <Message>
@@ -59,8 +68,8 @@ const Screen = () => {
 
       {!isSmallScreen && <Divider hidden />}
 
-      {data.products.length > 0 ? (
-        <Products products={data.products} isSmallScreen={isSmallScreen} />
+      {products.length > 0 ? (
+        <Products products={products} isSmallScreen={isSmallScreen} />
       ) : (
         <Message info>
           <Message.Header>
@@ -75,5 +84,3 @@ const Screen = () => {
     </>
   )
 }
-
-export default Screen

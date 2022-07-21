@@ -1,7 +1,7 @@
 import React from 'react'
 import { Divider } from 'semantic-ui-react'
 
-const Footer = () => {
+export const Footer = () => {
   return (
     <>
       <Divider horizontal>
@@ -11,5 +11,3 @@ const Footer = () => {
     </>
   )
 }
-
-export default Footer

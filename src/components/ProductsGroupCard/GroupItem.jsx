@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { formatDateTime } from '../../lib/formatDate'
 import { TrueFalseIcon } from '../TrueFalseIcon'
 
-export default function GroupItem({ groupItem }) {
+export const GroupItem = ({ groupItem }) => {
   const formattedDate = formatDateTime(groupItem.history_updated_at)
 
   return (

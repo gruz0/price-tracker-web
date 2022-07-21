@@ -1,6 +1,6 @@
 import { Chart as GoogleChart } from 'react-google-charts'
 
-export default function Chart({ product, history }) {
+export const Chart = ({ product, history }) => {
   let historyData = [
     [
       { type: 'datetime', label: 'Дата' },

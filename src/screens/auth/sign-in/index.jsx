@@ -1,8 +1,8 @@
 import React from 'react'
 import { Grid, Header } from 'semantic-ui-react'
-import SignIn from '../../../forms/SignIn'
+import { SignIn } from '../../../forms/SignIn'
 
-const Screen = () => (
+export const SignInScreen = () => (
   <Grid textAlign="center" style={{ marginTop: '1em' }}>
     <Grid.Column style={{ maxWidth: 450 }}>
       <Header as="h2" textAlign="center">
@@ -13,5 +13,3 @@ const Screen = () => (
     </Grid.Column>
   </Grid>
 )
-
-export default Screen

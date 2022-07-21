@@ -7,7 +7,7 @@ const statuses = {
   not_found: 'Товар не существует',
 }
 
-export default function PriceTable({ history }) {
+export const PriceTable = ({ history }) => {
   const [displayAllRecords, setDisplayAllRecords] = useState(false)
   const [data, setData] = useState([])
 

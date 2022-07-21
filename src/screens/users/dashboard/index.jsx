@@ -1,9 +1,19 @@
-import React, { useContext } from 'react'
+import React from 'react'
 import { Container, Divider, Header } from 'semantic-ui-react'
-import DisplayContext from '../../../context/display-context'
+import ErrorWrapper from '../../../components/ErrorWrapper'
+import JustOneSecond from '../../../components/JustOneSecond'
+import { useAuth } from '../../../hooks'
 
-const Screen = () => {
-  const { isSmallScreen } = useContext(DisplayContext)
+export const DashboardScreen = ({ isSmallScreen }) => {
+  const { isLoading: userLoading, isAuthenticated } = useAuth()
+
+  if (userLoading) {
+    return <JustOneSecond title="Загружаем пользователя..." />
+  }
+
+  if (!isAuthenticated) {
+    return <ErrorWrapper header="Пожалуйста, войдите в систему" />
+  }
 
   return (
     <Container textAlign="center" fluid>
@@ -24,5 +34,3 @@ const Screen = () => {
     </Container>
   )
 }
-
-export default Screen

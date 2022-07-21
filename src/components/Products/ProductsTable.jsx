@@ -1,7 +1,7 @@
 import { Table, Icon } from 'semantic-ui-react'
-import Product from './Product'
+import { Product } from './Product'
 
-export default function ProductsTable({ products }) {
+export const ProductsTable = ({ products }) => {
   return (
     <Table>
       <Table.Header>

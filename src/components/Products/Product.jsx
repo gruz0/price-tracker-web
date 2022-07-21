@@ -2,11 +2,11 @@ import React from 'react'
 import { Table } from 'semantic-ui-react'
 import Link from 'next/link'
 import { formatDateTime } from '../../lib/formatDate'
-import PriceLabel from './PriceLabel'
+import { PriceLabel } from './PriceLabel'
 import { TrueFalseIcon } from '../TrueFalseIcon'
-import Shop from './Shop'
+import { Shop } from './Shop'
 
-export default function Product({ product }) {
+export const Product = ({ product }) => {
   const formattedDate = formatDateTime(product.price_updated_at)
 
   return (

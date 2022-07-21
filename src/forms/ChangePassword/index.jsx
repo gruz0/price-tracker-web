@@ -4,7 +4,7 @@ import { Button, Form } from 'semantic-ui-react'
 import ErrorWrapper from '../../components/ErrorWrapper'
 import { changeUserPassword } from '../../lib/settings'
 
-export default function ChangePassword({ token, authenticate }) {
+export const ChangePassword = ({ token, authenticate }) => {
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
 
