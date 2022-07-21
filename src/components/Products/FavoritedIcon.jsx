@@ -1,6 +1,6 @@
 import { Icon } from 'semantic-ui-react'
 
-export default function FavoritedIcon({ favorited }) {
+export const FavoritedIcon = ({ favorited }) => {
   return (
     <>
       {favorited ? (

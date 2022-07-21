@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { Message, Input } from 'semantic-ui-react'
 
-export default function ApiKey({ apiKey }) {
+export const ApiKey = ({ apiKey }) => {
   const [isCopied, setIsCopied] = useState(false)
 
   async function copyTextToClipboard(text) {

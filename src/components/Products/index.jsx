@@ -8,9 +8,9 @@ import {
   Segment,
   Icon,
 } from 'semantic-ui-react'
-import ProductsTable from './ProductsTable'
-import ProductsCards from './ProductsCards'
-import PaginationComponent from '../Pagination'
+import { ProductsTable } from './ProductsTable'
+import { ProductsCards } from './ProductsCards'
+import { Pagination } from '../Pagination'
 
 export default function ProductsList({ products, isSmallScreen }) {
   const [view, setView] = useState(isSmallScreen ? 'card' : 'table')
@@ -177,7 +177,7 @@ export default function ProductsList({ products, isSmallScreen }) {
         <>
           <Divider hidden />
 
-          <PaginationComponent
+          <Pagination
             showPagination={showPagination}
             totalPages={totalPages}
             changePage={changePage}

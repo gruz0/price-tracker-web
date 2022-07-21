@@ -1,6 +1,6 @@
 import { Menu, Image, Dropdown } from 'semantic-ui-react'
 
-export default function SearchInOtherShops({ product, shops }) {
+export const SearchInOtherShops = ({ product, shops }) => {
   return (
     <Menu.Menu position="right">
       <Dropdown item text="Найти в других магазинах">

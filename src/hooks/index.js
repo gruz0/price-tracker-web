@@ -39,7 +39,8 @@ export const AuthProvider = ({ children }) => {
       } else {
         logout()
       }
-    } catch (error) {
+    } catch (err) {
+      console.error({ err })
       logout()
     }
   }

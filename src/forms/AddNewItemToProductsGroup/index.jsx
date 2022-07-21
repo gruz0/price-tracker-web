@@ -5,11 +5,11 @@ import ErrorWrapper from '../../components/ErrorWrapper'
 import { isEmptyString } from '../../lib/validators'
 import { addUserProductToProductsGroup } from '../../lib/products_groups'
 
-export default function AddNewItemToProductsGroup({
+export const AddNewItemToProductsGroup = ({
   token,
   productsGroup,
   userProducts,
-}) {
+}) => {
   const router = useRouter()
   const [selectedProductId, setSelectedProductId] = useState('')
   const [message, setMessage] = useState(undefined)

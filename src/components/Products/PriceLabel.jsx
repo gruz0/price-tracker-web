@@ -1,6 +1,6 @@
 import { Label } from 'semantic-ui-react'
 
-export default function PriceLabel({ product, attached, ribbon, tag }) {
+export const PriceLabel = ({ product, attached, ribbon, tag }) => {
   const myBenefit = product.my_benefit
   const myBenefitAbsolute = Math.abs(myBenefit)
 

@@ -3,17 +3,17 @@ import { useRouter } from 'next/router'
 import { Button, Segment, Message, Divider, Header } from 'semantic-ui-react'
 import { useAuth } from '../../hooks'
 import JustOneSecond from '../JustOneSecond'
-import GroupItems from './GroupItems'
+import { GroupItems } from './GroupItems'
 import ErrorWrapper from '../ErrorWrapper'
-import AddNewItemToProductsGroup from '../../forms/AddNewItemToProductsGroup'
+import { AddNewItemToProductsGroup } from '../../forms/AddNewItemToProductsGroup'
 import { removeProductsGroup } from '../../lib/products_groups'
 
-export default function ProductsGroupCard({
+export const ProductsGroupCard = ({
   productsGroup,
   productsGroupItems,
   userProducts,
   isSmallScreen,
-}) {
+}) => {
   const router = useRouter()
   const { user, token } = useAuth()
   const [error, setError] = useState(undefined)

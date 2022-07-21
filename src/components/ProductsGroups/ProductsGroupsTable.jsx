@@ -1,7 +1,7 @@
 import { Table } from 'semantic-ui-react'
-import ProductsGroup from './ProductsGroup'
+import { ProductsGroup } from './ProductsGroup'
 
-export default function ProductsGroupsTable({ productsGroups }) {
+export const ProductsGroupsTable = ({ productsGroups }) => {
   return (
     <Table>
       <Table.Header>

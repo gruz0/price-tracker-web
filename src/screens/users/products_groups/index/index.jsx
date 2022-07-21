@@ -1,22 +1,21 @@
-import React, { useState, useEffect, useContext } from 'react'
-
+import React, { useState } from 'react'
 import { useRouter } from 'next/router'
 import { Input, Modal, Segment, Button, Message } from 'semantic-ui-react'
-
-import ProductsGroups from '../../../../components/ProductsGroups'
+import { ProductsGroups } from '../../../../components/ProductsGroups'
 import ErrorWrapper from '../../../../components/ErrorWrapper'
 import JustOneSecond from '../../../../components/JustOneSecond'
 import { useAuth } from '../../../../hooks'
 import useProductsGroups from '../../../../hooks/useProductsGroups'
-import DisplayContext from '../../../../context/display-context'
 import { createNewProductsGroup } from '../../../../lib/products_groups'
 
-const Screen = () => {
+export const ProductsGroupsScreen = ({ isSmallScreen }) => {
   const router = useRouter()
-
-  const { user, token, logout } = useAuth()
-  const { data, isLoading, error } = useProductsGroups(token)
-  const { isSmallScreen } = useContext(DisplayContext)
+  const { isLoading: userLoading, isAuthenticated, token } = useAuth()
+  const {
+    data: productsGroupsResponse,
+    isLoading: productsGroupsLoading,
+    error: productsGroupsError,
+  } = useProductsGroups(token)
 
   const [newProductsGroupTitle, setNewProductsGroupTitle] = useState('')
   const [openNewProductsGroupDialog, setOpenNewProductsGroupDialog] =
@@ -47,24 +46,28 @@ const Screen = () => {
     }
   }
 
-  useEffect(() => {
-    if (error && error?.info?.status === 'forbidden') {
-      return logout()
-    }
-  }, [error])
+  if (userLoading) {
+    return <JustOneSecond title="Загружаем пользователя..." />
+  }
 
-  if (error) {
+  if (!isAuthenticated) {
+    return <ErrorWrapper header="Пожалуйста, войдите в систему" />
+  }
+
+  if (productsGroupsLoading) {
+    return <JustOneSecond title="Загружаем группы товаров..." />
+  }
+
+  if (productsGroupsError) {
     return (
       <ErrorWrapper
         header="Не удалось загрузить группы товаров"
-        error={error}
+        error={productsGroupsError}
       />
     )
   }
 
-  if (!user || isLoading) {
-    return <JustOneSecond />
-  }
+  const { products_groups: productsGroups } = productsGroupsResponse
 
   return (
     <>
@@ -119,9 +122,9 @@ const Screen = () => {
         </Modal.Actions>
       </Modal>
 
-      {data.products_groups.length > 0 ? (
+      {productsGroups.length > 0 ? (
         <ProductsGroups
-          productsGroups={data.products_groups}
+          productsGroups={productsGroups}
           isSmallScreen={isSmallScreen}
         />
       ) : (
@@ -135,5 +138,3 @@ const Screen = () => {
     </>
   )
 }
-
-export default Screen

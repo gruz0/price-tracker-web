@@ -12,7 +12,7 @@ import {
 import { addProduct } from '../../lib/api'
 import ErrorWrapper from '../../components/ErrorWrapper'
 
-export default function AddNewProduct({ token, isSmallScreen }) {
+export const AddNewProduct = ({ token, isSmallScreen }) => {
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const initialFields = { url: '' }

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import {
   Divider,
   Menu,
@@ -10,15 +10,11 @@ import {
   Icon,
 } from 'semantic-ui-react'
 import { useRouter } from 'next/router'
-import Statistics from './Statistics'
-import ProductGroups from './ProductGroups'
-import SearchInOtherShops from './SearchInOtherShops'
-import Chart from './Chart'
-import PriceTable from './PriceTable'
-import { useAuth } from '../../hooks'
-import JustOneSecond from '../JustOneSecond'
-import useProductHistory from '../../hooks/useProductHistory'
-import useMyProductSubscriptions from '../../hooks/useMyProductSubscriptions'
+import { Statistics } from './Statistics'
+import { ProductGroups } from './ProductGroups'
+import { SearchInOtherShops } from './SearchInOtherShops'
+import { Chart } from './Chart'
+import { PriceTable } from './PriceTable'
 import ErrorWrapper from '../ErrorWrapper'
 import { isEmptyString } from '../../lib/validators'
 import {
@@ -28,130 +24,90 @@ import {
 } from '../../lib/subscriptions'
 import { removeProductFromUser } from '../../lib/products'
 
-export default function ProductCard({ product, shops, groups, isSmallScreen }) {
+export const ProductCard = ({
+  user,
+  token,
+  product,
+  shops,
+  groups,
+  productHistory,
+  productSubscriptions,
+  isSmallScreen,
+}) => {
   const router = useRouter()
-  const { user, token, logout } = useAuth()
-  const { data, isLoading, error } = useProductHistory(product.id, token)
-  const {
-    data: subscriptions,
-    isLoading: areSubscriptionsLoading,
-    error: subscriptionsLoadingError,
-  } = useMyProductSubscriptions(product.id, token)
 
-  const [subscriptionError, setSubscriptionError] = useState(null)
+  const [subscriptionError, setSubscriptionError] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   // FIXME: Вынести это в хелпер и переиспользовать в auth.js
   const hasSubscriptions =
-    subscriptions &&
+    productSubscriptions &&
     !(
-      Object.keys(subscriptions).length === 0 &&
-      subscriptions.constructor === Object
+      Object.keys(productSubscriptions).length === 0 &&
+      productSubscriptions.constructor === Object
     )
-
-  useEffect(() => {
-    if (error && error?.info?.status === 'forbidden') {
-      return logout()
-    }
-
-    if (subscriptionError && subscriptionError?.info?.status === 'forbidden') {
-      return logout()
-    }
-
-    if (
-      subscriptionsLoadingError &&
-      subscriptionsLoadingError?.info?.status === 'forbidden'
-    ) {
-      return logout()
-    }
-  }, [error, subscriptionError, subscriptionsLoadingError])
 
   const userHasTelegramAccount =
     user && user.telegram_account && !isEmptyString(user.telegram_account)
 
-  const handleOutOfStockSubscription = async (e) => {
-    e.preventDefault()
-
-    setSubscriptionError(null)
+  const handleOutOfStockSubscription = () => {
+    setSubscriptionError('')
     setIsSubmitting(true)
 
     const subscriptionType = 'on_change_status_to_in_stock'
     const subscription =
-      hasSubscriptions && subscriptions['on_change_status_to_in_stock']
+      hasSubscriptions && productSubscriptions['on_change_status_to_in_stock']
 
     try {
       if (subscription) {
-        await unsubscribeUserFromProductEvent(
-          token,
-          product.id,
-          subscription.id
-        )
+        unsubscribeUserFromProductEvent(token, product.id, subscription.id)
+          .then(() => router.reload())
+          .catch((err) => {
+            console.error({ err })
+            setSubscriptionError(err)
+          })
       } else {
-        await subscribeUserToProductEvent(token, product.id, subscriptionType)
+        subscribeUserToProductEvent(token, product.id, subscriptionType)
+          .then(() => router.reload())
+          .catch((err) => {
+            console.error({ err })
+            setSubscriptionError(err)
+          })
       }
-
-      router.reload()
     } catch (err) {
-      setSubscriptionError(err)
+      console.error({ err })
+      setSubscriptionError(err.message)
     } finally {
       setIsSubmitting(false)
     }
   }
 
-  const handleRemoveProductFromUser = async (e) => {
+  const handleRemoveProductFromUser = () => {
     if (!confirm('Удалить товар из отслеживаемых?')) {
       return
     }
 
-    e.preventDefault()
-
     try {
-      await removeProductFromUser(token, product.id)
-
-      router.push('/products')
-      return
+      removeProductFromUser(token, product.id)
+        .then(() => router.push('/products'))
+        .catch((err) => console.error({ err }))
     } catch (err) {
       console.error({ err })
     }
   }
 
-  const handleRemoveAllProductSubscriptions = async (e) => {
+  const handleRemoveAllProductSubscriptions = () => {
     if (!confirm('Удалить все уведомления товара?')) {
       return
     }
 
-    e.preventDefault()
-
     try {
-      await removeAllProductSubscriptionsFromUser(token, product.id)
-
-      router.reload()
-      return
+      removeAllProductSubscriptionsFromUser(token, product.id)
+        .then(() => router.reload())
+        .catch((err) => console.error({ err }))
     } catch (err) {
       console.error({ err })
     }
-  }
-
-  if (!user || isLoading || areSubscriptionsLoading) {
-    return <JustOneSecond />
-  }
-
-  if (error) {
-    return (
-      <ErrorWrapper
-        header="Не удалось загрузить историю товара"
-        error={error}
-      />
-    )
-  }
-
-  if (subscriptionsLoadingError) {
-    return (
-      <ErrorWrapper
-        header="Не удалось загрузить подписки на товар"
-        error={subscriptionsLoadingError}
-      />
-    )
   }
 
   return (
@@ -160,13 +116,10 @@ export default function ProductCard({ product, shops, groups, isSmallScreen }) {
 
       <Header as={isSmallScreen ? 'h2' : 'h1'}>{product.title}</Header>
 
-      {data?.history && data.history.length > 0 ? (
+      {productHistory.history.length > 0 ? (
         <>
-          <Segment
-            padded={!isSmallScreen}
-            loading={isSubmitting || areSubscriptionsLoading}
-          >
-            {subscriptionError && (
+          <Segment padded={!isSmallScreen} loading={isSubmitting}>
+            {subscriptionError !== '' && (
               <ErrorWrapper
                 header="Ошибка при обработке подписки"
                 error={subscriptionError}
@@ -180,7 +133,7 @@ export default function ProductCard({ product, shops, groups, isSmallScreen }) {
               onChange={handleOutOfStockSubscription}
               checked={
                 hasSubscriptions &&
-                Boolean(subscriptions['on_change_status_to_in_stock'])
+                Boolean(productSubscriptions['on_change_status_to_in_stock'])
               }
             />
 
@@ -214,13 +167,16 @@ export default function ProductCard({ product, shops, groups, isSmallScreen }) {
           </Segment>
 
           <Segment padded={!isSmallScreen}>
-            <Statistics product={data.product} isSmallScreen={isSmallScreen} />
+            <Statistics
+              product={productHistory.product}
+              isSmallScreen={isSmallScreen}
+            />
           </Segment>
 
           <Menu stackable>
             <Menu.Item
               as="a"
-              href={data.product.url}
+              href={productHistory.product.url}
               target="_blank"
               rel="noreferrer noopener"
               content={`Перейти в магазин ${product.shop}`}
@@ -235,7 +191,10 @@ export default function ProductCard({ product, shops, groups, isSmallScreen }) {
           <Header as="h3">Динамика цен</Header>
 
           <Segment>
-            <Chart product={data.product} history={data.history} />
+            <Chart
+              product={productHistory.product}
+              history={productHistory.history}
+            />
           </Segment>
 
           <Header as="h3">Таблица цен</Header>
@@ -249,7 +208,7 @@ export default function ProductCard({ product, shops, groups, isSmallScreen }) {
               </p>
             </Message>
           ) : (
-            <PriceTable history={data.history} />
+            <PriceTable history={productHistory.history} />
           )}
 
           <Header as="h3">Полезные кнопки</Header>

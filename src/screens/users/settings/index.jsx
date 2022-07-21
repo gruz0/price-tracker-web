@@ -1,18 +1,26 @@
 import React from 'react'
 import { Segment, Grid, Header } from 'semantic-ui-react'
-
-import { useAuth } from '../../../hooks'
+import ErrorWrapper from '../../../components/ErrorWrapper'
 import JustOneSecond from '../../../components/JustOneSecond'
-import ApiKey from '../../../forms/ApiKey'
-import ChangePassword from '../../../forms/ChangePassword'
+import { ApiKey } from '../../../forms/ApiKey'
+import { ChangePassword } from '../../../forms/ChangePassword'
+import { useAuth } from '../../../hooks'
 
-const Screen = () => {
-  const { isLoading, user, token, authenticate } = useAuth()
+export const SettingsScreen = () => {
+  const {
+    isLoading: userLoading,
+    isAuthenticated,
+    user,
+    token,
+    authenticate,
+  } = useAuth()
 
-  // FIXME: Здесь надо разобраться, почему не происходит логаут при заходе из другого браузера.
-  // В других вьюхах вызывается дополнительный вызов стороннего хука, который отдаёт ошибку, а здесь такого нет.
-  if (isLoading || !user) {
-    return <JustOneSecond />
+  if (userLoading) {
+    return <JustOneSecond title="Загружаем пользователя..." />
+  }
+
+  if (!isAuthenticated) {
+    return <ErrorWrapper header="Пожалуйста, войдите в систему" />
   }
 
   return (
@@ -43,5 +51,3 @@ const Screen = () => {
     </>
   )
 }
-
-export default Screen

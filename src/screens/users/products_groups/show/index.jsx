@@ -1,45 +1,31 @@
-import React, { useEffect, useContext } from 'react'
-import { useRouter } from 'next/router'
-import ErrorWrapper from '../../../../components/ErrorWrapper'
+import React from 'react'
 import JustOneSecond from '../../../../components/JustOneSecond'
 import { useAuth } from '../../../../hooks'
-import useProductsGroup from '../../../../hooks/useProductsGroup'
-import ProductsGroupCard from '../../../../components/ProductsGroupCard'
-import DisplayContext from '../../../../context/display-context'
+import { ProductsGroupCard } from '../../../../components/ProductsGroupCard'
+import ErrorWrapper from '../../../../components/ErrorWrapper'
 
-const Screen = () => {
-  const router = useRouter()
-  const { token, logout } = useAuth()
-  const { data, isLoading, error } = useProductsGroup(router.query.id, token)
-  const { isSmallScreen } = useContext(DisplayContext)
+export const ProductsGroupScreen = ({
+  productsGroup,
+  productsGroupItems,
+  userProducts,
+  isSmallScreen,
+}) => {
+  const { isLoading: userLoading, isAuthenticated } = useAuth()
 
-  useEffect(() => {
-    if (error && error?.info?.status === 'forbidden') {
-      return logout()
-    }
-  }, [error])
-
-  if (error) {
-    return (
-      <ErrorWrapper
-        header="Не удалось загрузить группу товаров"
-        error={error}
-      />
-    )
+  if (userLoading) {
+    return <JustOneSecond title="Загружаем пользователя..." />
   }
 
-  if (isLoading) {
-    return <JustOneSecond />
+  if (!isAuthenticated) {
+    return <ErrorWrapper header="Пожалуйста, войдите в систему" />
   }
 
   return (
     <ProductsGroupCard
-      productsGroup={data.products_group}
-      productsGroupItems={data.products_group_items}
-      userProducts={data.user_products}
+      productsGroup={productsGroup}
+      productsGroupItems={productsGroupItems}
+      userProducts={userProducts}
       isSmallScreen={isSmallScreen}
     />
   )
 }
-
-export default Screen

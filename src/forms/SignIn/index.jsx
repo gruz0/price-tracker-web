@@ -12,7 +12,7 @@ const getNextURLToRedirect = ({ query }) => {
   return isNextURLValid ? query.next : '/products'
 }
 
-export default function SignIn() {
+export const SignIn = () => {
   const { signIn, authenticate } = useAuth()
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
