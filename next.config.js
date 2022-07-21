@@ -11,10 +11,8 @@ const nextConfig = {
   // https://nextjs.org/docs/api-reference/next.config.js/react-strict-mode
   reactStrictMode: true,
 
-  experimental: {
-    // This will build the project as a standalone app inside the Docker image
-    outputStandalone: true,
-  },
+  // This will build the project as a standalone app inside the Docker image
+  output: 'standalone',
 
   swcMinify: true,
 
