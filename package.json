@@ -19,7 +19,7 @@
   },
   "dependencies": {
     "@next/bundle-analyzer": "^12.1.6",
-    "@prisma/client": "^4.0.0",
+    "@prisma/client": "^4.1.0",
     "@sentry/nextjs": "^7.2.0",
     "fs-extra": "^10.1.0",
     "js-cookie": "^3.0.1",
@@ -51,6 +51,6 @@
     "jest-mock-extended": "^2.0.6",
     "node-mocks-http": "^1.11.0",
     "prettier": "^2.6.2",
-    "prisma": "^4.0.0"
+    "prisma": "^4.1.0"
   }
 }
