@@ -18,4 +18,26 @@ export const ProductRepository = {
       LIMIT ${productsLimit}
     `
   },
+
+  ownedByUsers: async (productId) => {
+    return await prisma.userProduct.findMany({
+      where: {
+        product_id: productId,
+      },
+      select: {
+        user_id: true,
+      },
+    })
+  },
+
+  changeStatusToHold: async (productId) => {
+    return await prisma.product.update({
+      where: {
+        id: productId,
+      },
+      data: {
+        status: 'hold',
+      },
+    })
+  },
 }

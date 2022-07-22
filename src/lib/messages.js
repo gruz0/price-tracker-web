@@ -650,3 +650,13 @@ export const UNABLE_TO_UPDATE_USER_LAST_ACTIVITY = {
   status: 'unable_to_update_user_last_activity',
   message: 'Не удалось обновить дату последней активности пользователя',
 }
+
+export const UNABLE_TO_CHECK_IS_PRODUCT_OWNED_BY_USERS = {
+  status: 'unable_to_check_is_product_owned_by_users',
+  message: 'Не удалось проверить наличие товара у пользователей',
+}
+
+export const UNABLE_TO_CHANGE_PRODUCT_STATUS_TO_HOLD = {
+  status: 'unable_to_change_product_status_to_hold',
+  message: 'Не удалось изменить статус товара',
+}

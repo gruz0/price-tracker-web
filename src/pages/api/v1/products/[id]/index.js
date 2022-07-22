@@ -19,11 +19,14 @@ import {
   USER_DOES_NOT_HAVE_PRODUCT,
   UNABLE_TO_REMOVE_USER_PRODUCT_WITH_SUBSCRIPTIONS,
   UNABLE_TO_UPDATE_USER_LAST_ACTIVITY,
+  UNABLE_TO_CHANGE_PRODUCT_STATUS_TO_HOLD,
+  UNABLE_TO_CHECK_IS_PRODUCT_OWNED_BY_USERS,
 } from '../../../../../lib/messages'
 import { isEmptyString, isValidUUID } from '../../../../../lib/validators'
 import { getShops } from '../../../../../services/shops'
 import { UserProductsService } from '../../../../../services/user_products_service'
 import { validateBearerToken } from '../../../../../lib/auth_helpers'
+import { ProductsService } from '../../../../../services/products_service'
 
 const handler = async (req, res) => {
   if (!['GET', 'DELETE'].includes(req.method)) {
@@ -145,6 +148,40 @@ const handler = async (req, res) => {
         500,
         UNABLE_TO_REMOVE_USER_PRODUCT_WITH_SUBSCRIPTIONS
       )
+    }
+
+    let isOwnedByUsers
+
+    try {
+      isOwnedByUsers = await ProductsService.isOwnedByUsers(productId)
+    } catch (err) {
+      console.error({ err })
+
+      Sentry.withScope(function (scope) {
+        scope.setContext('args', { productId })
+        scope.setTag('section', 'ProductsService.isOwnedByUsers')
+        scope.setUser({ user })
+        Sentry.captureException(err)
+      })
+
+      return responseJSON(res, 500, UNABLE_TO_CHECK_IS_PRODUCT_OWNED_BY_USERS)
+    }
+
+    if (!isOwnedByUsers) {
+      try {
+        await ProductsService.moveToHold(productId)
+      } catch (err) {
+        console.error({ err })
+
+        Sentry.withScope(function (scope) {
+          scope.setContext('args', { productId })
+          scope.setTag('section', 'ProductsService.moveToHold')
+          scope.setUser({ user })
+          Sentry.captureException(err)
+        })
+
+        return responseJSON(res, 500, UNABLE_TO_CHANGE_PRODUCT_STATUS_TO_HOLD)
+      }
     }
 
     return responseJSON(res, 200, {})

@@ -446,6 +446,55 @@ describe(`DELETE ${ENDPOINT}`, () => {
         expect(existedProduct).not.toBeNull()
       })
 
+      test('updates product status to hold', async () => {
+        const { req, res } = mockAuthorizedDELETERequest(user.token, {
+          id: product.id,
+        })
+
+        await handler(req, res)
+
+        expect(res._getStatusCode()).toBe(200)
+
+        const existedProduct = await prisma.product.findUnique({
+          where: { id: product.id },
+        })
+
+        expect(existedProduct.status).toEqual('hold')
+      })
+
+      describe('when other people have this product', () => {
+        test('keeps product status as active', async () => {
+          const user2 = await prisma.user.create({
+            data: {
+              login: 'user2',
+              password: 'password',
+            },
+          })
+
+          await prisma.userProduct.create({
+            data: {
+              user_id: user2.id,
+              product_id: product.id,
+              price: 42,
+            },
+          })
+
+          const { req, res } = mockAuthorizedDELETERequest(user.token, {
+            id: product.id,
+          })
+
+          await handler(req, res)
+
+          expect(res._getStatusCode()).toBe(200)
+
+          const existedProduct = await prisma.product.findUnique({
+            where: { id: product.id },
+          })
+
+          expect(existedProduct.status).toEqual('active')
+        })
+      })
+
       test('removes product from user', async () => {
         const { req, res } = mockAuthorizedDELETERequest(user.token, {
           id: product.id,
