@@ -106,7 +106,7 @@ describe(`GET ${ENDPOINT}`, () => {
     })
 
     describe('with products', () => {
-      test('returns products', async () => {
+      test('returns only matched products', async () => {
         const { req, res } = mockAuthorizedGETRequest(crawler.token)
 
         await prisma.product.create({
@@ -235,6 +235,29 @@ describe(`GET ${ENDPOINT}`, () => {
                   in_stock: true,
                   status: 'ok',
                   title: 'Product 7',
+                  crawler_id: crawler.id,
+                  created_at: new Date(Date.now() - hourInMilliseconds * 4), // 4 hours ago
+                },
+              ],
+            },
+          },
+        })
+
+        // Product on hold will be skipped as well
+        await prisma.product.create({
+          data: {
+            url_hash: 'hash8',
+            shop: 'ozon',
+            url: 'https://domain8.tld',
+            title: 'Product 8',
+            status: 'hold',
+            history: {
+              create: [
+                {
+                  original_price: 1.0,
+                  in_stock: true,
+                  status: 'ok',
+                  title: 'Product 8',
                   crawler_id: crawler.id,
                   created_at: new Date(Date.now() - hourInMilliseconds * 4), // 4 hours ago
                 },
