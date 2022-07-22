@@ -1,7 +1,7 @@
 import { Card, Divider } from 'semantic-ui-react'
 import { ProductCard } from './ProductCard'
 
-export const ProductsItems = ({ products }) => {
+export const ProductsCards = ({ products }) => {
   return (
     <>
       {products.length > 0 && (
