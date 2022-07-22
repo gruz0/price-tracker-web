@@ -69,6 +69,7 @@ model Product {
   url_hash           String                    @unique @db.VarChar(255)
   shop               String                    @db.VarChar(255)
   image              String?                   @db.VarChar(255)
+  status             String                    @default("active") @db.VarChar(32)
   created_at         DateTime                  @default(now())
   updated_at         DateTime                  @updatedAt
   history            ProductHistory[]

@@ -32,7 +32,6 @@ import {
 } from '../../../../../lib/messages'
 import {
   findCrawlerByToken,
-  getOutdatedProducts,
   removeNewProductFromQueue,
   createProduct,
   skipQueuedProductForCrawler,
@@ -44,6 +43,7 @@ import { findProductByURLHash } from '../../../../../services/products'
 import { addProductToUser } from '../../../../../services/users'
 import { responseJSON, isStatusSupported } from '../../../../../lib/helpers'
 import { validateBearerToken } from '../../../../../lib/auth_helpers'
+import { CrawlersService } from '../../../../../services/crawlers_service'
 
 const handler = async (req, res) => {
   if (!['POST', 'GET'].includes(req.method)) {
@@ -84,12 +84,12 @@ const handler = async (req, res) => {
     let products
 
     try {
-      products = await getOutdatedProducts()
+      products = await CrawlersService.getOutdatedProducts()
     } catch (err) {
       console.error({ err })
 
       Sentry.withScope(function (scope) {
-        scope.setTag('section', 'getOutdatedProducts')
+        scope.setTag('section', 'CrawlersService.getOutdatedProducts')
         scope.setTag('crawler_id', crawlerId)
         Sentry.captureException(err)
       })

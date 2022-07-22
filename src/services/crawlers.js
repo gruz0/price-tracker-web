@@ -38,26 +38,6 @@ export const findProductQueueForUser = async (url, urlHash, userId) => {
   })
 }
 
-export const getOutdatedProducts = async (
-  lastUpdateInHours = 3,
-  productsLimit = 20
-) => {
-  return await prisma.$queryRaw`
-    select p.id, p.url, p.image
-    from products p
-    join (
-      select distinct on (product_id) product_id
-        , abs(date_part('day',NOW() - created_at) * 24 - date_part('hour', NOW() - created_at)) as updated_hours_ago
-        , created_at
-      from product_history
-      order by product_id, updated_hours_ago asc
-    ) ph on ph.product_id = p.id
-    where ph.updated_hours_ago > ${lastUpdateInHours}::INTEGER
-    order by ph.updated_hours_ago desc
-    limit ${productsLimit}
-  `
-}
-
 export const createProduct = async ({ urlHash, shop, url, title }) => {
   return await prisma.product.create({
     data: {
