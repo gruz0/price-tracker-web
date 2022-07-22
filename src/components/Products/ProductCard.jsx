@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { formatDateTime } from '../../lib/formatDate'
 import { PriceLabel } from './PriceLabel'
 import { TrueFalseIcon } from '../TrueFalseIcon'
-import Shop from './Shop'
+import { Shop } from './Shop'
 
 export const ProductCard = ({ product }) => {
   const formattedDate = formatDateTime(product.price_updated_at)
