@@ -2,53 +2,20 @@ import { withSentry } from '@sentry/nextjs'
 import * as Sentry from '@sentry/nextjs'
 import { findUserByTelegramAccount } from '../../../../../../services/auth'
 import { isEmptyString } from '../../../../../../lib/validators'
+import { findBotByToken } from '../../../../../../services/bots'
+import { responseJSON } from '../../../../../../lib/helpers'
+import { UsersService } from '../../../../../../services/users'
+import { validateBearerToken } from '../../../../../../lib/auth_helpers'
+import { addProductToUserUseCase } from '../../../../../../useCases/users/addProductToUser'
 import {
   METHOD_NOT_ALLOWED,
   UNABLE_TO_FIND_BOT_BY_TOKEN,
   BOT_DOES_NOT_EXIST,
   MISSING_TELEGRAM_ACCOUNT,
   UNABLE_TO_FIND_USER_BY_TELEGRAM_ACCOUNT,
-  INVALID_URL,
-  IT_IS_NOT_A_SINGLE_PRODUCT_URL,
-  UNABLE_TO_USE_SHOP_ORIGINAL_DOMAIN,
-  UNABLE_TO_CALCULATE_URL_HASH,
-  MISSING_URL,
-  SHOP_IS_NOT_SUPPORTED_YET,
-  UNABLE_TO_FIND_PRODUCT_BY_URL_HASH,
-  UNABLE_TO_ADD_NEW_PRODUCT_TO_QUEUE,
-  PRODUCT_ADDED_TO_QUEUE,
-  UNABLE_TO_GET_PRODUCT_LATEST_PRICE_FROM_HISTORY,
-  UNABLE_TO_ADD_PRODUCT_TO_USER_RIGHT_NOW_BECAUSE_OF_MISSING_PRICE,
-  UNABLE_TO_ADD_EXISTING_PRODUCT_TO_USER,
-  REDIRECT_TO_PRODUCT_PAGE,
-  UNABLE_TO_GET_USER_PRODUCT,
-  PRODUCT_ADDED_TO_USER,
   USER_DOES_NOT_EXIST,
   UNABLE_TO_UPDATE_USER_LAST_ACTIVITY,
 } from '../../../../../../lib/messages'
-import { findBotByToken } from '../../../../../../services/bots'
-import {
-  calculateHash,
-  detectURL,
-  isValidUrl,
-  responseJSON,
-} from '../../../../../../lib/helpers'
-import {
-  findShopByURL,
-  isSingleProductURL,
-  replaceHostWithOriginalShopDomain,
-} from '../../../../../../services/shops'
-import {
-  addNewProductToQueue,
-  findProductByURLHash,
-  getProductLatestValidPriceFromHistory,
-} from '../../../../../../services/products'
-import {
-  addProductToUser,
-  UsersService,
-} from '../../../../../../services/users'
-import { UserProductsService } from '../../../../../../services/user_products_service'
-import { validateBearerToken } from '../../../../../../lib/auth_helpers'
 
 const handler = async (req, res) => {
   if (req.method !== 'POST') {
@@ -129,235 +96,12 @@ const handler = async (req, res) => {
   }
 
   const { url } = req.body
-
-  if (isEmptyString(url)) {
-    return responseJSON(res, 422, MISSING_URL)
+  const extraSentryTags = {
+    bot_id: botId,
   }
+  const useCase = await addProductToUserUseCase({ user, url, extraSentryTags })
 
-  const detectedURLs = detectURL(url)
-
-  if (
-    !detectedURLs ||
-    detectedURLs.length === 0 ||
-    !isValidUrl(detectedURLs[0])
-  ) {
-    Sentry.withScope(function (scope) {
-      scope.setContext('args', { url, detectedURLs })
-      scope.setTag('section', 'detectURL')
-      scope.setTag('bot_id', botId)
-      scope.setUser({ user })
-      Sentry.captureException(
-        new Error(`Не удалось найти ссылки от пользователя через бота: ${url}`)
-      )
-    })
-
-    return responseJSON(res, 422, INVALID_URL)
-  }
-
-  const detectedURL = detectedURLs[0]
-
-  let shop
-
-  try {
-    shop = findShopByURL(detectedURL)
-  } catch (err) {
-    console.error({ err })
-
-    Sentry.withScope(function (scope) {
-      scope.setContext('args', { detectedURL })
-      scope.setTag('section', 'findShopByURL')
-      scope.setTag('bot_id', botId)
-      scope.setUser({ user })
-      Sentry.captureException(
-        new Error(
-          `Пользователь отправил ссылку на неподдерживаемый магазин через бота: ${url}`
-        )
-      )
-    })
-  }
-
-  if (!shop) {
-    return responseJSON(res, 422, SHOP_IS_NOT_SUPPORTED_YET)
-  }
-
-  let cleanURL
-
-  try {
-    cleanURL = replaceHostWithOriginalShopDomain(shop, detectedURL)
-  } catch (err) {
-    console.error({ err })
-
-    Sentry.withScope(function (scope) {
-      scope.setContext('args', { shop, detectedURL })
-      scope.setTag('section', 'replaceHostWithOriginalShopDomain')
-      scope.setTag('bot_id', botId)
-      scope.setUser({ user })
-      Sentry.captureException(err)
-    })
-
-    return responseJSON(res, 500, UNABLE_TO_USE_SHOP_ORIGINAL_DOMAIN)
-  }
-
-  try {
-    if (!isSingleProductURL(shop.name, cleanURL)) {
-      return responseJSON(res, 422, IT_IS_NOT_A_SINGLE_PRODUCT_URL)
-    }
-  } catch (err) {
-    console.error({ err })
-
-    Sentry.withScope(function (scope) {
-      scope.setContext('args', { shop, cleanURL })
-      scope.setTag('section', 'isSingleProductURL')
-      scope.setTag('bot_id', botId)
-      scope.setUser({ user })
-      Sentry.captureException(
-        new Error(
-          `Пользователь отправил ссылку на неподдерживаемую страницу через бота: ${url}`
-        )
-      )
-    })
-  }
-
-  let urlHash
-
-  try {
-    urlHash = calculateHash(cleanURL)
-  } catch (err) {
-    console.error({ err })
-
-    Sentry.withScope(function (scope) {
-      scope.setContext('args', { cleanURL })
-      scope.setTag('section', 'calculateHash')
-      scope.setTag('bot_id', botId)
-      scope.setUser({ user })
-      Sentry.captureException(err)
-    })
-
-    return responseJSON(res, 500, UNABLE_TO_CALCULATE_URL_HASH)
-  }
-
-  let product
-
-  try {
-    product = await findProductByURLHash(urlHash)
-  } catch (err) {
-    console.error({ err })
-
-    Sentry.withScope(function (scope) {
-      scope.setContext('args', { urlHash, cleanURL })
-      scope.setTag('section', 'findProductByURLHash')
-      scope.setTag('bot_id', botId)
-      scope.setUser({ user })
-      Sentry.captureException(err)
-    })
-
-    return responseJSON(res, 500, UNABLE_TO_FIND_PRODUCT_BY_URL_HASH)
-  }
-
-  if (!product) {
-    const newProductArgs = {
-      url_hash: urlHash,
-      url: cleanURL,
-      requested_by: user.id,
-    }
-
-    try {
-      await addNewProductToQueue(newProductArgs)
-    } catch (err) {
-      console.error({ err })
-
-      Sentry.withScope(function (scope) {
-        scope.setContext('args', { newProductArgs })
-        scope.setTag('section', 'addNewProductToQueue')
-        scope.setTag('bot_id', botId)
-        scope.setUser({ user })
-        Sentry.captureException(err)
-      })
-
-      return responseJSON(res, 500, UNABLE_TO_ADD_NEW_PRODUCT_TO_QUEUE)
-    }
-
-    return responseJSON(res, 201, PRODUCT_ADDED_TO_QUEUE)
-  }
-
-  let userProduct
-
-  try {
-    userProduct = await UserProductsService.getByUserIdAndProductId(
-      user.id,
-      product.id
-    )
-  } catch (err) {
-    console.error({ err })
-
-    Sentry.withScope(function (scope) {
-      scope.setContext('args', { user, product })
-      scope.setTag('section', 'UserProductsService.getByUserIdAndProductId')
-      scope.setTag('bot_id', botId)
-      scope.setUser({ user })
-      Sentry.captureException(err)
-    })
-
-    return responseJSON(res, 500, UNABLE_TO_GET_USER_PRODUCT)
-  }
-
-  if (userProduct) {
-    return responseJSON(res, 200, {
-      ...REDIRECT_TO_PRODUCT_PAGE,
-      location: '/products/' + product.id,
-    })
-  }
-
-  let productLatestPrice = null
-
-  try {
-    productLatestPrice = await getProductLatestValidPriceFromHistory(product.id)
-  } catch (err) {
-    console.error({ err })
-
-    Sentry.withScope(function (scope) {
-      scope.setContext('args', { product })
-      scope.setTag('section', 'getProductLatestValidPriceFromHistory')
-      scope.setTag('bot_id', botId)
-      scope.setUser({ user })
-      Sentry.captureException(err)
-    })
-
-    return responseJSON(
-      res,
-      500,
-      UNABLE_TO_GET_PRODUCT_LATEST_PRICE_FROM_HISTORY
-    )
-  }
-
-  if (!productLatestPrice || productLatestPrice === 0) {
-    return responseJSON(
-      res,
-      400,
-      UNABLE_TO_ADD_PRODUCT_TO_USER_RIGHT_NOW_BECAUSE_OF_MISSING_PRICE
-    )
-  }
-
-  try {
-    await addProductToUser(user.id, product.id, productLatestPrice)
-  } catch (err) {
-    console.error({ err })
-
-    Sentry.withScope(function (scope) {
-      scope.setContext('args', { user, product })
-      scope.setTag('section', 'addProductToUser')
-      scope.setTag('bot_id', botId)
-      scope.setUser({ user })
-      Sentry.captureException(err)
-    })
-
-    return responseJSON(res, 500, UNABLE_TO_ADD_EXISTING_PRODUCT_TO_USER)
-  }
-
-  return responseJSON(res, 201, {
-    ...PRODUCT_ADDED_TO_USER,
-    location: '/products/' + product.id,
-  })
+  return responseJSON(res, useCase.status, useCase.response)
 }
 
 export default withSentry(handler)

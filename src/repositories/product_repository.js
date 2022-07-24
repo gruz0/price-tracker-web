@@ -30,13 +30,13 @@ export const ProductRepository = {
     })
   },
 
-  changeStatusToHold: async (productId) => {
+  changeStatusTo: async (productId, status) => {
     return await prisma.product.update({
       where: {
         id: productId,
       },
       data: {
-        status: 'hold',
+        status: status,
       },
     })
   },

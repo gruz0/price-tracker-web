@@ -176,7 +176,7 @@ export const ProductCard = ({
           <Menu stackable>
             <Menu.Item
               as="a"
-              href={productHistory.product.url}
+              href={product.url}
               target="_blank"
               rel="noreferrer noopener"
               content={`Перейти в магазин ${product.shop}`}

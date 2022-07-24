@@ -321,11 +321,6 @@ export const USER_DOES_NOT_HAVE_PRODUCT = {
   message: 'Этого товара нет в вашем списке',
 }
 
-export const REDIRECT_TO_PRODUCT_PAGE = {
-  status: 'redirect_to_product_page',
-  message: 'Переадресуем на карточку товара',
-}
-
 export const PRODUCT_ADDED_TO_USER = {
   status: 'product_added_to_user',
   message: 'Товар уже есть в системе и мы добавили его к вам для отслеживания',
@@ -528,7 +523,7 @@ export const PRODUCT_EXISTS_AND_CAN_BE_ADDED_TO_YOUR_LIST = {
 
 export const YOU_ARE_ALREADY_HAVE_THIS_PRODUCT = {
   status: 'you_are_already_have_this_product',
-  message: 'У вас уже есть этот товар, можно открыть карточку в Chartik',
+  message: 'У вас уже есть этот товар',
 }
 
 export const MISSING_APP = {
@@ -658,5 +653,10 @@ export const UNABLE_TO_CHECK_IS_PRODUCT_OWNED_BY_USERS = {
 
 export const UNABLE_TO_CHANGE_PRODUCT_STATUS_TO_HOLD = {
   status: 'unable_to_change_product_status_to_hold',
-  message: 'Не удалось изменить статус товара',
+  message: 'Не удалось переместить товар в hold',
+}
+
+export const UNABLE_TO_CHANGE_PRODUCT_STATUS_TO_ACTIVE = {
+  status: 'unable_to_change_product_status_to_active',
+  message: 'Не удалось изменить статус товара на активный',
 }

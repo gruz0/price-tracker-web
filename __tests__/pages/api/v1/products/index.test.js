@@ -14,7 +14,8 @@ import {
   IT_IS_NOT_A_SINGLE_PRODUCT_URL,
   PRODUCT_ADDED_TO_QUEUE,
   UNABLE_TO_ADD_PRODUCT_TO_USER_RIGHT_NOW_BECAUSE_OF_MISSING_PRICE,
-  REDIRECT_TO_PRODUCT_PAGE,
+  PRODUCT_ADDED_TO_USER,
+  YOU_ARE_ALREADY_HAVE_THIS_PRODUCT,
 } from '../../../../../src/lib/messages'
 import {
   cleanDatabase,
@@ -396,7 +397,7 @@ describe(`POST ${ENDPOINT}`, () => {
 
             expect(res._getStatusCode()).toBe(200)
             expect(parseJSON(res)).toEqual({
-              ...REDIRECT_TO_PRODUCT_PAGE,
+              ...YOU_ARE_ALREADY_HAVE_THIS_PRODUCT,
               location: '/products/' + product.id,
             })
           })
@@ -415,7 +416,7 @@ describe(`POST ${ENDPOINT}`, () => {
 
           expect(res._getStatusCode()).toBe(200)
           expect(parseJSON(res)).toEqual({
-            ...REDIRECT_TO_PRODUCT_PAGE,
+            ...YOU_ARE_ALREADY_HAVE_THIS_PRODUCT,
             location: '/products/' + product.id,
           })
         })
@@ -509,7 +510,7 @@ describe(`POST ${ENDPOINT}`, () => {
 
           expect(res._getStatusCode()).toBe(201)
           expect(parseJSON(res)).toEqual({
-            ...REDIRECT_TO_PRODUCT_PAGE,
+            ...PRODUCT_ADDED_TO_USER,
             location: '/products/' + product.id,
           })
 
@@ -560,7 +561,7 @@ describe(`POST ${ENDPOINT}`, () => {
 
           expect(res._getStatusCode()).toBe(201)
           expect(parseJSON(res)).toEqual({
-            ...REDIRECT_TO_PRODUCT_PAGE,
+            ...PRODUCT_ADDED_TO_USER,
             location: '/products/' + product.id,
           })
 
@@ -612,6 +613,62 @@ describe(`POST ${ENDPOINT}`, () => {
           expect(res._getStatusCode()).toBe(201)
 
           await ensureUserLastActivityHasBeenUpdated(user)
+        })
+
+        describe('when product was on hold', () => {
+          test('updates product status to active', async () => {
+            await prisma.product.update({
+              where: {
+                id: product.id,
+              },
+              data: {
+                status: 'hold',
+              },
+            })
+
+            await prisma.productHistory.createMany({
+              data: [
+                {
+                  product_id: product.id,
+                  original_price: 42,
+                  discount_price: 35,
+                  in_stock: true,
+                  status: 'not_found',
+                  title: 'Title',
+                  crawler_id: crawler.id,
+                },
+                {
+                  product_id: product.id,
+                  original_price: 99,
+                  in_stock: true,
+                  status: 'ok',
+                  title: 'Title',
+                  crawler_id: crawler.id,
+                  created_at: new Date('2021-01-01'),
+                },
+              ],
+            })
+
+            const { req, res } = mockAuthorizedPOSTRequest(
+              user.token,
+              {},
+              {
+                url: product.url,
+              }
+            )
+
+            await handler(req, res)
+
+            expect(res._getStatusCode()).toBe(201)
+
+            const existedProduct = await prisma.product.findUnique({
+              where: {
+                id: product.id,
+              },
+            })
+
+            expect(existedProduct.status).toEqual('active')
+          })
         })
       })
     })

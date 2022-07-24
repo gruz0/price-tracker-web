@@ -31,6 +31,7 @@ export const UserProductsRepository = {
           select: {
             title: true,
             shop: true,
+            url: true,
           },
         },
       },
