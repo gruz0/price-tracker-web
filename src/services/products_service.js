@@ -13,6 +13,12 @@ export const ProductsService = {
   moveToHold: async (productId) => {
     validateProductId(productId)
 
-    return await repo.changeStatusToHold(productId)
+    return await repo.changeStatusTo(productId, 'hold')
+  },
+
+  moveToActive: async (productId) => {
+    validateProductId(productId)
+
+    return await repo.changeStatusTo(productId, 'active')
   },
 }

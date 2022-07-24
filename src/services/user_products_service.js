@@ -30,6 +30,7 @@ export const UserProductsService = {
       favorited: userProduct.favorited,
       title: userProduct.product.title,
       shop: userProduct.product.shop,
+      url: userProduct.product.url,
     }
   },
 

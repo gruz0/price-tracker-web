@@ -293,6 +293,7 @@ describe('getByUserIdAndProductId', () => {
           favorited: true,
           title: 'Product 1',
           shop: 'shop',
+          url: 'https://domain1.tld',
         })
       })
     })

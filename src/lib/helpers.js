@@ -7,6 +7,10 @@ export const detectURL = (string) => {
   return string.match(urlRegex)
 }
 
+export const isValidObject = (object) => {
+  return !(Object.keys(object).length === 0 && object.constructor === Object)
+}
+
 // TODO: Добавить тесты
 export const isValidUrl = (string) => {
   if (isEmptyString(string)) {

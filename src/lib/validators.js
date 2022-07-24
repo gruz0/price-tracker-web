@@ -1,4 +1,5 @@
 import { validate } from 'uuid'
+import { isValidObject } from './helpers'
 
 export const isEmptyString = (string) => {
   return (
@@ -54,4 +55,20 @@ export const validateUserProductId = (userProductId) => {
   if (!isValidUUID(userProductId)) {
     throw new Error('ID товара пользователя должен быть UUID')
   }
+}
+
+export const isValidUser = (user) => {
+  if (!isValidObject(user)) {
+    return false
+  }
+
+  if (!isValidUUID(user.id)) {
+    return false
+  }
+
+  if (isEmptyString(user.login)) {
+    return false
+  }
+
+  return true
 }

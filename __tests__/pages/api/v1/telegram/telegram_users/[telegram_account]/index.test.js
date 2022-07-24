@@ -21,9 +21,9 @@ import {
   SHOP_IS_NOT_SUPPORTED_YET,
   IT_IS_NOT_A_SINGLE_PRODUCT_URL,
   PRODUCT_ADDED_TO_QUEUE,
-  REDIRECT_TO_PRODUCT_PAGE,
   UNABLE_TO_ADD_PRODUCT_TO_USER_RIGHT_NOW_BECAUSE_OF_MISSING_PRICE,
   PRODUCT_ADDED_TO_USER,
+  YOU_ARE_ALREADY_HAVE_THIS_PRODUCT,
 } from '../../../../../../../src/lib/messages'
 import { parseJSON } from '../../../../../../helpers'
 import {
@@ -317,7 +317,7 @@ describe(`POST ${ENDPOINT}`, () => {
 
             expect(res._getStatusCode()).toBe(200)
             expect(parseJSON(res)).toEqual({
-              ...REDIRECT_TO_PRODUCT_PAGE,
+              ...YOU_ARE_ALREADY_HAVE_THIS_PRODUCT,
               location: '/products/' + product.id,
             })
           })
@@ -346,7 +346,7 @@ describe(`POST ${ENDPOINT}`, () => {
 
           expect(res._getStatusCode()).toBe(200)
           expect(parseJSON(res)).toEqual({
-            ...REDIRECT_TO_PRODUCT_PAGE,
+            ...YOU_ARE_ALREADY_HAVE_THIS_PRODUCT,
             location: '/products/' + product.id,
           })
         })

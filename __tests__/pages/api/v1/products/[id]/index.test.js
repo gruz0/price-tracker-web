@@ -184,6 +184,7 @@ describe(`GET ${ENDPOINT}`, () => {
               favorited: true,
               created_at: '2022-06-11T09:34:56.000Z',
               shop: 'shop',
+              url: product.url,
             },
             groups: [],
             shops: {
@@ -281,6 +282,7 @@ describe(`GET ${ENDPOINT}`, () => {
               favorited: true,
               created_at: '2022-06-11T09:34:56.000Z',
               shop: 'shop',
+              url: product.url,
             },
             groups: [
               {
