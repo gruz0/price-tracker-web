@@ -58,7 +58,7 @@ const whenNotAuthorized = (method) => {
 
 const ensureMethodNotAllowed = (method, url) => {
   describe(`${method} ${url}`, () => {
-    test('returns error', async () => {
+    it('returns error', async () => {
       const { req, res } = createMocks({
         method: method,
       })
@@ -90,7 +90,7 @@ describe(`PUT ${ENDPOINT}`, () => {
     })
 
     describe('when missing product_id in query', () => {
-      test('returns error', async () => {
+      it('returns error', async () => {
         const { req, res } = mockAuthorizedPUTRequest(crawler.token)
 
         await handler(req, res)
@@ -101,7 +101,7 @@ describe(`PUT ${ENDPOINT}`, () => {
     })
 
     describe('when product_id is not a valid UUID', () => {
-      test('returns error', async () => {
+      it('returns error', async () => {
         const { req, res } = mockAuthorizedPUTRequest(crawler.token, {
           product_id: 'qwe',
         })
@@ -114,7 +114,7 @@ describe(`PUT ${ENDPOINT}`, () => {
     })
 
     describe('when product does not exist', () => {
-      test('returns error', async () => {
+      it('returns error', async () => {
         const { req, res } = mockAuthorizedPUTRequest(crawler.token, {
           product_id: uuid.v4(),
         })
@@ -141,7 +141,7 @@ describe(`PUT ${ENDPOINT}`, () => {
       })
 
       describe('when missing status', () => {
-        test('returns error', async () => {
+        it('returns error', async () => {
           const { req, res } = mockAuthorizedPUTRequest(
             crawler.token,
             {
@@ -161,7 +161,7 @@ describe(`PUT ${ENDPOINT}`, () => {
       })
 
       describe('when status is not supported', () => {
-        test('returns error', async () => {
+        it('returns error', async () => {
           const { req, res } = mockAuthorizedPUTRequest(
             crawler.token,
             {
@@ -184,7 +184,7 @@ describe(`PUT ${ENDPOINT}`, () => {
       })
 
       describe('when missing in_stock', () => {
-        test('returns error', async () => {
+        it('returns error', async () => {
           const { req, res } = mockAuthorizedPUTRequest(
             crawler.token,
             {
@@ -206,7 +206,7 @@ describe(`PUT ${ENDPOINT}`, () => {
       })
 
       describe('when status === skip', () => {
-        test('does nothing', async () => {
+        it('does nothing', async () => {
           const { req, res } = mockAuthorizedPUTRequest(
             crawler.token,
             {
@@ -231,7 +231,7 @@ describe(`PUT ${ENDPOINT}`, () => {
       describe('when status === ok', () => {
         describe('when is in_stock', () => {
           describe('when missing prices', () => {
-            test('returns error', async () => {
+            it('returns error', async () => {
               const { req, res } = mockAuthorizedPUTRequest(
                 crawler.token,
                 {
@@ -254,7 +254,7 @@ describe(`PUT ${ENDPOINT}`, () => {
           })
 
           describe('when missing title', () => {
-            test('returns error', async () => {
+            it('returns error', async () => {
               const { req, res } = mockAuthorizedPUTRequest(
                 crawler.token,
                 {
@@ -290,7 +290,7 @@ describe(`PUT ${ENDPOINT}`, () => {
                 }
               })
 
-              test('returns error', async () => {
+              it('returns error', async () => {
                 const { req, res } = mockAuthorizedPUTRequest(
                   crawler.token,
                   {
@@ -316,7 +316,7 @@ describe(`PUT ${ENDPOINT}`, () => {
                 }
               })
 
-              test('returns error', async () => {
+              it('returns error', async () => {
                 const { req, res } = mockAuthorizedPUTRequest(
                   crawler.token,
                   {
@@ -343,7 +343,7 @@ describe(`PUT ${ENDPOINT}`, () => {
               })
 
               describe('without history', () => {
-                test('returns success', async () => {
+                it('returns success', async () => {
                   const { req, res } = mockAuthorizedPUTRequest(
                     crawler.token,
                     {
@@ -368,7 +368,7 @@ describe(`PUT ${ENDPOINT}`, () => {
                   expect(res._getStatusCode()).toBe(200)
                 })
 
-                test('creates a record in product history', async () => {
+                it('creates a record in product history', async () => {
                   const { req, res } = mockAuthorizedPUTRequest(
                     crawler.token,
                     {
@@ -427,7 +427,7 @@ describe(`PUT ${ENDPOINT}`, () => {
                     })
 
                     describe('when user does not have telegram_account', () => {
-                      test('does not add message to telegram_messages', async () => {
+                      it('does not add message to telegram_messages', async () => {
                         const { req, res } = mockAuthorizedPUTRequest(
                           crawler.token,
                           {
@@ -458,7 +458,7 @@ describe(`PUT ${ENDPOINT}`, () => {
                         })
                       })
 
-                      test('adds price to users who do not have price for this product', async () => {
+                      it('adds price to users who do not have price for this product', async () => {
                         const { req, res } = mockAuthorizedPUTRequest(
                           crawler.token,
                           {
@@ -480,7 +480,7 @@ describe(`PUT ${ENDPOINT}`, () => {
                         expect(userProducts[0].price).toEqual(35)
                       })
 
-                      test('adds message to telegram_messages', async () => {
+                      it('adds message to telegram_messages', async () => {
                         const { req, res } = mockAuthorizedPUTRequest(
                           crawler.token,
                           {
@@ -520,7 +520,7 @@ describe(`PUT ${ENDPOINT}`, () => {
                     })
 
                     describe('when recent history is in stock', () => {
-                      test('does not add message to telegram_messages', async () => {
+                      it('does not add message to telegram_messages', async () => {
                         const { req, res } = mockAuthorizedPUTRequest(
                           crawler.token,
                           {
@@ -552,7 +552,7 @@ describe(`PUT ${ENDPOINT}`, () => {
                       })
 
                       describe('when user does not have telegram_account', () => {
-                        test('does not add message to telegram_messages', async () => {
+                        it('does not add message to telegram_messages', async () => {
                           const { req, res } = mockAuthorizedPUTRequest(
                             crawler.token,
                             {
@@ -584,7 +584,7 @@ describe(`PUT ${ENDPOINT}`, () => {
                         })
 
                         describe('when user does not have product subscription', () => {
-                          test('does not add message to telegram_messages', async () => {
+                          it('does not add message to telegram_messages', async () => {
                             const { req, res } = mockAuthorizedPUTRequest(
                               crawler.token,
                               {
@@ -615,7 +615,7 @@ describe(`PUT ${ENDPOINT}`, () => {
                             })
                           })
 
-                          test('adds message to telegram_messages', async () => {
+                          it('adds message to telegram_messages', async () => {
                             const { req, res } = mockAuthorizedPUTRequest(
                               crawler.token,
                               {
@@ -644,7 +644,7 @@ describe(`PUT ${ENDPOINT}`, () => {
                   })
                 })
 
-                test('returns success', async () => {
+                it('returns success', async () => {
                   const { req, res } = mockAuthorizedPUTRequest(
                     crawler.token,
                     {
@@ -669,7 +669,7 @@ describe(`PUT ${ENDPOINT}`, () => {
                   expect(res._getStatusCode()).toBe(200)
                 })
 
-                test('creates a record in product history', async () => {
+                it('creates a record in product history', async () => {
                   const { req, res } = mockAuthorizedPUTRequest(
                     crawler.token,
                     {
@@ -709,7 +709,7 @@ describe(`PUT ${ENDPOINT}`, () => {
                 }
               })
 
-              test('returns error', async () => {
+              it('returns error', async () => {
                 const { req, res } = mockAuthorizedPUTRequest(
                   crawler.token,
                   {
@@ -735,7 +735,7 @@ describe(`PUT ${ENDPOINT}`, () => {
                 }
               })
 
-              test('returns error', async () => {
+              it('returns error', async () => {
                 const { req, res } = mockAuthorizedPUTRequest(
                   crawler.token,
                   {
@@ -762,7 +762,7 @@ describe(`PUT ${ENDPOINT}`, () => {
               })
 
               describe('without history', () => {
-                test('returns success', async () => {
+                it('returns success', async () => {
                   const { req, res } = mockAuthorizedPUTRequest(
                     crawler.token,
                     {
@@ -787,7 +787,7 @@ describe(`PUT ${ENDPOINT}`, () => {
                   expect(res._getStatusCode()).toBe(200)
                 })
 
-                test('creates a record in product history', async () => {
+                it('creates a record in product history', async () => {
                   const { req, res } = mockAuthorizedPUTRequest(
                     crawler.token,
                     {
@@ -846,7 +846,7 @@ describe(`PUT ${ENDPOINT}`, () => {
                     })
 
                     describe('when user does not have telegram_account', () => {
-                      test('does not add message to telegram_messages', async () => {
+                      it('does not add message to telegram_messages', async () => {
                         const { req, res } = mockAuthorizedPUTRequest(
                           crawler.token,
                           {
@@ -877,7 +877,7 @@ describe(`PUT ${ENDPOINT}`, () => {
                         })
                       })
 
-                      test('adds price to users who do not have price for this product', async () => {
+                      it('adds price to users who do not have price for this product', async () => {
                         const { req, res } = mockAuthorizedPUTRequest(
                           crawler.token,
                           {
@@ -899,7 +899,7 @@ describe(`PUT ${ENDPOINT}`, () => {
                         expect(userProducts[0].price).toEqual(42)
                       })
 
-                      test('adds message to telegram_messages', async () => {
+                      it('adds message to telegram_messages', async () => {
                         const { req, res } = mockAuthorizedPUTRequest(
                           crawler.token,
                           {
@@ -939,7 +939,7 @@ describe(`PUT ${ENDPOINT}`, () => {
                     })
 
                     describe('when recent history is in stock', () => {
-                      test('does not add message to telegram_messages', async () => {
+                      it('does not add message to telegram_messages', async () => {
                         const { req, res } = mockAuthorizedPUTRequest(
                           crawler.token,
                           {
@@ -971,7 +971,7 @@ describe(`PUT ${ENDPOINT}`, () => {
                       })
 
                       describe('when user does not have telegram_account', () => {
-                        test('does not add message to telegram_messages', async () => {
+                        it('does not add message to telegram_messages', async () => {
                           const { req, res } = mockAuthorizedPUTRequest(
                             crawler.token,
                             {
@@ -1003,7 +1003,7 @@ describe(`PUT ${ENDPOINT}`, () => {
                         })
 
                         describe('when user does not have product subscription', () => {
-                          test('does not add message to telegram_messages', async () => {
+                          it('does not add message to telegram_messages', async () => {
                             const { req, res } = mockAuthorizedPUTRequest(
                               crawler.token,
                               {
@@ -1034,7 +1034,7 @@ describe(`PUT ${ENDPOINT}`, () => {
                             })
                           })
 
-                          test('adds message to telegram_messages', async () => {
+                          it('adds message to telegram_messages', async () => {
                             const { req, res } = mockAuthorizedPUTRequest(
                               crawler.token,
                               {
@@ -1063,7 +1063,7 @@ describe(`PUT ${ENDPOINT}`, () => {
                   })
                 })
 
-                test('returns success', async () => {
+                it('returns success', async () => {
                   const { req, res } = mockAuthorizedPUTRequest(
                     crawler.token,
                     {
@@ -1088,7 +1088,7 @@ describe(`PUT ${ENDPOINT}`, () => {
                   expect(res._getStatusCode()).toBe(200)
                 })
 
-                test('creates a record in product history', async () => {
+                it('creates a record in product history', async () => {
                   const { req, res } = mockAuthorizedPUTRequest(
                     crawler.token,
                     {
@@ -1130,7 +1130,7 @@ describe(`PUT ${ENDPOINT}`, () => {
               })
 
               describe('without history', () => {
-                test('returns success', async () => {
+                it('returns success', async () => {
                   const { req, res } = mockAuthorizedPUTRequest(
                     crawler.token,
                     {
@@ -1155,7 +1155,7 @@ describe(`PUT ${ENDPOINT}`, () => {
                   expect(res._getStatusCode()).toBe(200)
                 })
 
-                test('creates a record in product history', async () => {
+                it('creates a record in product history', async () => {
                   const { req, res } = mockAuthorizedPUTRequest(
                     crawler.token,
                     {
@@ -1214,7 +1214,7 @@ describe(`PUT ${ENDPOINT}`, () => {
                     })
 
                     describe('when user does not have telegram_account', () => {
-                      test('does not add message to telegram_messages', async () => {
+                      it('does not add message to telegram_messages', async () => {
                         const { req, res } = mockAuthorizedPUTRequest(
                           crawler.token,
                           {
@@ -1245,7 +1245,7 @@ describe(`PUT ${ENDPOINT}`, () => {
                         })
                       })
 
-                      test('adds discount price to users who do not have price for this product', async () => {
+                      it('adds discount price to users who do not have price for this product', async () => {
                         const { req, res } = mockAuthorizedPUTRequest(
                           crawler.token,
                           {
@@ -1267,7 +1267,7 @@ describe(`PUT ${ENDPOINT}`, () => {
                         expect(userProducts[0].price).toEqual(35)
                       })
 
-                      test('adds message to telegram_messages', async () => {
+                      it('adds message to telegram_messages', async () => {
                         const { req, res } = mockAuthorizedPUTRequest(
                           crawler.token,
                           {
@@ -1307,7 +1307,7 @@ describe(`PUT ${ENDPOINT}`, () => {
                     })
 
                     describe('when recent history is in stock', () => {
-                      test('does not add message to telegram_messages', async () => {
+                      it('does not add message to telegram_messages', async () => {
                         const { req, res } = mockAuthorizedPUTRequest(
                           crawler.token,
                           {
@@ -1339,7 +1339,7 @@ describe(`PUT ${ENDPOINT}`, () => {
                       })
 
                       describe('when user does not have telegram_account', () => {
-                        test('does not add message to telegram_messages', async () => {
+                        it('does not add message to telegram_messages', async () => {
                           const { req, res } = mockAuthorizedPUTRequest(
                             crawler.token,
                             {
@@ -1371,7 +1371,7 @@ describe(`PUT ${ENDPOINT}`, () => {
                         })
 
                         describe('when user does not have product subscription', () => {
-                          test('does not add message to telegram_messages', async () => {
+                          it('does not add message to telegram_messages', async () => {
                             const { req, res } = mockAuthorizedPUTRequest(
                               crawler.token,
                               {
@@ -1402,7 +1402,7 @@ describe(`PUT ${ENDPOINT}`, () => {
                             })
                           })
 
-                          test('adds message to telegram_messages', async () => {
+                          it('adds message to telegram_messages', async () => {
                             const { req, res } = mockAuthorizedPUTRequest(
                               crawler.token,
                               {
@@ -1431,7 +1431,7 @@ describe(`PUT ${ENDPOINT}`, () => {
                   })
                 })
 
-                test('returns success', async () => {
+                it('returns success', async () => {
                   const { req, res } = mockAuthorizedPUTRequest(
                     crawler.token,
                     {
@@ -1456,7 +1456,7 @@ describe(`PUT ${ENDPOINT}`, () => {
                   expect(res._getStatusCode()).toBe(200)
                 })
 
-                test('creates a record in product history', async () => {
+                it('creates a record in product history', async () => {
                   const { req, res } = mockAuthorizedPUTRequest(
                     crawler.token,
                     {

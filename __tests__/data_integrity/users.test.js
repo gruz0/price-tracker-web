@@ -194,7 +194,7 @@ describe('users', () => {
     })
   })
 
-  test('removes user1 related records from user_product_subscriptions', async () => {
+  it('removes user1 related records from user_product_subscriptions', async () => {
     await deleteUser1()
 
     const result = await prisma.userProductSubscription.findMany()
@@ -205,7 +205,7 @@ describe('users', () => {
     ])
   })
 
-  test('removes user1 related records from user_products', async () => {
+  it('removes user1 related records from user_products', async () => {
     await deleteUser1()
 
     const result = await prisma.userProduct.findMany()
@@ -213,7 +213,7 @@ describe('users', () => {
     expect(result).toEqual([user2Product1, user2Product2])
   })
 
-  test('removes user1 related records from products_queue', async () => {
+  it('removes user1 related records from products_queue', async () => {
     await deleteUser1()
 
     const result = await prisma.productQueue.findMany()
@@ -221,7 +221,7 @@ describe('users', () => {
     expect(result).toEqual([user2ProductQueue])
   })
 
-  test('removes user1 related records from user_products_groups', async () => {
+  it('removes user1 related records from user_products_groups', async () => {
     await deleteUser1()
 
     const result = await prisma.userProductsGroup.findMany()
@@ -229,7 +229,7 @@ describe('users', () => {
     expect(result).toEqual([user2ProductsGroup1])
   })
 
-  test('removes user1 related records from user_products_group_items', async () => {
+  it('removes user1 related records from user_products_group_items', async () => {
     await deleteUser1()
 
     const result = await prisma.userProductsGroupItem.findMany()
@@ -237,7 +237,7 @@ describe('users', () => {
     expect(result).toEqual([user2ProductsGroup1Item1, user2ProductsGroup1Item2])
   })
 
-  test('does not remove product_history', async () => {
+  it('does not remove product_history', async () => {
     await deleteUser1()
 
     const result = await prisma.productHistory.findMany()
@@ -245,7 +245,7 @@ describe('users', () => {
     expect(result).toEqual([product1History, product2History])
   })
 
-  test('does not remove products', async () => {
+  it('does not remove products', async () => {
     await deleteUser1()
 
     const result = await prisma.product.findMany()
@@ -253,7 +253,7 @@ describe('users', () => {
     expect(result).toEqual([product1, product2])
   })
 
-  test('does not remove crawlers', async () => {
+  it('does not remove crawlers', async () => {
     await deleteUser1()
 
     const result = await prisma.crawler.findMany()

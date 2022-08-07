@@ -11,7 +11,7 @@ describe('getOutdatedProducts', () => {
     return await service.getOutdatedProducts(lastUpdateInHours, productsLimit)
   }
 
-  test('returns only matched products', async () => {
+  it('returns only matched products', async () => {
     const crawler = await prisma.crawler.create({
       data: {
         location: 'somewhere',

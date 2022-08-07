@@ -8,9 +8,9 @@ beforeEach(async () => {
 })
 
 describe('calculateHash', () => {
-  test.todo('when empty string it must raise an error')
+  it.todo('when empty string it must raise an error')
 
-  test('returns hash', () => {
+  it('returns hash', () => {
     expect(calculateHash('https://www.ozon.ru/product/42')).toEqual(
       '7bb40729dde6700a1540e342904e73696d3ffdb5ed222b7c4a69d3181d78d87f'
     )
@@ -29,7 +29,7 @@ describe('buildUserResponse', () => {
   })
 
   describe('when user provided', () => {
-    test('returns user', async () => {
+    it('returns user', async () => {
       const user = await prisma.user.create({
         data: {
           login: 'user1',

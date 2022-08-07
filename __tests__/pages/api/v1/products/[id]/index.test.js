@@ -52,7 +52,7 @@ const whenNotAuthorized = (method) => {
 
 const ensureMethodNotAllowed = (method, url) => {
   describe(`${method} ${url}`, () => {
-    test('returns error', async () => {
+    it('returns error', async () => {
       const { req, res } = createMocks({
         method: method,
       })
@@ -84,7 +84,7 @@ describe(`GET ${ENDPOINT}`, () => {
     })
 
     describe('when product_id missing', () => {
-      test('returns error', async () => {
+      it('returns error', async () => {
         const { req, res } = mockAuthorizedGETRequest(user.token)
 
         await handler(req, res)
@@ -95,7 +95,7 @@ describe(`GET ${ENDPOINT}`, () => {
     })
 
     describe('when product_id is not a valid UUID', () => {
-      test('returns error', async () => {
+      it('returns error', async () => {
         const { req, res } = mockAuthorizedGETRequest(user.token, {
           id: 'qwe',
         })
@@ -108,7 +108,7 @@ describe(`GET ${ENDPOINT}`, () => {
     })
 
     describe('when product does not exist', () => {
-      test('returns error', async () => {
+      it('returns error', async () => {
         const { req, res } = mockAuthorizedGETRequest(user.token, {
           id: uuid.v4(),
         })
@@ -121,7 +121,7 @@ describe(`GET ${ENDPOINT}`, () => {
     })
 
     describe('when user does not have product', () => {
-      test('returns error', async () => {
+      it('returns error', async () => {
         const product = await prisma.product.create({
           data: {
             title: 'Product',
@@ -168,7 +168,7 @@ describe(`GET ${ENDPOINT}`, () => {
       })
 
       describe('when product is not in groups', () => {
-        test('returns products with shops', async () => {
+        it('returns products with shops', async () => {
           const { req, res } = mockAuthorizedGETRequest(user.token, {
             id: product.id,
           })
@@ -223,7 +223,7 @@ describe(`GET ${ENDPOINT}`, () => {
           expect(res._getStatusCode()).toBe(200)
         })
 
-        test('updates last_activity_at', async () => {
+        it('updates last_activity_at', async () => {
           const { req, res } = mockAuthorizedGETRequest(user.token, {
             id: product.id,
           })
@@ -237,7 +237,7 @@ describe(`GET ${ENDPOINT}`, () => {
       })
 
       describe('when product is in groups', () => {
-        test('returns products with shops and groups', async () => {
+        it('returns products with shops and groups', async () => {
           const userProductGroup1 = await prisma.userProductsGroup.create({
             data: {
               user_id: user.id,
@@ -350,7 +350,7 @@ describe(`DELETE ${ENDPOINT}`, () => {
     })
 
     describe('when product_id missing', () => {
-      test('returns error', async () => {
+      it('returns error', async () => {
         const { req, res } = mockAuthorizedDELETERequest(user.token)
 
         await handler(req, res)
@@ -361,7 +361,7 @@ describe(`DELETE ${ENDPOINT}`, () => {
     })
 
     describe('when product_id is not a valid UUID', () => {
-      test('returns error', async () => {
+      it('returns error', async () => {
         const { req, res } = mockAuthorizedDELETERequest(user.token, {
           id: 'qwe',
         })
@@ -374,7 +374,7 @@ describe(`DELETE ${ENDPOINT}`, () => {
     })
 
     describe('when product does not exist', () => {
-      test('returns error', async () => {
+      it('returns error', async () => {
         const { req, res } = mockAuthorizedDELETERequest(user.token, {
           id: uuid.v4(),
         })
@@ -387,7 +387,7 @@ describe(`DELETE ${ENDPOINT}`, () => {
     })
 
     describe('when user does not have product', () => {
-      test('returns error', async () => {
+      it('returns error', async () => {
         const product = await prisma.product.create({
           data: {
             title: 'Product',
@@ -431,7 +431,7 @@ describe(`DELETE ${ENDPOINT}`, () => {
         })
       })
 
-      test('does not remove product', async () => {
+      it('does not remove product', async () => {
         const { req, res } = mockAuthorizedDELETERequest(user.token, {
           id: product.id,
         })
@@ -448,7 +448,7 @@ describe(`DELETE ${ENDPOINT}`, () => {
         expect(existedProduct).not.toBeNull()
       })
 
-      test('updates product status to hold', async () => {
+      it('updates product status to hold', async () => {
         const { req, res } = mockAuthorizedDELETERequest(user.token, {
           id: product.id,
         })
@@ -465,7 +465,7 @@ describe(`DELETE ${ENDPOINT}`, () => {
       })
 
       describe('when other people have this product', () => {
-        test('keeps product status as active', async () => {
+        it('keeps product status as active', async () => {
           const user2 = await prisma.user.create({
             data: {
               login: 'user2',
@@ -497,7 +497,7 @@ describe(`DELETE ${ENDPOINT}`, () => {
         })
       })
 
-      test('removes product from user', async () => {
+      it('removes product from user', async () => {
         const { req, res } = mockAuthorizedDELETERequest(user.token, {
           id: product.id,
         })
@@ -516,7 +516,7 @@ describe(`DELETE ${ENDPOINT}`, () => {
         expect(existedUserProduct).toBeNull()
       })
 
-      test('updates last_activity_at', async () => {
+      it('updates last_activity_at', async () => {
         const { req, res } = mockAuthorizedDELETERequest(user.token, {
           id: product.id,
         })
@@ -529,7 +529,7 @@ describe(`DELETE ${ENDPOINT}`, () => {
       })
 
       describe('when user has product subscriptions', () => {
-        test('removes product subscriptions', async () => {
+        it('removes product subscriptions', async () => {
           await prisma.userProductSubscription.create({
             data: {
               user_id: user.id,
@@ -609,7 +609,7 @@ describe(`DELETE ${ENDPOINT}`, () => {
           })
         })
 
-        test('removes product from items', async () => {
+        it('removes product from items', async () => {
           const { req, res } = mockAuthorizedDELETERequest(user.token, {
             id: product.id,
           })
@@ -627,7 +627,7 @@ describe(`DELETE ${ENDPOINT}`, () => {
           ])
         })
 
-        test('does not remove user products group', async () => {
+        it('does not remove user products group', async () => {
           const { req, res } = mockAuthorizedDELETERequest(user.token, {
             id: product.id,
           })

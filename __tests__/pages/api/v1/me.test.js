@@ -46,7 +46,7 @@ const whenNotAuthorized = (method) => {
 
 const ensureMethodNotAllowed = (method, url) => {
   describe(`${method} ${url}`, () => {
-    test('returns error', async () => {
+    it('returns error', async () => {
       const { req, res } = createMocks({
         method: method,
       })
@@ -67,7 +67,7 @@ describe(`GET ${ENDPOINT}`, () => {
   whenNotAuthorized('GET')
 
   describe('when user exists', () => {
-    test('returns response', async () => {
+    it('returns response', async () => {
       const user = await prisma.user.create({
         data: {
           login: 'user1',
@@ -91,7 +91,7 @@ describe(`GET ${ENDPOINT}`, () => {
       expect(response.user.telegram_account).toEqual('12345')
     })
 
-    test('updates last_activity_at', async () => {
+    it('updates last_activity_at', async () => {
       const user = await prisma.user.create({
         data: {
           login: 'user1',

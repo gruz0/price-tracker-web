@@ -51,7 +51,7 @@ const whenNotAuthorized = (method) => {
 
 const ensureMethodNotAllowed = (method, url) => {
   describe(`${method} ${url}`, () => {
-    test('returns error', async () => {
+    it('returns error', async () => {
       const { req, res } = createMocks({
         method: method,
       })
@@ -84,7 +84,7 @@ describe(`GET ${ENDPOINT}`, () => {
     })
 
     describe('when product_id missing', () => {
-      test('returns error', async () => {
+      it('returns error', async () => {
         const { req, res } = mockAuthorizedGETRequest(user.token)
 
         await handler(req, res)
@@ -95,7 +95,7 @@ describe(`GET ${ENDPOINT}`, () => {
     })
 
     describe('when product_id is not a valid UUID', () => {
-      test('returns error', async () => {
+      it('returns error', async () => {
         const { req, res } = mockAuthorizedGETRequest(user.token, {
           id: 'qwe',
         })
@@ -108,7 +108,7 @@ describe(`GET ${ENDPOINT}`, () => {
     })
 
     describe('when product does not exist', () => {
-      test('returns error', async () => {
+      it('returns error', async () => {
         const { req, res } = mockAuthorizedGETRequest(user.token, {
           id: uuid.v4(),
         })
@@ -136,7 +136,7 @@ describe(`GET ${ENDPOINT}`, () => {
       })
 
       describe('when user does not have product', () => {
-        test('returns error', async () => {
+        it('returns error', async () => {
           const { req, res } = mockAuthorizedGETRequest(user.token, {
             id: product.id,
           })
@@ -164,7 +164,7 @@ describe(`GET ${ENDPOINT}`, () => {
         })
 
         describe('without product history', () => {
-          test('returns response', async () => {
+          it('returns response', async () => {
             const { req, res } = mockAuthorizedGETRequest(user.token, {
               id: product.id,
             })
@@ -195,7 +195,7 @@ describe(`GET ${ENDPOINT}`, () => {
             expect(res._getStatusCode()).toBe(200)
           })
 
-          test('updates last_activity_at', async () => {
+          it('updates last_activity_at', async () => {
             const { req, res } = mockAuthorizedGETRequest(user.token, {
               id: product.id,
             })
@@ -220,7 +220,7 @@ describe(`GET ${ENDPOINT}`, () => {
           })
 
           describe('when no valid history records', () => {
-            test('returns response', async () => {
+            it('returns response', async () => {
               await prisma.productHistory.createMany({
                 data: [
                   {
@@ -272,7 +272,7 @@ describe(`GET ${ENDPOINT}`, () => {
           })
 
           describe('with valid history records', () => {
-            test('returns response', async () => {
+            it('returns response', async () => {
               await prisma.productHistory.createMany({
                 data: [
                   {

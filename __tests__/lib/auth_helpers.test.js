@@ -13,7 +13,7 @@ describe('validateBearerToken', () => {
   }
 
   describe('when missing authorization', () => {
-    test('returns error', () => {
+    it('returns error', () => {
       const result = execution({})
 
       expect(result).toEqual({
@@ -24,7 +24,7 @@ describe('validateBearerToken', () => {
   })
 
   describe('when authorization does not start with Bearer ', () => {
-    test('returns error', () => {
+    it('returns error', () => {
       const result = execution({ authorization: 'Bearer' })
 
       expect(result).toEqual({
@@ -35,7 +35,7 @@ describe('validateBearerToken', () => {
   })
 
   describe('when token is empty', () => {
-    test('returns error', () => {
+    it('returns error', () => {
       const result = execution({ authorization: 'Bearer ' })
 
       expect(result).toEqual({
@@ -46,7 +46,7 @@ describe('validateBearerToken', () => {
   })
 
   describe('when token is not a valid UUID', () => {
-    test('returns error', () => {
+    it('returns error', () => {
       const result = execution({ authorization: 'Bearer qwe' })
 
       expect(result).toEqual({
@@ -57,7 +57,7 @@ describe('validateBearerToken', () => {
   })
 
   describe('when token is a valid UUID but with extra chars', () => {
-    test('returns error', () => {
+    it('returns error', () => {
       const token = `${uuid.v4()}q`
 
       const result = execution({ authorization: `Bearer ${token}` })
@@ -70,7 +70,7 @@ describe('validateBearerToken', () => {
   })
 
   describe('when valid UUID token provided', () => {
-    test('returns token', () => {
+    it('returns token', () => {
       const token = uuid.v4()
 
       const result = execution({ authorization: `Bearer ${token}` })

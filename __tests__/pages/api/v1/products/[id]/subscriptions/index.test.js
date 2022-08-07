@@ -57,7 +57,7 @@ const whenNotAuthorized = (method) => {
 
 const ensureMethodNotAllowed = (method, url) => {
   describe(`${method} ${url}`, () => {
-    test('returns error', async () => {
+    it('returns error', async () => {
       const { req, res } = createMocks({
         method: method,
       })
@@ -88,7 +88,7 @@ describe(`GET ${ENDPOINT}`, () => {
     })
 
     describe('when product_id missing', () => {
-      test('returns error', async () => {
+      it('returns error', async () => {
         const { req, res } = mockAuthorizedGETRequest(user.token)
 
         await handler(req, res)
@@ -99,7 +99,7 @@ describe(`GET ${ENDPOINT}`, () => {
     })
 
     describe('when product_id is not a valid UUID', () => {
-      test('returns error', async () => {
+      it('returns error', async () => {
         const { req, res } = mockAuthorizedGETRequest(user.token, {
           id: 'qwe',
         })
@@ -112,7 +112,7 @@ describe(`GET ${ENDPOINT}`, () => {
     })
 
     describe('when product does not exist', () => {
-      test('returns error', async () => {
+      it('returns error', async () => {
         const { req, res } = mockAuthorizedGETRequest(user.token, {
           id: uuid.v4(),
         })
@@ -125,7 +125,7 @@ describe(`GET ${ENDPOINT}`, () => {
     })
 
     describe('when user does not have product', () => {
-      test('returns error', async () => {
+      it('returns error', async () => {
         const product = await prisma.product.create({
           data: {
             title: 'Product',
@@ -147,7 +147,7 @@ describe(`GET ${ENDPOINT}`, () => {
     })
 
     describe('when user does not have product subscriptions', () => {
-      test('returns empty response', async () => {
+      it('returns empty response', async () => {
         const product = await prisma.product.create({
           data: {
             title: 'Product',
@@ -177,7 +177,7 @@ describe(`GET ${ENDPOINT}`, () => {
     })
 
     describe('when user has product subscriptions', () => {
-      test('returns response', async () => {
+      it('returns response', async () => {
         const product = await prisma.product.create({
           data: {
             title: 'Product',
@@ -256,7 +256,7 @@ describe(`DELETE ${ENDPOINT}`, () => {
     })
 
     describe('when product_id missing', () => {
-      test('returns error', async () => {
+      it('returns error', async () => {
         const { req, res } = mockAuthorizedDELETERequest(user.token, {})
 
         await handler(req, res)
@@ -267,7 +267,7 @@ describe(`DELETE ${ENDPOINT}`, () => {
     })
 
     describe('when product_id is not a valid UUID', () => {
-      test('returns error', async () => {
+      it('returns error', async () => {
         const { req, res } = mockAuthorizedDELETERequest(user.token, {
           id: 'qwe',
         })
@@ -280,7 +280,7 @@ describe(`DELETE ${ENDPOINT}`, () => {
     })
 
     describe('when product does not exist', () => {
-      test('returns error', async () => {
+      it('returns error', async () => {
         const { req, res } = mockAuthorizedDELETERequest(user.token, {
           id: uuid.v4(),
         })
@@ -293,7 +293,7 @@ describe(`DELETE ${ENDPOINT}`, () => {
     })
 
     describe('when user does not have product', () => {
-      test('returns error', async () => {
+      it('returns error', async () => {
         const product = await prisma.product.create({
           data: {
             title: 'Product',
@@ -360,7 +360,7 @@ describe(`DELETE ${ENDPOINT}`, () => {
           })
         })
 
-        test('removes subscriptions', async () => {
+        it('removes subscriptions', async () => {
           const { req, res } = mockAuthorizedDELETERequest(user.token, {
             id: product.id,
           })
@@ -399,7 +399,7 @@ describe(`DELETE ${ENDPOINT}`, () => {
           expect(subscription2).toBeNull()
         })
 
-        test('updates last_activity_at', async () => {
+        it('updates last_activity_at', async () => {
           const { req, res } = mockAuthorizedDELETERequest(user.token, {
             id: product.id,
           })
@@ -431,7 +431,7 @@ describe(`POST ${ENDPOINT}`, () => {
     })
 
     describe('when product_id missing', () => {
-      test('returns error', async () => {
+      it('returns error', async () => {
         const { req, res } = mockAuthorizedPOSTRequest(user.token, {})
 
         await handler(req, res)
@@ -442,7 +442,7 @@ describe(`POST ${ENDPOINT}`, () => {
     })
 
     describe('when product does not exist', () => {
-      test('returns error', async () => {
+      it('returns error', async () => {
         const { req, res } = mockAuthorizedPOSTRequest(user.token, {
           id: uuid.v4(),
         })
@@ -469,7 +469,7 @@ describe(`POST ${ENDPOINT}`, () => {
       })
 
       describe('when user does not have product', () => {
-        test('returns error', async () => {
+        it('returns error', async () => {
           const { req, res } = mockAuthorizedPOSTRequest(user.token, {
             id: product.id,
           })
@@ -493,7 +493,7 @@ describe(`POST ${ENDPOINT}`, () => {
         })
 
         describe('when user does not have telegram account', () => {
-          test('returns error', async () => {
+          it('returns error', async () => {
             const { req, res } = mockAuthorizedPOSTRequest(user.token, {
               id: product.id,
             })
@@ -520,7 +520,7 @@ describe(`POST ${ENDPOINT}`, () => {
           })
 
           describe('when subscription_type missing', () => {
-            test('returns error', async () => {
+            it('returns error', async () => {
               const { req, res } = mockAuthorizedPOSTRequest(user.token, {
                 id: product.id,
               })
@@ -533,7 +533,7 @@ describe(`POST ${ENDPOINT}`, () => {
           })
 
           describe('when subscription_type is not supported', () => {
-            test('returns error', async () => {
+            it('returns error', async () => {
               const { req, res } = mockAuthorizedPOSTRequest(
                 user.token,
                 {
@@ -552,7 +552,7 @@ describe(`POST ${ENDPOINT}`, () => {
           })
 
           describe('when user has subscription for the product', () => {
-            test('does nothing', async () => {
+            it('does nothing', async () => {
               await prisma.userProductSubscription.create({
                 data: {
                   user_id: user.id,
@@ -581,7 +581,7 @@ describe(`POST ${ENDPOINT}`, () => {
           })
 
           describe('when user does not have subscription for the product', () => {
-            test('returns response', async () => {
+            it('returns response', async () => {
               const { req, res } = mockAuthorizedPOSTRequest(
                 user.token,
                 {
@@ -606,7 +606,7 @@ describe(`POST ${ENDPOINT}`, () => {
               expect(res._getStatusCode()).toBe(201)
             })
 
-            test('adds subscription', async () => {
+            it('adds subscription', async () => {
               const { req, res } = mockAuthorizedPOSTRequest(
                 user.token,
                 {
@@ -635,7 +635,7 @@ describe(`POST ${ENDPOINT}`, () => {
               expect(createdSubscription).not.toBeNull()
             })
 
-            test('updates last_activity_at', async () => {
+            it('updates last_activity_at', async () => {
               const { req, res } = mockAuthorizedPOSTRequest(
                 user.token,
                 {

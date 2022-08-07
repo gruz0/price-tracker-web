@@ -55,7 +55,7 @@ const whenNotAuthorized = (method) => {
 
 const ensureMethodNotAllowed = (method, url) => {
   describe(`${method} ${url}`, () => {
-    test('returns error', async () => {
+    it('returns error', async () => {
       const { req, res } = createMocks({
         method: method,
       })
@@ -91,7 +91,7 @@ describe(`POST ${ENDPOINT}`, () => {
   })
 
   describe('when missing current_password', () => {
-    test('returns response', async () => {
+    it('returns response', async () => {
       const { req, res } = mockAuthorizedPOSTRequest(user.token, {})
 
       await handler(req, res)
@@ -102,7 +102,7 @@ describe(`POST ${ENDPOINT}`, () => {
   })
 
   describe('when missing new_password', () => {
-    test('returns response', async () => {
+    it('returns response', async () => {
       const { req, res } = mockAuthorizedPOSTRequest(
         user.token,
         {},
@@ -119,7 +119,7 @@ describe(`POST ${ENDPOINT}`, () => {
   })
 
   describe('when missing new_password_confirmation', () => {
-    test('returns response', async () => {
+    it('returns response', async () => {
       const { req, res } = mockAuthorizedPOSTRequest(
         user.token,
         {},
@@ -137,7 +137,7 @@ describe(`POST ${ENDPOINT}`, () => {
   })
 
   describe('when new_password and new_password_confirmation do not match', () => {
-    test('returns response', async () => {
+    it('returns response', async () => {
       const { req, res } = mockAuthorizedPOSTRequest(
         user.token,
         {},
@@ -156,7 +156,7 @@ describe(`POST ${ENDPOINT}`, () => {
   })
 
   describe('when new_password is too short', () => {
-    test('returns response', async () => {
+    it('returns response', async () => {
       const { req, res } = mockAuthorizedPOSTRequest(
         user.token,
         {},
@@ -175,7 +175,7 @@ describe(`POST ${ENDPOINT}`, () => {
   })
 
   describe('when new_password is equal to current_password', () => {
-    test('returns response', async () => {
+    it('returns response', async () => {
       const { req, res } = mockAuthorizedPOSTRequest(
         user.token,
         {},
@@ -196,7 +196,7 @@ describe(`POST ${ENDPOINT}`, () => {
   })
 
   describe('when current_password is not valid', () => {
-    test('returns response', async () => {
+    it('returns response', async () => {
       const { req, res } = mockAuthorizedPOSTRequest(
         user.token,
         {},
@@ -215,7 +215,7 @@ describe(`POST ${ENDPOINT}`, () => {
   })
 
   describe('when all is good', () => {
-    test('updates user password and token', async () => {
+    it('updates user password and token', async () => {
       const { req, res } = mockAuthorizedPOSTRequest(
         user.token,
         {},
@@ -238,7 +238,7 @@ describe(`POST ${ENDPOINT}`, () => {
       expect(existedUser.pasword).not.toEqual(user.password)
     })
 
-    test('returns response', async () => {
+    it('returns response', async () => {
       const { req, res } = mockAuthorizedPOSTRequest(
         user.token,
         {},
@@ -265,7 +265,7 @@ describe(`POST ${ENDPOINT}`, () => {
       expect(response.user.telegram_account).toEqual('12345')
     })
 
-    test('updates last_activity_at', async () => {
+    it('updates last_activity_at', async () => {
       const { req, res } = mockAuthorizedPOSTRequest(
         user.token,
         {},

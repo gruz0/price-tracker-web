@@ -43,7 +43,7 @@ const whenNotAuthorized = (method) => {
 
 const ensureMethodNotAllowed = (method, url) => {
   describe(`${method} ${url}`, () => {
-    test('returns error', async () => {
+    it('returns error', async () => {
       const { req, res } = createMocks({
         method: method,
       })
@@ -75,7 +75,7 @@ describe(`GET ${ENDPOINT}`, () => {
     })
 
     describe('without products', () => {
-      test('returns empty response', async () => {
+      it('returns empty response', async () => {
         const { req, res } = mockAuthorizedGETRequest(crawler.token)
 
         await handler(req, res)
@@ -90,7 +90,7 @@ describe(`GET ${ENDPOINT}`, () => {
     })
 
     describe('with products', () => {
-      test('returns products', async () => {
+      it('returns products', async () => {
         const { req, res } = mockAuthorizedGETRequest(crawler.token)
 
         const user = await prisma.user.create({

@@ -325,7 +325,7 @@ describe('isSingleProductURL', () => {
 
 describe('replaceHostWithOriginalShopDomain', () => {
   describe('when alternate domain exists', () => {
-    test('replaces alternate domain with original domain', () => {
+    it('replaces alternate domain with original domain', () => {
       const shop = {
         domain: 'www.ozon.ru',
         alternateDomains: ['m.ozon.ru'],
@@ -346,7 +346,7 @@ describe('replaceHostWithOriginalShopDomain', () => {
       alternateDomains: [''],
     }
 
-    test('replaces domain with original domain', () => {
+    it('replaces domain with original domain', () => {
       const url =
         'https://m.ozon.ru/product/otparivatel-tefal-pro-style-it3450-belyy-seryy-161082079/?sh=xLFoe3qKbA'
 

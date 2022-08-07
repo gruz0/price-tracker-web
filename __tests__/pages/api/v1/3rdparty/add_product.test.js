@@ -54,7 +54,7 @@ const whenNotAuthorized = (method) => {
 
 const ensureMethodNotAllowed = (method, url) => {
   describe(`${method} ${url}`, () => {
-    test('returns error', async () => {
+    it('returns error', async () => {
       const { req, res } = createMocks({
         method: method,
       })
@@ -87,7 +87,7 @@ describe(`POST ${ENDPOINT}`, () => {
     })
 
     describe('when missing url', () => {
-      test('returns error', async () => {
+      it('returns error', async () => {
         const { req, res } = mockAuthorizedPOSTRequest(user.api_key, {})
 
         await handler(req, res)
@@ -98,7 +98,7 @@ describe(`POST ${ENDPOINT}`, () => {
     })
 
     describe('when url is not a valid url', () => {
-      test('returns error', async () => {
+      it('returns error', async () => {
         const { req, res } = mockAuthorizedPOSTRequest(
           user.api_key,
           {},
@@ -115,7 +115,7 @@ describe(`POST ${ENDPOINT}`, () => {
     })
 
     describe('when shop is not supported', () => {
-      test('returns error', async () => {
+      it('returns error', async () => {
         const { req, res } = mockAuthorizedPOSTRequest(
           user.api_key,
           {},
@@ -132,7 +132,7 @@ describe(`POST ${ENDPOINT}`, () => {
     })
 
     describe('when URL is not a single product URL', () => {
-      test('returns error', async () => {
+      it('returns error', async () => {
         const { req, res } = mockAuthorizedPOSTRequest(
           user.api_key,
           {},
@@ -150,7 +150,7 @@ describe(`POST ${ENDPOINT}`, () => {
 
     describe('when product does not exist', () => {
       describe('when used alternate domain', () => {
-        test('adds new product to queue', async () => {
+        it('adds new product to queue', async () => {
           const { req, res } = mockAuthorizedPOSTRequest(
             user.api_key,
             {},
@@ -175,7 +175,7 @@ describe(`POST ${ENDPOINT}`, () => {
         })
       })
 
-      test('adds new product to queue', async () => {
+      it('adds new product to queue', async () => {
         const { req, res } = mockAuthorizedPOSTRequest(
           user.api_key,
           {},
@@ -197,7 +197,7 @@ describe(`POST ${ENDPOINT}`, () => {
         )
       })
 
-      test('removes extra query args from url', async () => {
+      it('removes extra query args from url', async () => {
         const { req, res } = mockAuthorizedPOSTRequest(
           user.api_key,
           {},
@@ -242,7 +242,7 @@ describe(`POST ${ENDPOINT}`, () => {
 
       describe('when user has this product', () => {
         describe('when used alternate url', () => {
-          test('does nothing', async () => {
+          it('does nothing', async () => {
             await prisma.userProduct.create({
               data: {
                 user_id: user.id,
@@ -269,7 +269,7 @@ describe(`POST ${ENDPOINT}`, () => {
           })
         })
 
-        test('does nothing', async () => {
+        it('does nothing', async () => {
           await prisma.userProduct.create({
             data: {
               user_id: user.id,
@@ -297,7 +297,7 @@ describe(`POST ${ENDPOINT}`, () => {
       })
 
       describe('without history', () => {
-        test('returns success', async () => {
+        it('returns success', async () => {
           const { req, res } = mockAuthorizedPOSTRequest(
             user.api_key,
             {},
@@ -315,7 +315,7 @@ describe(`POST ${ENDPOINT}`, () => {
           })
         })
 
-        test('adds product to user with zero price', async () => {
+        it('adds product to user with zero price', async () => {
           const { req, res } = mockAuthorizedPOSTRequest(
             user.api_key,
             {},
@@ -349,7 +349,7 @@ describe(`POST ${ENDPOINT}`, () => {
           })
         })
 
-        test('returns success', async () => {
+        it('returns success', async () => {
           const { req, res } = mockAuthorizedPOSTRequest(
             user.api_key,
             {},
@@ -367,7 +367,7 @@ describe(`POST ${ENDPOINT}`, () => {
           })
         })
 
-        test('adds product to user with zero price', async () => {
+        it('adds product to user with zero price', async () => {
           const { req, res } = mockAuthorizedPOSTRequest(
             user.api_key,
             {},
@@ -405,7 +405,7 @@ describe(`POST ${ENDPOINT}`, () => {
           })
         })
 
-        test('adds product to user with lowest price', async () => {
+        it('adds product to user with lowest price', async () => {
           const { req, res } = mockAuthorizedPOSTRequest(
             user.api_key,
             {},
@@ -431,7 +431,7 @@ describe(`POST ${ENDPOINT}`, () => {
           expect(userProducts[0].price).toEqual(35)
         })
 
-        test('updates last_activity_at', async () => {
+        it('updates last_activity_at', async () => {
           const { req, res } = mockAuthorizedPOSTRequest(
             user.api_key,
             {},
