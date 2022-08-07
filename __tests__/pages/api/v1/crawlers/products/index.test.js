@@ -27,6 +27,9 @@ import {
   MISSING_PRICES,
   DISCOUNT_PRICE_MUST_BE_POSITIVE,
   ORIGINAL_PRICE_MUST_BE_POSITIVE,
+  DISCOUNT_PRICE_MUST_BE_A_NUMBER,
+  ORIGINAL_PRICE_MUST_BE_A_NUMBER,
+  PRODUCT_ALREADY_EXISTS,
 } from '../../../../../../src/lib/messages'
 import { parseJSON, hourInMilliseconds } from '../../../../../helpers'
 import {
@@ -466,472 +469,1202 @@ describe(`POST ${ENDPOINT}`, () => {
       })
     })
 
-    describe('when product does not exist', () => {
-      describe('when status === not_found', () => {
-        test('removes product from queue', async () => {
-          await prisma.productQueue.create({
-            data: {
-              requested_by_id: user.id,
-              url_hash: 'hash',
-              url: 'https://domain.tld',
-            },
-          })
+    describe('when product is in queue', () => {
+      let productInQueue
 
-          const { req, res } = mockAuthorizedPOSTRequest(
-            crawler.token,
-            {},
-            {
-              requested_by: user.id,
-              url_hash: 'hash',
-              shop: 'ozon',
-              url: 'https://domain.tld',
-              status: 'not_found',
-            }
-          )
-
-          const productsInQueueBefore = await prisma.productQueue.findMany()
-          expect(productsInQueueBefore.length).toEqual(1)
-
-          await handler(req, res)
-
-          expect(res._getStatusCode()).toBe(200)
-          expect(parseJSON(res)).toEqual({})
-
-          const productsInQueueAfter = await prisma.productQueue.findMany()
-          expect(productsInQueueAfter.length).toEqual(0)
+      beforeEach(async () => {
+        productInQueue = await prisma.productQueue.create({
+          data: {
+            requested_by_id: user.id,
+            url_hash: 'hash',
+            url: 'https://domain.tld',
+          },
         })
       })
 
-      describe('when status === required_to_change_location', () => {
-        test('skips crawler for this product', async () => {
-          const productQueue = await prisma.productQueue.create({
-            data: {
-              requested_by_id: user.id,
-              url_hash: 'hash',
-              url: 'https://domain.tld',
-            },
-          })
-
-          const { req, res } = mockAuthorizedPOSTRequest(
-            crawler.token,
-            {},
-            {
-              requested_by: user.id,
-              url_hash: 'hash',
-              shop: 'ozon',
-              url: 'https://domain.tld',
-              status: 'required_to_change_location',
-            }
-          )
-
-          await handler(req, res)
-
-          expect(res._getStatusCode()).toBe(200)
-          expect(parseJSON(res)).toEqual({})
-
-          const updatedProductQueue = await prisma.productQueue.findUnique({
-            where: {
-              url_url_hash_requested_by_id: {
-                url: productQueue.url,
-                url_hash: productQueue.url_hash,
-                requested_by_id: productQueue.requested_by_id,
-              },
-            },
-          })
-
-          expect(updatedProductQueue.skip_for_crawler_id).toEqual(crawler.id)
-        })
-      })
-
-      describe('when status === ok', () => {
-        test('creates a new product', async () => {
-          await prisma.productQueue.create({
-            data: {
-              requested_by_id: user.id,
-              url_hash: 'hash',
-              url: 'https://domain.tld',
-            },
-          })
-
-          const { req, res } = mockAuthorizedPOSTRequest(
-            crawler.token,
-            {},
-            {
-              requested_by: user.id,
-              url_hash: 'hash',
-              shop: 'ozon',
-              url: 'https://domain.tld',
-              status: 'ok',
-              title: 'Product',
-              in_stock: true,
-              original_price: 42,
-              discount_price: 35,
-            }
-          )
-
-          await handler(req, res)
-
-          expect(res._getStatusCode()).toBe(201)
-
-          const createdProduct = parseJSON(res)
-          expect(createdProduct.shop).toEqual('ozon')
-          expect(createdProduct.url).toEqual('https://domain.tld')
-          expect(createdProduct.url_hash).toEqual('hash')
-          expect(createdProduct.title).toEqual('Product')
-
-          const productHistory = await prisma.productHistory.findMany({
-            where: { product_id: createdProduct.id },
-          })
-
-          expect(productHistory.length).toEqual(1)
-
-          expect(productHistory[0].title).toEqual('Product')
-          expect(productHistory[0].original_price).toEqual(42)
-          expect(productHistory[0].discount_price).toEqual(35)
-          expect(productHistory[0].in_stock).toEqual(true)
-          expect(productHistory[0].status).toEqual('ok')
-          expect(productHistory[0].crawler_id).toEqual(crawler.id)
-        })
-
-        test('removes product from queue', async () => {
-          await prisma.productQueue.create({
-            data: {
-              requested_by_id: user.id,
-              url_hash: 'hash',
-              url: 'https://domain.tld',
-            },
-          })
-
-          const { req, res } = mockAuthorizedPOSTRequest(
-            crawler.token,
-            {},
-            {
-              requested_by: user.id,
-              url_hash: 'hash',
-              shop: 'ozon',
-              url: 'https://domain.tld',
-              status: 'ok',
-              title: 'Product',
-              in_stock: true,
-              original_price: 42,
-              discount_price: 35,
-            }
-          )
-
-          const productsInQueueBefore = await prisma.productQueue.findMany()
-          expect(productsInQueueBefore.length).toEqual(1)
-
-          await handler(req, res)
-
-          expect(res._getStatusCode()).toBe(201)
-
-          const productsInQueueAfter = await prisma.productQueue.findMany()
-          expect(productsInQueueAfter.length).toEqual(0)
-        })
-
-        describe('when prices are missing', () => {
-          test('returns error', async () => {
-            await prisma.productQueue.create({
-              data: {
-                requested_by_id: user.id,
-                url_hash: 'hash',
-                url: 'https://domain.tld',
-              },
-            })
-
+      describe('when product does not exist', () => {
+        describe('when status === skip', () => {
+          test('does not remove product from queue', async () => {
             const { req, res } = mockAuthorizedPOSTRequest(
               crawler.token,
               {},
               {
                 requested_by: user.id,
-                url_hash: 'hash',
+                url_hash: productInQueue.url_hash,
+                url: productInQueue.url,
                 shop: 'ozon',
-                url: 'https://domain.tld',
-                status: 'ok',
-                title: 'Product',
-                in_stock: true,
+                status: 'skip',
               }
             )
 
             await handler(req, res)
 
-            expect(parseJSON(res)).toEqual(MISSING_PRICES)
-            expect(res._getStatusCode()).toBe(400)
+            expect(parseJSON(res)).toEqual({})
+            expect(res._getStatusCode()).toBe(200)
+
+            const productsInQueue = await prisma.productQueue.findMany()
+            expect(productsInQueue.length).toEqual(1)
           })
         })
 
-        describe('when only discount is set', () => {
-          describe('when price is negative', () => {
-            test('returns error', async () => {
-              await prisma.productQueue.create({
-                data: {
-                  requested_by_id: user.id,
-                  url_hash: 'hash',
-                  url: 'https://domain.tld',
-                },
-              })
+        describe('when status === age_restriction', () => {
+          test('removes product from queue', async () => {
+            const { req, res } = mockAuthorizedPOSTRequest(
+              crawler.token,
+              {},
+              {
+                requested_by: user.id,
+                url_hash: productInQueue.url_hash,
+                url: productInQueue.url,
+                shop: 'ozon',
+                status: 'age_restriction',
+              }
+            )
 
-              const { req, res } = mockAuthorizedPOSTRequest(
-                crawler.token,
-                {},
-                {
-                  requested_by: user.id,
-                  url_hash: 'hash',
-                  shop: 'ozon',
-                  url: 'https://domain.tld',
-                  status: 'ok',
-                  title: 'Product',
-                  in_stock: true,
-                  discount_price: -1,
-                }
-              )
+            const productsInQueueBefore = await prisma.productQueue.findMany()
+            expect(productsInQueueBefore.length).toEqual(1)
 
-              await handler(req, res)
+            await handler(req, res)
 
-              expect(parseJSON(res)).toEqual(DISCOUNT_PRICE_MUST_BE_POSITIVE)
-              expect(res._getStatusCode()).toBe(422)
-            })
-          })
+            expect(parseJSON(res)).toEqual({})
+            expect(res._getStatusCode()).toBe(200)
 
-          describe('when price is zero', () => {
-            test('returns error', async () => {
-              await prisma.productQueue.create({
-                data: {
-                  requested_by_id: user.id,
-                  url_hash: 'hash',
-                  url: 'https://domain.tld',
-                },
-              })
-
-              const { req, res } = mockAuthorizedPOSTRequest(
-                crawler.token,
-                {},
-                {
-                  requested_by: user.id,
-                  url_hash: 'hash',
-                  shop: 'ozon',
-                  url: 'https://domain.tld',
-                  status: 'ok',
-                  title: 'Product',
-                  in_stock: true,
-                  discount_price: 0,
-                }
-              )
-
-              await handler(req, res)
-
-              expect(parseJSON(res)).toEqual(DISCOUNT_PRICE_MUST_BE_POSITIVE)
-              expect(res._getStatusCode()).toBe(422)
-            })
-          })
-
-          describe('when price is positive', () => {
-            test('adds product to user with discount_price', async () => {
-              await prisma.productQueue.create({
-                data: {
-                  requested_by_id: user.id,
-                  url_hash: 'hash',
-                  url: 'https://domain.tld',
-                },
-              })
-
-              const { req, res } = mockAuthorizedPOSTRequest(
-                crawler.token,
-                {},
-                {
-                  requested_by: user.id,
-                  url_hash: 'hash',
-                  shop: 'ozon',
-                  url: 'https://domain.tld',
-                  status: 'ok',
-                  title: 'Product',
-                  in_stock: true,
-                  discount_price: 35,
-                }
-              )
-
-              await handler(req, res)
-
-              expect(res._getStatusCode()).toBe(201)
-
-              const createdProduct = parseJSON(res)
-
-              const userProducts = await prisma.userProduct.findMany({
-                where: { user_id: user.id },
-              })
-              expect(userProducts.length).toEqual(1)
-              expect(userProducts[0].product_id).toEqual(createdProduct.id)
-              expect(userProducts[0].price).toEqual(35)
-            })
+            const productsInQueueAfter = await prisma.productQueue.findMany()
+            expect(productsInQueueAfter.length).toEqual(0)
           })
         })
 
-        describe('when only original_price is set', () => {
-          describe('when price is negative', () => {
-            test('returns error', async () => {
-              await prisma.productQueue.create({
-                data: {
-                  requested_by_id: user.id,
-                  url_hash: 'hash',
-                  url: 'https://domain.tld',
-                },
-              })
+        describe('when status === not_found', () => {
+          test('removes product from queue', async () => {
+            const { req, res } = mockAuthorizedPOSTRequest(
+              crawler.token,
+              {},
+              {
+                requested_by: user.id,
+                url_hash: productInQueue.url_hash,
+                url: productInQueue.url,
+                shop: 'ozon',
+                status: 'not_found',
+              }
+            )
 
-              const { req, res } = mockAuthorizedPOSTRequest(
-                crawler.token,
-                {},
-                {
-                  requested_by: user.id,
-                  url_hash: 'hash',
-                  shop: 'ozon',
-                  url: 'https://domain.tld',
-                  status: 'ok',
-                  title: 'Product',
-                  in_stock: true,
-                  original_price: -1,
-                }
-              )
+            const productsInQueueBefore = await prisma.productQueue.findMany()
+            expect(productsInQueueBefore.length).toEqual(1)
 
-              await handler(req, res)
+            await handler(req, res)
 
-              expect(parseJSON(res)).toEqual(ORIGINAL_PRICE_MUST_BE_POSITIVE)
-              expect(res._getStatusCode()).toBe(422)
-            })
+            expect(parseJSON(res)).toEqual({})
+            expect(res._getStatusCode()).toBe(200)
+
+            const productsInQueueAfter = await prisma.productQueue.findMany()
+            expect(productsInQueueAfter.length).toEqual(0)
           })
+        })
 
-          describe('when price is zero', () => {
-            test('returns error', async () => {
-              await prisma.productQueue.create({
-                data: {
-                  requested_by_id: user.id,
-                  url_hash: 'hash',
-                  url: 'https://domain.tld',
+        describe('when status === required_to_change_location', () => {
+          test('skips crawler for this product', async () => {
+            const { req, res } = mockAuthorizedPOSTRequest(
+              crawler.token,
+              {},
+              {
+                requested_by: user.id,
+                url_hash: productInQueue.url_hash,
+                url: productInQueue.url,
+                shop: 'ozon',
+                status: 'required_to_change_location',
+              }
+            )
+
+            await handler(req, res)
+
+            expect(parseJSON(res)).toEqual({})
+            expect(res._getStatusCode()).toBe(200)
+
+            const updatedProductQueue = await prisma.productQueue.findUnique({
+              where: {
+                url_url_hash_requested_by_id: {
+                  url: productInQueue.url,
+                  url_hash: productInQueue.url_hash,
+                  requested_by_id: productInQueue.requested_by_id,
                 },
-              })
-
-              const { req, res } = mockAuthorizedPOSTRequest(
-                crawler.token,
-                {},
-                {
-                  requested_by: user.id,
-                  url_hash: 'hash',
-                  shop: 'ozon',
-                  url: 'https://domain.tld',
-                  status: 'ok',
-                  title: 'Product',
-                  in_stock: true,
-                  original_price: 0,
-                }
-              )
-
-              await handler(req, res)
-
-              expect(parseJSON(res)).toEqual(ORIGINAL_PRICE_MUST_BE_POSITIVE)
-              expect(res._getStatusCode()).toBe(422)
+              },
             })
+
+            expect(updatedProductQueue.skip_for_crawler_id).toEqual(crawler.id)
           })
+        })
 
-          describe('when price is positive', () => {
-            test('adds product to user with original_price', async () => {
-              await prisma.productQueue.create({
-                data: {
-                  requested_by_id: user.id,
-                  url_hash: 'hash',
-                  url: 'https://domain.tld',
-                },
-              })
+        describe('when status === ok', () => {
+          describe('when product is out of stock', () => {
+            describe('without prices', () => {
+              let body
 
-              const { req, res } = mockAuthorizedPOSTRequest(
-                crawler.token,
-                {},
-                {
+              beforeEach(() => {
+                body = {
                   requested_by: user.id,
-                  url_hash: 'hash',
+                  url_hash: productInQueue.url_hash,
+                  url: productInQueue.url,
                   shop: 'ozon',
-                  url: 'https://domain.tld',
                   status: 'ok',
                   title: 'Product',
-                  in_stock: true,
+                  in_stock: false,
+                }
+              })
+
+              test('returns success', async () => {
+                const { req, res } = mockAuthorizedPOSTRequest(
+                  crawler.token,
+                  {},
+                  body
+                )
+
+                await handler(req, res)
+
+                const createdProduct = parseJSON(res)
+                expect(createdProduct.url).toEqual(productInQueue.url)
+                expect(createdProduct.url_hash).toEqual(productInQueue.url_hash)
+                expect(createdProduct.shop).toEqual('ozon')
+                expect(createdProduct.title).toEqual('Product')
+
+                expect(res._getStatusCode()).toBe(201)
+              })
+
+              test('creates a new product', async () => {
+                const { req, res } = mockAuthorizedPOSTRequest(
+                  crawler.token,
+                  {},
+                  body
+                )
+
+                await handler(req, res)
+
+                const products = await prisma.product.findMany()
+
+                expect(products.length).toEqual(1)
+                expect(products[0].url).toEqual(productInQueue.url)
+                expect(products[0].url_hash).toEqual(productInQueue.url_hash)
+                expect(products[0].shop).toEqual('ozon')
+                expect(products[0].title).toEqual('Product')
+              })
+
+              test('creates a record in product history', async () => {
+                const { req, res } = mockAuthorizedPOSTRequest(
+                  crawler.token,
+                  {},
+                  body
+                )
+
+                await handler(req, res)
+
+                const productHistory = await prisma.productHistory.findMany()
+
+                expect(productHistory.length).toEqual(1)
+
+                expect(productHistory[0].title).toEqual('Product')
+                expect(productHistory[0].original_price).toBeNull()
+                expect(productHistory[0].discount_price).toBeNull()
+                expect(productHistory[0].in_stock).toEqual(false)
+                expect(productHistory[0].status).toEqual('ok')
+                expect(productHistory[0].crawler_id).toEqual(crawler.id)
+              })
+
+              test('removes product from queue', async () => {
+                const { req, res } = mockAuthorizedPOSTRequest(
+                  crawler.token,
+                  {},
+                  body
+                )
+
+                await handler(req, res)
+
+                const productsInQueueAfter =
+                  await prisma.productQueue.findMany()
+                expect(productsInQueueAfter.length).toEqual(0)
+              })
+
+              test('adds product to user with zero price', async () => {
+                const { req, res } = mockAuthorizedPOSTRequest(
+                  crawler.token,
+                  {},
+                  body
+                )
+
+                await handler(req, res)
+
+                const createdProduct = parseJSON(res)
+
+                const userProducts = await prisma.userProduct.findMany()
+                expect(userProducts.length).toEqual(1)
+                expect(userProducts[0].product_id).toEqual(createdProduct.id)
+                expect(userProducts[0].price).toEqual(0)
+                expect(userProducts[0].favorited).toEqual(false)
+              })
+            })
+
+            describe('with discount price only', () => {
+              let body
+
+              describe('when price is not a number', () => {
+                beforeEach(() => {
+                  body = {
+                    requested_by: user.id,
+                    url_hash: productInQueue.url_hash,
+                    url: productInQueue.url,
+                    shop: 'ozon',
+                    status: 'ok',
+                    title: 'Product',
+                    discount_price: '1.1a',
+                    in_stock: false,
+                  }
+                })
+
+                test('returns error', async () => {
+                  const { req, res } = mockAuthorizedPOSTRequest(
+                    crawler.token,
+                    {},
+                    body
+                  )
+
+                  await handler(req, res)
+
+                  expect(parseJSON(res)).toEqual(
+                    DISCOUNT_PRICE_MUST_BE_A_NUMBER
+                  )
+                  expect(res._getStatusCode()).toBe(422)
+                })
+              })
+
+              describe('when price is negative', () => {
+                beforeEach(() => {
+                  body = {
+                    requested_by: user.id,
+                    url_hash: productInQueue.url_hash,
+                    url: productInQueue.url,
+                    shop: 'ozon',
+                    status: 'ok',
+                    title: 'Product',
+                    discount_price: -1,
+                    in_stock: false,
+                  }
+                })
+
+                test('returns error', async () => {
+                  const { req, res } = mockAuthorizedPOSTRequest(
+                    crawler.token,
+                    {},
+                    body
+                  )
+
+                  await handler(req, res)
+
+                  expect(parseJSON(res)).toEqual(
+                    DISCOUNT_PRICE_MUST_BE_POSITIVE
+                  )
+                  expect(res._getStatusCode()).toBe(422)
+                })
+              })
+
+              describe('when price is positive number', () => {
+                beforeEach(() => {
+                  body = {
+                    requested_by: user.id,
+                    url_hash: productInQueue.url_hash,
+                    url: productInQueue.url,
+                    shop: 'ozon',
+                    status: 'ok',
+                    title: 'Product',
+                    discount_price: 35,
+                    in_stock: false,
+                  }
+                })
+
+                test('returns success', async () => {
+                  const { req, res } = mockAuthorizedPOSTRequest(
+                    crawler.token,
+                    {},
+                    body
+                  )
+
+                  await handler(req, res)
+
+                  const createdProduct = parseJSON(res)
+                  expect(createdProduct.url).toEqual(productInQueue.url)
+                  expect(createdProduct.url_hash).toEqual(
+                    productInQueue.url_hash
+                  )
+                  expect(createdProduct.shop).toEqual('ozon')
+                  expect(createdProduct.title).toEqual('Product')
+
+                  expect(res._getStatusCode()).toBe(201)
+                })
+
+                test('creates a new product', async () => {
+                  const { req, res } = mockAuthorizedPOSTRequest(
+                    crawler.token,
+                    {},
+                    body
+                  )
+
+                  await handler(req, res)
+
+                  const products = await prisma.product.findMany()
+
+                  expect(products.length).toEqual(1)
+                  expect(products[0].url).toEqual(productInQueue.url)
+                  expect(products[0].url_hash).toEqual(productInQueue.url_hash)
+                  expect(products[0].shop).toEqual('ozon')
+                  expect(products[0].title).toEqual('Product')
+                })
+
+                test('creates a record in product history', async () => {
+                  const { req, res } = mockAuthorizedPOSTRequest(
+                    crawler.token,
+                    {},
+                    body
+                  )
+
+                  await handler(req, res)
+
+                  const productHistory = await prisma.productHistory.findMany()
+
+                  expect(productHistory.length).toEqual(1)
+
+                  expect(productHistory[0].title).toEqual('Product')
+                  expect(productHistory[0].original_price).toBeNull()
+                  expect(productHistory[0].discount_price).toEqual(35)
+                  expect(productHistory[0].in_stock).toEqual(false)
+                  expect(productHistory[0].status).toEqual('ok')
+                  expect(productHistory[0].crawler_id).toEqual(crawler.id)
+                })
+
+                test('removes product from queue', async () => {
+                  const { req, res } = mockAuthorizedPOSTRequest(
+                    crawler.token,
+                    {},
+                    body
+                  )
+
+                  await handler(req, res)
+
+                  const productsInQueueAfter =
+                    await prisma.productQueue.findMany()
+                  expect(productsInQueueAfter.length).toEqual(0)
+                })
+
+                test('adds product to user with discount price', async () => {
+                  const { req, res } = mockAuthorizedPOSTRequest(
+                    crawler.token,
+                    {},
+                    body
+                  )
+
+                  await handler(req, res)
+
+                  const createdProduct = parseJSON(res)
+
+                  const userProducts = await prisma.userProduct.findMany()
+                  expect(userProducts.length).toEqual(1)
+                  expect(userProducts[0].product_id).toEqual(createdProduct.id)
+                  expect(userProducts[0].price).toEqual(35)
+                  expect(userProducts[0].favorited).toEqual(false)
+                })
+              })
+            })
+
+            describe('with original price only', () => {
+              let body
+
+              describe('when price is not a number', () => {
+                beforeEach(() => {
+                  body = {
+                    requested_by: user.id,
+                    url_hash: productInQueue.url_hash,
+                    url: productInQueue.url,
+                    shop: 'ozon',
+                    status: 'ok',
+                    title: 'Product',
+                    original_price: '1.1a',
+                    in_stock: false,
+                  }
+                })
+
+                test('returns error', async () => {
+                  const { req, res } = mockAuthorizedPOSTRequest(
+                    crawler.token,
+                    {},
+                    body
+                  )
+
+                  await handler(req, res)
+
+                  expect(parseJSON(res)).toEqual(
+                    ORIGINAL_PRICE_MUST_BE_A_NUMBER
+                  )
+                  expect(res._getStatusCode()).toBe(422)
+                })
+              })
+
+              describe('when price is negative', () => {
+                beforeEach(() => {
+                  body = {
+                    requested_by: user.id,
+                    url_hash: productInQueue.url_hash,
+                    url: productInQueue.url,
+                    shop: 'ozon',
+                    status: 'ok',
+                    title: 'Product',
+                    original_price: -1,
+                    in_stock: false,
+                  }
+                })
+
+                test('returns error', async () => {
+                  const { req, res } = mockAuthorizedPOSTRequest(
+                    crawler.token,
+                    {},
+                    body
+                  )
+
+                  await handler(req, res)
+
+                  expect(parseJSON(res)).toEqual(
+                    ORIGINAL_PRICE_MUST_BE_POSITIVE
+                  )
+                  expect(res._getStatusCode()).toBe(422)
+                })
+              })
+
+              describe('when price is positive number', () => {
+                beforeEach(() => {
+                  body = {
+                    requested_by: user.id,
+                    url_hash: productInQueue.url_hash,
+                    url: productInQueue.url,
+                    shop: 'ozon',
+                    status: 'ok',
+                    title: 'Product',
+                    original_price: 42,
+                    in_stock: false,
+                  }
+                })
+
+                test('returns success', async () => {
+                  const { req, res } = mockAuthorizedPOSTRequest(
+                    crawler.token,
+                    {},
+                    body
+                  )
+
+                  await handler(req, res)
+
+                  const createdProduct = parseJSON(res)
+                  expect(createdProduct.url).toEqual(productInQueue.url)
+                  expect(createdProduct.url_hash).toEqual(
+                    productInQueue.url_hash
+                  )
+                  expect(createdProduct.shop).toEqual('ozon')
+                  expect(createdProduct.title).toEqual('Product')
+
+                  expect(res._getStatusCode()).toBe(201)
+                })
+
+                test('creates a new product', async () => {
+                  const { req, res } = mockAuthorizedPOSTRequest(
+                    crawler.token,
+                    {},
+                    body
+                  )
+
+                  await handler(req, res)
+
+                  const products = await prisma.product.findMany()
+
+                  expect(products.length).toEqual(1)
+                  expect(products[0].url).toEqual(productInQueue.url)
+                  expect(products[0].url_hash).toEqual(productInQueue.url_hash)
+                  expect(products[0].shop).toEqual('ozon')
+                  expect(products[0].title).toEqual('Product')
+                })
+
+                test('creates a record in product history', async () => {
+                  const { req, res } = mockAuthorizedPOSTRequest(
+                    crawler.token,
+                    {},
+                    body
+                  )
+
+                  await handler(req, res)
+
+                  const productHistory = await prisma.productHistory.findMany()
+
+                  expect(productHistory.length).toEqual(1)
+
+                  expect(productHistory[0].title).toEqual('Product')
+                  expect(productHistory[0].original_price).toEqual(42)
+                  expect(productHistory[0].discount_price).toBeNull()
+                  expect(productHistory[0].in_stock).toEqual(false)
+                  expect(productHistory[0].status).toEqual('ok')
+                  expect(productHistory[0].crawler_id).toEqual(crawler.id)
+                })
+
+                test('removes product from queue', async () => {
+                  const { req, res } = mockAuthorizedPOSTRequest(
+                    crawler.token,
+                    {},
+                    body
+                  )
+
+                  await handler(req, res)
+
+                  const productsInQueueAfter =
+                    await prisma.productQueue.findMany()
+                  expect(productsInQueueAfter.length).toEqual(0)
+                })
+
+                test('adds product to user with original price', async () => {
+                  const { req, res } = mockAuthorizedPOSTRequest(
+                    crawler.token,
+                    {},
+                    body
+                  )
+
+                  await handler(req, res)
+
+                  const createdProduct = parseJSON(res)
+
+                  const userProducts = await prisma.userProduct.findMany()
+                  expect(userProducts.length).toEqual(1)
+                  expect(userProducts[0].product_id).toEqual(createdProduct.id)
+                  expect(userProducts[0].price).toEqual(42)
+                  expect(userProducts[0].favorited).toEqual(false)
+                })
+              })
+            })
+
+            describe('with both prices', () => {
+              let body
+
+              beforeEach(() => {
+                body = {
+                  requested_by: user.id,
+                  url_hash: productInQueue.url_hash,
+                  url: productInQueue.url,
+                  shop: 'ozon',
+                  status: 'ok',
+                  title: 'Product',
                   original_price: 42,
+                  discount_price: 35,
+                  in_stock: false,
                 }
-              )
-
-              await handler(req, res)
-
-              expect(res._getStatusCode()).toBe(201)
-
-              const createdProduct = parseJSON(res)
-
-              const userProducts = await prisma.userProduct.findMany({
-                where: { user_id: user.id },
               })
-              expect(userProducts.length).toEqual(1)
-              expect(userProducts[0].product_id).toEqual(createdProduct.id)
-              expect(userProducts[0].price).toEqual(42)
+
+              test('returns success', async () => {
+                const { req, res } = mockAuthorizedPOSTRequest(
+                  crawler.token,
+                  {},
+                  body
+                )
+
+                await handler(req, res)
+
+                const createdProduct = parseJSON(res)
+                expect(createdProduct.url).toEqual(productInQueue.url)
+                expect(createdProduct.url_hash).toEqual(productInQueue.url_hash)
+                expect(createdProduct.shop).toEqual('ozon')
+                expect(createdProduct.title).toEqual('Product')
+
+                expect(res._getStatusCode()).toBe(201)
+              })
+
+              test('creates a new product', async () => {
+                const { req, res } = mockAuthorizedPOSTRequest(
+                  crawler.token,
+                  {},
+                  body
+                )
+
+                await handler(req, res)
+
+                const products = await prisma.product.findMany()
+
+                expect(products.length).toEqual(1)
+                expect(products[0].url).toEqual(productInQueue.url)
+                expect(products[0].url_hash).toEqual(productInQueue.url_hash)
+                expect(products[0].shop).toEqual('ozon')
+                expect(products[0].title).toEqual('Product')
+              })
+
+              test('creates a record in product history', async () => {
+                const { req, res } = mockAuthorizedPOSTRequest(
+                  crawler.token,
+                  {},
+                  body
+                )
+
+                await handler(req, res)
+
+                const productHistory = await prisma.productHistory.findMany()
+
+                expect(productHistory.length).toEqual(1)
+
+                expect(productHistory[0].title).toEqual('Product')
+                expect(productHistory[0].original_price).toEqual(42)
+                expect(productHistory[0].discount_price).toEqual(35)
+                expect(productHistory[0].in_stock).toEqual(false)
+                expect(productHistory[0].status).toEqual('ok')
+                expect(productHistory[0].crawler_id).toEqual(crawler.id)
+              })
+
+              test('removes product from queue', async () => {
+                const { req, res } = mockAuthorizedPOSTRequest(
+                  crawler.token,
+                  {},
+                  body
+                )
+
+                await handler(req, res)
+
+                const productsInQueueAfter =
+                  await prisma.productQueue.findMany()
+                expect(productsInQueueAfter.length).toEqual(0)
+              })
+
+              test('adds product to user with discount price', async () => {
+                const { req, res } = mockAuthorizedPOSTRequest(
+                  crawler.token,
+                  {},
+                  body
+                )
+
+                await handler(req, res)
+
+                const createdProduct = parseJSON(res)
+
+                const userProducts = await prisma.userProduct.findMany()
+                expect(userProducts.length).toEqual(1)
+                expect(userProducts[0].product_id).toEqual(createdProduct.id)
+                expect(userProducts[0].price).toEqual(35)
+                expect(userProducts[0].favorited).toEqual(false)
+              })
             })
           })
-        })
 
-        describe('when both prices are set', () => {
-          test('adds product to user with discount_price', async () => {
-            await prisma.productQueue.create({
-              data: {
-                requested_by_id: user.id,
-                url_hash: 'hash',
-                url: 'https://domain.tld',
-              },
+          describe('when product is in stock', () => {
+            describe('without prices', () => {
+              let body
+
+              beforeEach(() => {
+                body = {
+                  requested_by: user.id,
+                  url_hash: productInQueue.url_hash,
+                  url: productInQueue.url,
+                  shop: 'ozon',
+                  status: 'ok',
+                  title: 'Product',
+                  in_stock: true,
+                }
+              })
+
+              test('returns error', async () => {
+                const { req, res } = mockAuthorizedPOSTRequest(
+                  crawler.token,
+                  {},
+                  body
+                )
+
+                await handler(req, res)
+
+                expect(parseJSON(res)).toEqual(MISSING_PRICES)
+                expect(res._getStatusCode()).toBe(400)
+              })
+
+              test('does not create a new product', async () => {
+                const { req, res } = mockAuthorizedPOSTRequest(
+                  crawler.token,
+                  {},
+                  body
+                )
+
+                await handler(req, res)
+
+                const products = await prisma.product.findMany()
+                expect(products).toEqual([])
+              })
+
+              test('does not remove product from queue', async () => {
+                const { req, res } = mockAuthorizedPOSTRequest(
+                  crawler.token,
+                  {},
+                  body
+                )
+
+                await handler(req, res)
+
+                const productsInQueue = await prisma.productQueue.findMany()
+                expect(productsInQueue).toEqual([productInQueue])
+              })
             })
 
-            const { req, res } = mockAuthorizedPOSTRequest(
-              crawler.token,
-              {},
-              {
-                requested_by: user.id,
-                url_hash: 'hash',
-                shop: 'ozon',
-                url: 'https://domain.tld',
-                status: 'ok',
-                title: 'Product',
-                in_stock: true,
-                original_price: 42,
-                discount_price: 35,
-              }
-            )
+            describe('with discount price only', () => {
+              let body
 
-            await handler(req, res)
+              describe('when price is not a number', () => {
+                beforeEach(() => {
+                  body = {
+                    requested_by: user.id,
+                    url_hash: productInQueue.url_hash,
+                    url: productInQueue.url,
+                    shop: 'ozon',
+                    status: 'ok',
+                    title: 'Product',
+                    discount_price: '1.1a',
+                    in_stock: true,
+                  }
+                })
 
-            expect(res._getStatusCode()).toBe(201)
+                test('returns error', async () => {
+                  const { req, res } = mockAuthorizedPOSTRequest(
+                    crawler.token,
+                    {},
+                    body
+                  )
 
-            const createdProduct = parseJSON(res)
+                  await handler(req, res)
 
-            const userProducts = await prisma.userProduct.findMany({
-              where: { user_id: user.id },
+                  expect(parseJSON(res)).toEqual(
+                    DISCOUNT_PRICE_MUST_BE_A_NUMBER
+                  )
+                  expect(res._getStatusCode()).toBe(422)
+                })
+              })
+
+              describe('when price is negative', () => {
+                beforeEach(() => {
+                  body = {
+                    requested_by: user.id,
+                    url_hash: productInQueue.url_hash,
+                    url: productInQueue.url,
+                    shop: 'ozon',
+                    status: 'ok',
+                    title: 'Product',
+                    discount_price: -1,
+                    in_stock: true,
+                  }
+                })
+
+                test('returns error', async () => {
+                  const { req, res } = mockAuthorizedPOSTRequest(
+                    crawler.token,
+                    {},
+                    body
+                  )
+
+                  await handler(req, res)
+
+                  expect(parseJSON(res)).toEqual(
+                    DISCOUNT_PRICE_MUST_BE_POSITIVE
+                  )
+                  expect(res._getStatusCode()).toBe(422)
+                })
+              })
+
+              describe('when price is positive number', () => {
+                beforeEach(() => {
+                  body = {
+                    requested_by: user.id,
+                    url_hash: productInQueue.url_hash,
+                    url: productInQueue.url,
+                    shop: 'ozon',
+                    status: 'ok',
+                    title: 'Product',
+                    discount_price: 35,
+                    in_stock: true,
+                  }
+                })
+
+                test('returns success', async () => {
+                  const { req, res } = mockAuthorizedPOSTRequest(
+                    crawler.token,
+                    {},
+                    body
+                  )
+
+                  await handler(req, res)
+
+                  const createdProduct = parseJSON(res)
+                  expect(createdProduct.url).toEqual(productInQueue.url)
+                  expect(createdProduct.url_hash).toEqual(
+                    productInQueue.url_hash
+                  )
+                  expect(createdProduct.shop).toEqual('ozon')
+                  expect(createdProduct.title).toEqual('Product')
+
+                  expect(res._getStatusCode()).toBe(201)
+                })
+
+                test('creates a new product', async () => {
+                  const { req, res } = mockAuthorizedPOSTRequest(
+                    crawler.token,
+                    {},
+                    body
+                  )
+
+                  await handler(req, res)
+
+                  const products = await prisma.product.findMany()
+
+                  expect(products.length).toEqual(1)
+                  expect(products[0].url).toEqual(productInQueue.url)
+                  expect(products[0].url_hash).toEqual(productInQueue.url_hash)
+                  expect(products[0].shop).toEqual('ozon')
+                  expect(products[0].title).toEqual('Product')
+                })
+
+                test('creates a record in product history', async () => {
+                  const { req, res } = mockAuthorizedPOSTRequest(
+                    crawler.token,
+                    {},
+                    body
+                  )
+
+                  await handler(req, res)
+
+                  const productHistory = await prisma.productHistory.findMany()
+
+                  expect(productHistory.length).toEqual(1)
+
+                  expect(productHistory[0].title).toEqual('Product')
+                  expect(productHistory[0].original_price).toBeNull()
+                  expect(productHistory[0].discount_price).toEqual(35)
+                  expect(productHistory[0].in_stock).toEqual(true)
+                  expect(productHistory[0].status).toEqual('ok')
+                  expect(productHistory[0].crawler_id).toEqual(crawler.id)
+                })
+
+                test('removes product from queue', async () => {
+                  const { req, res } = mockAuthorizedPOSTRequest(
+                    crawler.token,
+                    {},
+                    body
+                  )
+
+                  await handler(req, res)
+
+                  const productsInQueueAfter =
+                    await prisma.productQueue.findMany()
+                  expect(productsInQueueAfter.length).toEqual(0)
+                })
+
+                test('adds product to user with discount price', async () => {
+                  const { req, res } = mockAuthorizedPOSTRequest(
+                    crawler.token,
+                    {},
+                    body
+                  )
+
+                  await handler(req, res)
+
+                  const createdProduct = parseJSON(res)
+
+                  const userProducts = await prisma.userProduct.findMany()
+                  expect(userProducts.length).toEqual(1)
+                  expect(userProducts[0].product_id).toEqual(createdProduct.id)
+                  expect(userProducts[0].price).toEqual(35)
+                  expect(userProducts[0].favorited).toEqual(false)
+                })
+              })
             })
-            expect(userProducts.length).toEqual(1)
-            expect(userProducts[0].product_id).toEqual(createdProduct.id)
-            expect(userProducts[0].price).toEqual(35)
+
+            describe('with original price only', () => {
+              let body
+
+              describe('when price is not a number', () => {
+                beforeEach(() => {
+                  body = {
+                    requested_by: user.id,
+                    url_hash: productInQueue.url_hash,
+                    url: productInQueue.url,
+                    shop: 'ozon',
+                    status: 'ok',
+                    title: 'Product',
+                    original_price: '1.1a',
+                    in_stock: true,
+                  }
+                })
+
+                test('returns error', async () => {
+                  const { req, res } = mockAuthorizedPOSTRequest(
+                    crawler.token,
+                    {},
+                    body
+                  )
+
+                  await handler(req, res)
+
+                  expect(parseJSON(res)).toEqual(
+                    ORIGINAL_PRICE_MUST_BE_A_NUMBER
+                  )
+                  expect(res._getStatusCode()).toBe(422)
+                })
+              })
+
+              describe('when price is negative', () => {
+                beforeEach(() => {
+                  body = {
+                    requested_by: user.id,
+                    url_hash: productInQueue.url_hash,
+                    url: productInQueue.url,
+                    shop: 'ozon',
+                    status: 'ok',
+                    title: 'Product',
+                    original_price: -1,
+                    in_stock: true,
+                  }
+                })
+
+                test('returns error', async () => {
+                  const { req, res } = mockAuthorizedPOSTRequest(
+                    crawler.token,
+                    {},
+                    body
+                  )
+
+                  await handler(req, res)
+
+                  expect(parseJSON(res)).toEqual(
+                    ORIGINAL_PRICE_MUST_BE_POSITIVE
+                  )
+                  expect(res._getStatusCode()).toBe(422)
+                })
+              })
+
+              describe('when price is positive number', () => {
+                beforeEach(() => {
+                  body = {
+                    requested_by: user.id,
+                    url_hash: productInQueue.url_hash,
+                    url: productInQueue.url,
+                    shop: 'ozon',
+                    status: 'ok',
+                    title: 'Product',
+                    original_price: 42,
+                    in_stock: true,
+                  }
+                })
+
+                test('returns success', async () => {
+                  const { req, res } = mockAuthorizedPOSTRequest(
+                    crawler.token,
+                    {},
+                    body
+                  )
+
+                  await handler(req, res)
+
+                  const createdProduct = parseJSON(res)
+                  expect(createdProduct.url).toEqual(productInQueue.url)
+                  expect(createdProduct.url_hash).toEqual(
+                    productInQueue.url_hash
+                  )
+                  expect(createdProduct.shop).toEqual('ozon')
+                  expect(createdProduct.title).toEqual('Product')
+
+                  expect(res._getStatusCode()).toBe(201)
+                })
+
+                test('creates a new product', async () => {
+                  const { req, res } = mockAuthorizedPOSTRequest(
+                    crawler.token,
+                    {},
+                    body
+                  )
+
+                  await handler(req, res)
+
+                  const products = await prisma.product.findMany()
+
+                  expect(products.length).toEqual(1)
+                  expect(products[0].url).toEqual(productInQueue.url)
+                  expect(products[0].url_hash).toEqual(productInQueue.url_hash)
+                  expect(products[0].shop).toEqual('ozon')
+                  expect(products[0].title).toEqual('Product')
+                })
+
+                test('creates a record in product history', async () => {
+                  const { req, res } = mockAuthorizedPOSTRequest(
+                    crawler.token,
+                    {},
+                    body
+                  )
+
+                  await handler(req, res)
+
+                  const productHistory = await prisma.productHistory.findMany()
+
+                  expect(productHistory.length).toEqual(1)
+
+                  expect(productHistory[0].title).toEqual('Product')
+                  expect(productHistory[0].original_price).toEqual(42)
+                  expect(productHistory[0].discount_price).toBeNull()
+                  expect(productHistory[0].in_stock).toEqual(true)
+                  expect(productHistory[0].status).toEqual('ok')
+                  expect(productHistory[0].crawler_id).toEqual(crawler.id)
+                })
+
+                test('removes product from queue', async () => {
+                  const { req, res } = mockAuthorizedPOSTRequest(
+                    crawler.token,
+                    {},
+                    body
+                  )
+
+                  await handler(req, res)
+
+                  const productsInQueueAfter =
+                    await prisma.productQueue.findMany()
+                  expect(productsInQueueAfter.length).toEqual(0)
+                })
+
+                test('adds product to user with original price', async () => {
+                  const { req, res } = mockAuthorizedPOSTRequest(
+                    crawler.token,
+                    {},
+                    body
+                  )
+
+                  await handler(req, res)
+
+                  const createdProduct = parseJSON(res)
+
+                  const userProducts = await prisma.userProduct.findMany()
+                  expect(userProducts.length).toEqual(1)
+                  expect(userProducts[0].product_id).toEqual(createdProduct.id)
+                  expect(userProducts[0].price).toEqual(42)
+                  expect(userProducts[0].favorited).toEqual(false)
+                })
+              })
+            })
+
+            describe('with both prices', () => {
+              let body
+
+              beforeEach(() => {
+                body = {
+                  requested_by: user.id,
+                  url_hash: productInQueue.url_hash,
+                  url: productInQueue.url,
+                  shop: 'ozon',
+                  status: 'ok',
+                  title: 'Product',
+                  original_price: 42,
+                  discount_price: 35,
+                  in_stock: true,
+                }
+              })
+
+              test('returns success', async () => {
+                const { req, res } = mockAuthorizedPOSTRequest(
+                  crawler.token,
+                  {},
+                  body
+                )
+
+                await handler(req, res)
+
+                const createdProduct = parseJSON(res)
+                expect(createdProduct.url).toEqual(productInQueue.url)
+                expect(createdProduct.url_hash).toEqual(productInQueue.url_hash)
+                expect(createdProduct.shop).toEqual('ozon')
+                expect(createdProduct.title).toEqual('Product')
+
+                expect(res._getStatusCode()).toBe(201)
+              })
+
+              test('creates a new product', async () => {
+                const { req, res } = mockAuthorizedPOSTRequest(
+                  crawler.token,
+                  {},
+                  body
+                )
+
+                await handler(req, res)
+
+                const products = await prisma.product.findMany()
+
+                expect(products.length).toEqual(1)
+                expect(products[0].url).toEqual(productInQueue.url)
+                expect(products[0].url_hash).toEqual(productInQueue.url_hash)
+                expect(products[0].shop).toEqual('ozon')
+                expect(products[0].title).toEqual('Product')
+              })
+
+              test('creates a record in product history', async () => {
+                const { req, res } = mockAuthorizedPOSTRequest(
+                  crawler.token,
+                  {},
+                  body
+                )
+
+                await handler(req, res)
+
+                const productHistory = await prisma.productHistory.findMany()
+
+                expect(productHistory.length).toEqual(1)
+
+                expect(productHistory[0].title).toEqual('Product')
+                expect(productHistory[0].original_price).toEqual(42)
+                expect(productHistory[0].discount_price).toEqual(35)
+                expect(productHistory[0].in_stock).toEqual(true)
+                expect(productHistory[0].status).toEqual('ok')
+                expect(productHistory[0].crawler_id).toEqual(crawler.id)
+              })
+
+              test('removes product from queue', async () => {
+                const { req, res } = mockAuthorizedPOSTRequest(
+                  crawler.token,
+                  {},
+                  body
+                )
+
+                await handler(req, res)
+
+                const productsInQueueAfter =
+                  await prisma.productQueue.findMany()
+                expect(productsInQueueAfter.length).toEqual(0)
+              })
+
+              test('adds product to user with discount price', async () => {
+                const { req, res } = mockAuthorizedPOSTRequest(
+                  crawler.token,
+                  {},
+                  body
+                )
+
+                await handler(req, res)
+
+                const createdProduct = parseJSON(res)
+
+                const userProducts = await prisma.userProduct.findMany()
+                expect(userProducts.length).toEqual(1)
+                expect(userProducts[0].product_id).toEqual(createdProduct.id)
+                expect(userProducts[0].price).toEqual(35)
+                expect(userProducts[0].favorited).toEqual(false)
+              })
+            })
           })
         })
       })
-    })
 
-    describe('when product exists', () => {
-      describe('when prices are missing', () => {
+      // Это может быть в случае, когда одновременно один товар добавили два человека в систему.
+      // Либо же если два парсера new_products_parser запустились в одно время на разных серверах
+      describe('when product exists', () => {
         test('returns error', async () => {
           await prisma.product.create({
             data: {
-              url_hash: 'hash',
+              url_hash: productInQueue.url_hash,
               shop: 'ozon',
-              url: 'https://domain.tld',
+              url: productInQueue.url,
               title: 'Product',
-            },
-          })
-
-          await prisma.productQueue.create({
-            data: {
-              requested_by_id: user.id,
-              url_hash: 'hash',
-              url: 'https://domain.tld',
             },
           })
 
@@ -940,389 +1673,19 @@ describe(`POST ${ENDPOINT}`, () => {
             {},
             {
               requested_by: user.id,
-              url_hash: 'hash',
+              url_hash: productInQueue.url_hash,
+              url: productInQueue.url,
               shop: 'ozon',
-              url: 'https://domain.tld',
-              status: 'ok',
+              status: 'not_found',
               title: 'Product',
-              in_stock: true,
+              in_stock: false,
             }
           )
 
           await handler(req, res)
 
-          expect(parseJSON(res)).toEqual(MISSING_PRICES)
-          expect(res._getStatusCode()).toBe(400)
-        })
-      })
-
-      describe('when only discount is set', () => {
-        describe('when price is negative', () => {
-          test('returns error', async () => {
-            await prisma.product.create({
-              data: {
-                url_hash: 'hash',
-                shop: 'ozon',
-                url: 'https://domain.tld',
-                title: 'Product',
-              },
-            })
-
-            await prisma.productQueue.create({
-              data: {
-                requested_by_id: user.id,
-                url_hash: 'hash',
-                url: 'https://domain.tld',
-              },
-            })
-
-            const { req, res } = mockAuthorizedPOSTRequest(
-              crawler.token,
-              {},
-              {
-                requested_by: user.id,
-                url_hash: 'hash',
-                shop: 'ozon',
-                url: 'https://domain.tld',
-                status: 'ok',
-                title: 'Product',
-                in_stock: true,
-                discount_price: -1,
-              }
-            )
-
-            await handler(req, res)
-
-            expect(parseJSON(res)).toEqual(DISCOUNT_PRICE_MUST_BE_POSITIVE)
-            expect(res._getStatusCode()).toBe(422)
-          })
-        })
-
-        describe('when price is zero', () => {
-          test('returns error', async () => {
-            await prisma.product.create({
-              data: {
-                url_hash: 'hash',
-                shop: 'ozon',
-                url: 'https://domain.tld',
-                title: 'Product',
-              },
-            })
-
-            await prisma.productQueue.create({
-              data: {
-                requested_by_id: user.id,
-                url_hash: 'hash',
-                url: 'https://domain.tld',
-              },
-            })
-
-            const { req, res } = mockAuthorizedPOSTRequest(
-              crawler.token,
-              {},
-              {
-                requested_by: user.id,
-                url_hash: 'hash',
-                shop: 'ozon',
-                url: 'https://domain.tld',
-                status: 'ok',
-                title: 'Product',
-                in_stock: true,
-                discount_price: 0,
-              }
-            )
-
-            await handler(req, res)
-
-            expect(parseJSON(res)).toEqual(DISCOUNT_PRICE_MUST_BE_POSITIVE)
-            expect(res._getStatusCode()).toBe(422)
-          })
-        })
-
-        describe('when price is positive', () => {
-          test('adds product to user with discount_price', async () => {
-            await prisma.product.create({
-              data: {
-                url_hash: 'hash',
-                shop: 'ozon',
-                url: 'https://domain.tld',
-                title: 'Product',
-              },
-            })
-
-            await prisma.productQueue.create({
-              data: {
-                requested_by_id: user.id,
-                url_hash: 'hash',
-                url: 'https://domain.tld',
-              },
-            })
-
-            const { req, res } = mockAuthorizedPOSTRequest(
-              crawler.token,
-              {},
-              {
-                requested_by: user.id,
-                url_hash: 'hash',
-                shop: 'ozon',
-                url: 'https://domain.tld',
-                status: 'ok',
-                title: 'Product',
-                in_stock: true,
-                discount_price: 35,
-              }
-            )
-
-            await handler(req, res)
-
-            expect(res._getStatusCode()).toBe(201)
-
-            const createdProduct = parseJSON(res)
-
-            const userProducts = await prisma.userProduct.findMany({
-              where: { user_id: user.id },
-            })
-            expect(userProducts.length).toEqual(1)
-            expect(userProducts[0].product_id).toEqual(createdProduct.id)
-            expect(userProducts[0].price).toEqual(35)
-          })
-        })
-      })
-
-      describe('when only original_price is set', () => {
-        describe('when price is negative', () => {
-          test('returns error', async () => {
-            await prisma.product.create({
-              data: {
-                url_hash: 'hash',
-                shop: 'ozon',
-                url: 'https://domain.tld',
-                title: 'Product',
-              },
-            })
-
-            await prisma.productQueue.create({
-              data: {
-                requested_by_id: user.id,
-                url_hash: 'hash',
-                url: 'https://domain.tld',
-              },
-            })
-
-            const { req, res } = mockAuthorizedPOSTRequest(
-              crawler.token,
-              {},
-              {
-                requested_by: user.id,
-                url_hash: 'hash',
-                shop: 'ozon',
-                url: 'https://domain.tld',
-                status: 'ok',
-                title: 'Product',
-                in_stock: true,
-                original_price: -1,
-              }
-            )
-
-            await handler(req, res)
-
-            expect(parseJSON(res)).toEqual(ORIGINAL_PRICE_MUST_BE_POSITIVE)
-            expect(res._getStatusCode()).toBe(422)
-          })
-        })
-
-        describe('when price is zero', () => {
-          test('returns error', async () => {
-            await prisma.product.create({
-              data: {
-                url_hash: 'hash',
-                shop: 'ozon',
-                url: 'https://domain.tld',
-                title: 'Product',
-              },
-            })
-
-            await prisma.productQueue.create({
-              data: {
-                requested_by_id: user.id,
-                url_hash: 'hash',
-                url: 'https://domain.tld',
-              },
-            })
-
-            const { req, res } = mockAuthorizedPOSTRequest(
-              crawler.token,
-              {},
-              {
-                requested_by: user.id,
-                url_hash: 'hash',
-                shop: 'ozon',
-                url: 'https://domain.tld',
-                status: 'ok',
-                title: 'Product',
-                in_stock: true,
-                original_price: 0,
-              }
-            )
-
-            await handler(req, res)
-
-            expect(parseJSON(res)).toEqual(ORIGINAL_PRICE_MUST_BE_POSITIVE)
-            expect(res._getStatusCode()).toBe(422)
-          })
-        })
-
-        describe('when price is positive', () => {
-          test('adds product to user with original_price', async () => {
-            await prisma.product.create({
-              data: {
-                url_hash: 'hash',
-                shop: 'ozon',
-                url: 'https://domain.tld',
-                title: 'Product',
-              },
-            })
-
-            await prisma.productQueue.create({
-              data: {
-                requested_by_id: user.id,
-                url_hash: 'hash',
-                url: 'https://domain.tld',
-              },
-            })
-
-            const { req, res } = mockAuthorizedPOSTRequest(
-              crawler.token,
-              {},
-              {
-                requested_by: user.id,
-                url_hash: 'hash',
-                shop: 'ozon',
-                url: 'https://domain.tld',
-                status: 'ok',
-                title: 'Product',
-                in_stock: true,
-                original_price: 42,
-              }
-            )
-
-            await handler(req, res)
-
-            expect(res._getStatusCode()).toBe(201)
-
-            const createdProduct = parseJSON(res)
-
-            const userProducts = await prisma.userProduct.findMany({
-              where: { user_id: user.id },
-            })
-            expect(userProducts.length).toEqual(1)
-            expect(userProducts[0].product_id).toEqual(createdProduct.id)
-            expect(userProducts[0].price).toEqual(42)
-          })
-        })
-      })
-
-      describe('when both prices are set', () => {
-        test('adds parsed prices to product history', async () => {
-          await prisma.product.create({
-            data: {
-              url_hash: 'hash',
-              shop: 'ozon',
-              url: 'https://domain.tld',
-              title: 'Product',
-            },
-          })
-
-          await prisma.productQueue.create({
-            data: {
-              requested_by_id: user.id,
-              url_hash: 'hash',
-              url: 'https://domain.tld',
-            },
-          })
-
-          const { req, res } = mockAuthorizedPOSTRequest(
-            crawler.token,
-            {},
-            {
-              requested_by: user.id,
-              url_hash: 'hash',
-              shop: 'ozon',
-              url: 'https://domain.tld',
-              status: 'ok',
-              title: 'Product',
-              in_stock: true,
-              original_price: 42,
-              discount_price: 35,
-            }
-          )
-
-          await handler(req, res)
-
-          expect(res._getStatusCode()).toBe(201)
-
-          const createdProduct = parseJSON(res)
-
-          const productHistory = await prisma.productHistory.findMany({
-            where: { product_id: createdProduct.id },
-          })
-
-          expect(productHistory.length).toEqual(1)
-
-          expect(productHistory[0].title).toEqual('Product')
-          expect(productHistory[0].original_price).toEqual(42)
-          expect(productHistory[0].discount_price).toEqual(35)
-          expect(productHistory[0].in_stock).toEqual(true)
-          expect(productHistory[0].status).toEqual('ok')
-          expect(productHistory[0].crawler_id).toEqual(crawler.id)
-        })
-
-        test('adds product to user with discount_price', async () => {
-          await prisma.product.create({
-            data: {
-              url_hash: 'hash',
-              shop: 'ozon',
-              url: 'https://domain.tld',
-              title: 'Product',
-            },
-          })
-
-          await prisma.productQueue.create({
-            data: {
-              requested_by_id: user.id,
-              url_hash: 'hash',
-              url: 'https://domain.tld',
-            },
-          })
-
-          const { req, res } = mockAuthorizedPOSTRequest(
-            crawler.token,
-            {},
-            {
-              requested_by: user.id,
-              url_hash: 'hash',
-              shop: 'ozon',
-              url: 'https://domain.tld',
-              status: 'ok',
-              title: 'Product',
-              in_stock: true,
-              original_price: 42,
-              discount_price: 35,
-            }
-          )
-
-          await handler(req, res)
-
-          expect(res._getStatusCode()).toBe(201)
-
-          const createdProduct = parseJSON(res)
-
-          const userProducts = await prisma.userProduct.findMany({
-            where: { user_id: user.id },
-          })
-          expect(userProducts.length).toEqual(1)
-          expect(userProducts[0].product_id).toEqual(createdProduct.id)
-          expect(userProducts[0].price).toEqual(35)
+          expect(parseJSON(res)).toEqual(PRODUCT_ALREADY_EXISTS)
+          expect(res._getStatusCode()).toBe(409)
         })
       })
     })

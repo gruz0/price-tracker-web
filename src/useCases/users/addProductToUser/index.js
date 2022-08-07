@@ -5,7 +5,6 @@ import { ProductsService } from '../../../services/products_service'
 import {
   addNewProductToQueue,
   findProductByURLHash,
-  getProductLatestValidPriceFromHistory,
 } from '../../../services/products'
 import {
   findShopByURL,
@@ -27,7 +26,7 @@ import {
   UNABLE_TO_CALCULATE_URL_HASH,
   UNABLE_TO_CHANGE_PRODUCT_STATUS_TO_ACTIVE,
   UNABLE_TO_FIND_PRODUCT_BY_URL_HASH,
-  UNABLE_TO_GET_PRODUCT_LATEST_PRICE_FROM_HISTORY,
+  UNABLE_TO_GET_LAST_PRODUCT_HISTORY,
   UNABLE_TO_GET_USER_PRODUCT,
   UNABLE_TO_USE_SHOP_ORIGINAL_DOMAIN,
   YOU_ARE_ALREADY_HAVE_THIS_PRODUCT,
@@ -256,16 +255,16 @@ export const addProductToUserUseCase = async ({
     }
   }
 
-  let productLatestPrice = null
+  let productRecentHistory
 
   try {
-    productLatestPrice = await getProductLatestValidPriceFromHistory(product.id)
+    productRecentHistory = await ProductsService.getRecentHistory(product.id)
   } catch (err) {
     console.error({ err })
 
     Sentry.withScope(function (scope) {
       scope.setContext('args', { product })
-      scope.setTag('section', 'getProductLatestValidPriceFromHistory')
+      scope.setTag('section', 'ProductsService.getRecentHistory')
       scope.setUser({ user })
       sentryTags.forEach((tag) => scope.setTag(tag[0], tag[1]))
       Sentry.captureException(err)
@@ -273,16 +272,32 @@ export const addProductToUserUseCase = async ({
 
     return {
       status: 500,
-      response: UNABLE_TO_GET_PRODUCT_LATEST_PRICE_FROM_HISTORY,
+      response: UNABLE_TO_GET_LAST_PRODUCT_HISTORY,
     }
   }
 
-  if (!productLatestPrice || productLatestPrice === 0) {
-    return {
-      status: 400,
-      response:
-        UNABLE_TO_ADD_PRODUCT_TO_USER_RIGHT_NOW_BECAUSE_OF_MISSING_PRICE,
+  let productPrice = 0
+
+  if (productRecentHistory) {
+    const {
+      price: productRecentPrice,
+      status: productRecentStatus,
+      in_stock: productRecentInStock,
+    } = productRecentHistory
+
+    if (
+      productRecentStatus === 'ok' &&
+      productRecentInStock &&
+      productRecentPrice === 0
+    ) {
+      return {
+        status: 500,
+        response:
+          UNABLE_TO_ADD_PRODUCT_TO_USER_RIGHT_NOW_BECAUSE_OF_MISSING_PRICE,
+      }
     }
+
+    productPrice = productRecentPrice
   }
 
   if (product.status === 'hold') {
@@ -307,12 +322,12 @@ export const addProductToUserUseCase = async ({
   }
 
   try {
-    await addProductToUser(user.id, product.id, productLatestPrice)
+    await addProductToUser(user.id, product.id, productPrice)
   } catch (err) {
     console.error({ err })
 
     Sentry.withScope(function (scope) {
-      scope.setContext('args', { user, product })
+      scope.setContext('args', { user, product, productPrice })
       scope.setTag('section', 'addProductToUser')
       scope.setUser({ user })
       sentryTags.forEach((tag) => scope.setTag(tag[0], tag[1]))

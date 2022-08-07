@@ -40,4 +40,40 @@ export const ProductRepository = {
       },
     })
   },
+
+  getProductWithRecentHistory: async (productId) => {
+    const products = await prisma.$queryRaw`
+      SELECT p.id
+        , p.title
+        , p.url
+        , COALESCE((SELECT in_stock FROM product_history WHERE product_id = ${productId}::UUID ORDER BY created_at DESC LIMIT 1), false) AS recent_in_stock
+        , COALESCE((SELECT true FROM product_history WHERE product_id = ${productId}::UUID AND in_stock = TRUE), false) AS was_in_stock
+        , COALESCE((SELECT true FROM product_history WHERE product_id = ${productId}::UUID LIMIT 1), false) AS has_history
+        , COALESCE((SELECT true FROM user_products WHERE product_id = ${productId}::UUID LIMIT 1), false) AS has_users
+      FROM products p
+      WHERE p.id = ${productId}::UUID
+    `
+
+    if (products.length === 0) {
+      return null
+    }
+
+    return products[0]
+  },
+
+  getRecentHistory: async (productId) => {
+    const productHistory = await prisma.productHistory.findMany({
+      where: { product_id: productId },
+      orderBy: { created_at: 'desc' },
+      take: 1,
+    })
+
+    if (productHistory.length === 0) {
+      return null
+    }
+
+    const lastProductHistory = productHistory[0]
+
+    return lastProductHistory
+  },
 }

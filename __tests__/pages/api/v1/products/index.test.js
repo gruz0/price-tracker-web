@@ -13,7 +13,6 @@ import {
   SHOP_IS_NOT_SUPPORTED_YET,
   IT_IS_NOT_A_SINGLE_PRODUCT_URL,
   PRODUCT_ADDED_TO_QUEUE,
-  UNABLE_TO_ADD_PRODUCT_TO_USER_RIGHT_NOW_BECAUSE_OF_MISSING_PRICE,
   PRODUCT_ADDED_TO_USER,
   YOU_ARE_ALREADY_HAVE_THIS_PRODUCT,
 } from '../../../../../src/lib/messages'
@@ -423,7 +422,7 @@ describe(`POST ${ENDPOINT}`, () => {
       })
 
       describe('without history', () => {
-        test('returns error', async () => {
+        test('returns success', async () => {
           const { req, res } = mockAuthorizedPOSTRequest(
             user.token,
             {},
@@ -434,27 +433,48 @@ describe(`POST ${ENDPOINT}`, () => {
 
           await handler(req, res)
 
-          expect(parseJSON(res)).toEqual(
-            UNABLE_TO_ADD_PRODUCT_TO_USER_RIGHT_NOW_BECAUSE_OF_MISSING_PRICE
+          expect(res._getStatusCode()).toBe(201)
+          expect(parseJSON(res)).toEqual({
+            ...PRODUCT_ADDED_TO_USER,
+            location: '/products/' + product.id,
+          })
+        })
+
+        test('adds product to user with zero price', async () => {
+          const { req, res } = mockAuthorizedPOSTRequest(
+            user.token,
+            {},
+            {
+              url: product.url,
+            }
           )
-          expect(res._getStatusCode()).toBe(400)
+
+          await handler(req, res)
+
+          const userProducts = await prisma.userProduct.findMany({
+            where: { user_id: user.id },
+          })
+
+          expect(userProducts.length).toEqual(1)
+          expect(userProducts[0].product_id).toEqual(product.id)
+          expect(userProducts[0].price).toEqual(0)
         })
       })
 
       describe('when there is only one record in history with status not ok', () => {
-        test('returns error', async () => {
+        beforeEach(async () => {
           await prisma.productHistory.create({
             data: {
               product_id: product.id,
-              original_price: 42,
-              discount_price: 35,
-              in_stock: true,
+              in_stock: false,
               status: 'not_found',
               title: 'Title',
               crawler_id: crawler.id,
             },
           })
+        })
 
+        test('returns success', async () => {
           const { req, res } = mockAuthorizedPOSTRequest(
             user.token,
             {},
@@ -465,15 +485,36 @@ describe(`POST ${ENDPOINT}`, () => {
 
           await handler(req, res)
 
-          expect(parseJSON(res)).toEqual(
-            UNABLE_TO_ADD_PRODUCT_TO_USER_RIGHT_NOW_BECAUSE_OF_MISSING_PRICE
+          expect(res._getStatusCode()).toBe(201)
+          expect(parseJSON(res)).toEqual({
+            ...PRODUCT_ADDED_TO_USER,
+            location: '/products/' + product.id,
+          })
+        })
+
+        test('adds product to user with zero price', async () => {
+          const { req, res } = mockAuthorizedPOSTRequest(
+            user.token,
+            {},
+            {
+              url: product.url,
+            }
           )
-          expect(res._getStatusCode()).toBe(400)
+
+          await handler(req, res)
+
+          const userProducts = await prisma.userProduct.findMany({
+            where: { user_id: user.id },
+          })
+
+          expect(userProducts.length).toEqual(1)
+          expect(userProducts[0].product_id).toEqual(product.id)
+          expect(userProducts[0].price).toEqual(0)
         })
       })
 
       describe('with valid history', () => {
-        test('adds product to user with discount price', async () => {
+        beforeEach(async () => {
           await prisma.productHistory.createMany({
             data: [
               {
@@ -481,74 +522,15 @@ describe(`POST ${ENDPOINT}`, () => {
                 original_price: 42,
                 discount_price: 35,
                 in_stock: true,
-                status: 'not_found',
-                title: 'Title',
-                crawler_id: crawler.id,
-              },
-              {
-                product_id: product.id,
-                original_price: 99,
-                discount_price: 87,
-                in_stock: true,
                 status: 'ok',
                 title: 'Title',
                 crawler_id: crawler.id,
-                created_at: new Date('2021-01-01'),
               },
             ],
           })
-
-          const { req, res } = mockAuthorizedPOSTRequest(
-            user.token,
-            {},
-            {
-              url: product.url,
-            }
-          )
-
-          await handler(req, res)
-
-          expect(res._getStatusCode()).toBe(201)
-          expect(parseJSON(res)).toEqual({
-            ...PRODUCT_ADDED_TO_USER,
-            location: '/products/' + product.id,
-          })
-
-          const userProducts = await prisma.userProduct.findMany({
-            where: {
-              user_id: user.id,
-            },
-          })
-
-          expect(userProducts.length).toEqual(1)
-          expect(userProducts[0].product_id).toEqual(product.id)
-          expect(userProducts[0].price).toEqual(87)
         })
 
-        test('adds product to user with original price', async () => {
-          await prisma.productHistory.createMany({
-            data: [
-              {
-                product_id: product.id,
-                original_price: 42,
-                discount_price: 35,
-                in_stock: true,
-                status: 'not_found',
-                title: 'Title',
-                crawler_id: crawler.id,
-              },
-              {
-                product_id: product.id,
-                original_price: 99,
-                in_stock: true,
-                status: 'ok',
-                title: 'Title',
-                crawler_id: crawler.id,
-                created_at: new Date('2021-01-01'),
-              },
-            ],
-          })
-
+        test('adds product to user with lowest price', async () => {
           const { req, res } = mockAuthorizedPOSTRequest(
             user.token,
             {},
@@ -566,40 +548,15 @@ describe(`POST ${ENDPOINT}`, () => {
           })
 
           const userProducts = await prisma.userProduct.findMany({
-            where: {
-              user_id: user.id,
-            },
+            where: { user_id: user.id },
           })
 
           expect(userProducts.length).toEqual(1)
           expect(userProducts[0].product_id).toEqual(product.id)
-          expect(userProducts[0].price).toEqual(99)
+          expect(userProducts[0].price).toEqual(35)
         })
 
         test('updates last_activity_at', async () => {
-          await prisma.productHistory.createMany({
-            data: [
-              {
-                product_id: product.id,
-                original_price: 42,
-                discount_price: 35,
-                in_stock: true,
-                status: 'not_found',
-                title: 'Title',
-                crawler_id: crawler.id,
-              },
-              {
-                product_id: product.id,
-                original_price: 99,
-                in_stock: true,
-                status: 'ok',
-                title: 'Title',
-                crawler_id: crawler.id,
-                created_at: new Date('2021-01-01'),
-              },
-            ],
-          })
-
           const { req, res } = mockAuthorizedPOSTRequest(
             user.token,
             {},
@@ -624,29 +581,6 @@ describe(`POST ${ENDPOINT}`, () => {
               data: {
                 status: 'hold',
               },
-            })
-
-            await prisma.productHistory.createMany({
-              data: [
-                {
-                  product_id: product.id,
-                  original_price: 42,
-                  discount_price: 35,
-                  in_stock: true,
-                  status: 'not_found',
-                  title: 'Title',
-                  crawler_id: crawler.id,
-                },
-                {
-                  product_id: product.id,
-                  original_price: 99,
-                  in_stock: true,
-                  status: 'ok',
-                  title: 'Title',
-                  crawler_id: crawler.id,
-                  created_at: new Date('2021-01-01'),
-                },
-              ],
             })
 
             const { req, res } = mockAuthorizedPOSTRequest(

@@ -11,10 +11,7 @@ import {
   isSingleProductURL,
   replaceHostWithOriginalShopDomain,
 } from '../../../../services/shops'
-import {
-  findProductByURLHash,
-  getProductLatestValidPriceFromHistory,
-} from '../../../../services/products'
+import { findProductByURLHash } from '../../../../services/products'
 import { findUserByApiKey } from '../../../../services/auth'
 import {
   METHOD_NOT_ALLOWED,
@@ -33,11 +30,13 @@ import {
   URL_IS_SUPPORTED_AND_CAN_BE_ADDED_TO_YOUR_LIST,
   YOU_ARE_ALREADY_HAVE_THIS_PRODUCT,
   UNABLE_TO_UPDATE_USER_LAST_ACTIVITY,
+  UNABLE_TO_GET_LAST_PRODUCT_HISTORY,
 } from '../../../../lib/messages'
 import { isEmptyString } from '../../../../lib/validators'
 import { UserProductsService } from '../../../../services/user_products_service'
 import { validateBearerToken } from '../../../../lib/auth_helpers'
 import { UsersService } from '../../../../services/users'
+import { ProductsService } from '../../../../services/products_service'
 
 const handler = async (req, res) => {
   if (req.method !== 'POST') {
@@ -240,51 +239,54 @@ const handler = async (req, res) => {
     return responseJSON(res, 200, PRODUCT_EXISTS_AND_CAN_BE_ADDED_TO_YOUR_LIST)
   }
 
-  let productLatestPrice = null
+  let productRecentHistory
 
   try {
-    productLatestPrice = await getProductLatestValidPriceFromHistory(product.id)
+    productRecentHistory = await ProductsService.getRecentHistory(product.id)
   } catch (err) {
     console.error({ err })
 
     Sentry.withScope(function (scope) {
       scope.setContext('args', { product })
-      scope.setTag('section', 'getProductLatestValidPriceFromHistory')
+      scope.setTag('section', 'ProductsService.getRecentHistory')
       scope.setUser({ user })
       Sentry.captureException(err)
     })
 
-    return responseJSON(
-      res,
-      500,
-      UNABLE_TO_GET_PRODUCT_LATEST_PRICE_FROM_HISTORY
-    )
+    return responseJSON(res, 500, UNABLE_TO_GET_LAST_PRODUCT_HISTORY)
   }
 
-  if (!productLatestPrice || productLatestPrice === 0) {
-    Sentry.withScope(function (scope) {
-      scope.setContext('args', { product })
-      scope.setTag('section', 'getProductLatestValidPriceFromHistory')
-      scope.setUser({ user })
-      Sentry.captureException(
-        new Error(`Не удалось получить цену товара ${product.id} из истории`)
-      )
-    })
+  let productPrice = 0
 
-    return responseJSON(
-      res,
-      500,
-      UNABLE_TO_GET_PRODUCT_LATEST_PRICE_FROM_HISTORY
-    )
+  if (productRecentHistory) {
+    const {
+      price: productRecentPrice,
+      status: productRecentStatus,
+      in_stock: productRecentInStock,
+    } = productRecentHistory
+
+    if (
+      productRecentStatus === 'ok' &&
+      productRecentInStock &&
+      productRecentPrice === 0
+    ) {
+      return responseJSON(
+        res,
+        500,
+        UNABLE_TO_GET_PRODUCT_LATEST_PRICE_FROM_HISTORY
+      )
+    }
+
+    productPrice = productRecentPrice
   }
 
   return responseJSON(res, 200, {
     ...YOU_ARE_ALREADY_HAVE_THIS_PRODUCT,
     product: {
-      latest_price: productLatestPrice,
+      latest_price: productPrice,
       my_price: userProduct.price,
-      has_discount: productLatestPrice < userProduct.price,
-      my_benefit: userProduct.price - productLatestPrice,
+      has_discount: productPrice < userProduct.price,
+      my_benefit: userProduct.price - productPrice,
       location: `/products/${product.id}`,
     },
   })

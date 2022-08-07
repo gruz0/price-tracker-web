@@ -1,4 +1,5 @@
 import {
+  validatePositivePrice,
   validateProductId,
   validateUserId,
   validateUserProductId,
@@ -46,5 +47,12 @@ export const UserProductsService = {
     validateUserProductId(userProductId)
 
     return await repo.findAllProductsGroups(userId, userProductId)
+  },
+
+  updateProductPriceForUsers: async (productId, price) => {
+    validateProductId(productId)
+    validatePositivePrice(price)
+
+    return await repo.updateProductPriceForUsers(productId, price)
   },
 }

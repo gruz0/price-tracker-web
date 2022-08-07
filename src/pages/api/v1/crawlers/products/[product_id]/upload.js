@@ -4,8 +4,6 @@ import { tmpdir } from 'os'
 import multer from 'multer'
 import {
   METHOD_NOT_ALLOWED,
-  UNABLE_TO_FIND_CRAWLER_BY_TOKEN,
-  CRAWLER_DOES_NOT_EXIST,
   MISSING_PRODUCT_ID,
   UNABLE_TO_FIND_PRODUCT_BY_ID,
   PRODUCT_DOES_NOT_EXIST,
@@ -17,11 +15,10 @@ import { responseJSON } from '../../../../../../lib/helpers'
 import { isEmptyString, isValidUUID } from '../../../../../../lib/validators'
 import { findProductById } from '../../../../../../services/products'
 import {
-  findCrawlerByToken,
   moveProductImageToUploadsDirectory,
   updateProductImage,
 } from '../../../../../../services/crawlers'
-import { validateBearerToken } from '../../../../../../lib/auth_helpers'
+import { authenticateCrawlerByTokenUseCase } from '../../../../../../useCases/crawlers/authenticateCrawlerByTokenUseCase'
 
 const upload = multer({
   storage: multer.diskStorage({
@@ -55,35 +52,13 @@ apiRoute.use(async (req, res, next) => {
     return responseJSON(res, 405, METHOD_NOT_ALLOWED)
   }
 
-  const tokenResult = validateBearerToken(req.headers)
+  const crawlerResult = await authenticateCrawlerByTokenUseCase(req.headers)
 
-  if (typeof tokenResult !== 'string') {
-    return responseJSON(res, tokenResult.code, tokenResult.error)
+  if (typeof crawlerResult !== 'string') {
+    return responseJSON(res, crawlerResult.status, crawlerResult.response)
   }
 
-  const token = tokenResult
-
-  let crawler
-
-  try {
-    crawler = await findCrawlerByToken(token)
-  } catch (err) {
-    console.error({ err })
-
-    Sentry.withScope(function (scope) {
-      scope.setContext('args', { token })
-      scope.setTag('section', 'findCrawlerByToken')
-      Sentry.captureException(err)
-    })
-
-    return responseJSON(res, 500, UNABLE_TO_FIND_CRAWLER_BY_TOKEN)
-  }
-
-  if (!crawler) {
-    return responseJSON(res, 404, CRAWLER_DOES_NOT_EXIST)
-  }
-
-  const crawlerId = crawler.id
+  const crawlerId = crawlerResult
 
   const { product_id: productId } = req.query
 

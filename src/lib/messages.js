@@ -175,9 +175,19 @@ export const UNABLE_TO_GET_PRODUCT_PRICES = {
     'Не удалось получить ни одну из цен для привязки товара к пользователю',
 }
 
+export const ORIGINAL_PRICE_MUST_BE_A_NUMBER = {
+  status: 'original_price_must_be_a_number',
+  message: 'Оригинальная цена должна быть числом',
+}
+
 export const ORIGINAL_PRICE_MUST_BE_POSITIVE = {
   status: 'original_price_must_be_positive',
   message: 'Оригинальная цена должна быть больше нуля',
+}
+
+export const DISCOUNT_PRICE_MUST_BE_A_NUMBER = {
+  status: 'discount_price_must_be_a_number',
+  message: 'Цена со скидкой должна быть числом',
 }
 
 export const DISCOUNT_PRICE_MUST_BE_POSITIVE = {
@@ -385,8 +395,7 @@ export const UNABLE_TO_GET_USER_PRODUCTS_WITH_PRICES = {
 export const UNABLE_TO_ADD_PRODUCT_TO_USER_RIGHT_NOW_BECAUSE_OF_MISSING_PRICE =
   {
     status: 'unable_to_add_product_to_user_right_now_because_of_missing_price',
-    message:
-      'Нет возможности добавить товар, т.к. у него нет цены на данный момент',
+    message: 'Нет возможности добавить товар, т.к. нет цены на данный момент',
   }
 
 export const UNABLE_TO_GET_PRODUCT_LATEST_PRICE_FROM_HISTORY = {
@@ -488,6 +497,11 @@ export const UNABLE_TO_GET_NEW_PRODUCTS_REQUESTS = {
 export const UNABLE_TO_FIND_PRODUCT_BY_ID = {
   status: 'unable_to_find_product_by_id',
   message: 'Не удалось найти товар по ID',
+}
+
+export const UNABLE_TO_FIND_PRODUCT_WITH_RECENT_HISTORY = {
+  status: 'unable_to_find_product_with_recent_history',
+  message: 'Не удалось найти товар с последней историей по ID',
 }
 
 export const UNABLE_TO_ADD_EXISTING_PRODUCT_TO_USER = {
@@ -659,4 +673,14 @@ export const UNABLE_TO_CHANGE_PRODUCT_STATUS_TO_HOLD = {
 export const UNABLE_TO_CHANGE_PRODUCT_STATUS_TO_ACTIVE = {
   status: 'unable_to_change_product_status_to_active',
   message: 'Не удалось изменить статус товара на активный',
+}
+
+export const PRODUCT_ALREADY_EXISTS = {
+  status: 'product_already_exists',
+  message: 'Товар уже существует',
+}
+
+export const UNABLE_TO_UPDATE_USER_PRODUCTS_PRICE = {
+  status: 'unable_to_update_user_products_price',
+  message: 'Не удалось обновить цену товара пользователей',
 }

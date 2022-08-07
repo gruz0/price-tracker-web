@@ -44,6 +44,7 @@ model User {
   products                  UserProduct[]
   user_products_group_items UserProductsGroupItem[]
   user_products_groups      UserProductsGroup[]
+  TelegramMessage           TelegramMessage[]
 
   @@map("users")
 }
@@ -151,4 +152,14 @@ model UserProductsGroupItem {
 
   @@unique([user_id, user_products_group_id, user_product_id])
   @@map("user_products_group_items")
+}
+
+model TelegramMessage {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  message    String   @db.VarChar(1024)
+  user_id    String   @db.Uuid
+  created_at DateTime @default(now())
+  user       User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@map("telegram_messages")
 }

@@ -191,7 +191,7 @@ describe('addProductToUserUseCase', () => {
     })
 
     describe('when user has this product', () => {
-      it('return success', async () => {
+      it('returns success', async () => {
         await prisma.userProduct.create({
           data: {
             user_id: user.id,
@@ -213,177 +213,46 @@ describe('addProductToUserUseCase', () => {
     })
 
     describe('when user does not have this product', () => {
-      describe('when product does not have valid history', () => {
-        it('returns error', async () => {
+      describe('without history', () => {
+        it('returns success', async () => {
           const result = await execution(user, product.url)
 
           expect(result).toEqual({
-            status: 400,
-            response:
-              UNABLE_TO_ADD_PRODUCT_TO_USER_RIGHT_NOW_BECAUSE_OF_MISSING_PRICE,
-          })
-        })
-      })
-
-      describe('when there is only one record in history with status not ok', () => {
-        test('returns error', async () => {
-          await prisma.productHistory.create({
-            data: {
-              product_id: product.id,
-              original_price: 42,
-              discount_price: 35,
-              in_stock: true,
-              status: 'not_found',
-              title: 'Title',
-              crawler_id: crawler.id,
+            status: 201,
+            response: {
+              ...PRODUCT_ADDED_TO_USER,
+              location: `/products/${product.id}`,
             },
           })
+        })
 
-          const result = await execution(user, product.url)
+        it('adds product to user with zero price', async () => {
+          await execution(user, product.url)
 
-          expect(result).toEqual({
-            status: 400,
-            response:
-              UNABLE_TO_ADD_PRODUCT_TO_USER_RIGHT_NOW_BECAUSE_OF_MISSING_PRICE,
+          const userProducts = await prisma.userProduct.findMany({
+            where: { user_id: user.id },
           })
+
+          expect(userProducts.length).toEqual(1)
+          expect(userProducts[0].product_id).toEqual(product.id)
+          expect(userProducts[0].price).toEqual(0)
         })
       })
 
-      describe('with valid product history', () => {
-        describe('discount price', () => {
+      describe('with history', () => {
+        describe('status === skip', () => {
           beforeEach(async () => {
-            await prisma.productHistory.createMany({
-              data: [
-                {
-                  product_id: product.id,
-                  original_price: 42,
-                  discount_price: 35,
-                  in_stock: true,
-                  status: 'not_found',
-                  title: 'Title',
-                  crawler_id: crawler.id,
-                },
-                {
-                  product_id: product.id,
-                  original_price: 99,
-                  discount_price: 87,
-                  in_stock: true,
-                  status: 'ok',
-                  title: 'Title',
-                  crawler_id: crawler.id,
-                  created_at: new Date('2021-01-01'),
-                },
-              ],
-            })
-          })
-
-          it('return success', async () => {
-            const result = await execution(user, product.url)
-
-            expect(result).toEqual({
-              status: 201,
-              response: {
-                ...PRODUCT_ADDED_TO_USER,
-                location: `/products/${product.id}`,
-              },
-            })
-          })
-
-          it('adds product to user with discount price', async () => {
-            await execution(user, product.url)
-
-            const userProducts = await prisma.userProduct.findMany({
-              where: {
-                user_id: user.id,
-              },
-            })
-
-            expect(userProducts.length).toEqual(1)
-            expect(userProducts[0].product_id).toEqual(product.id)
-            expect(userProducts[0].price).toEqual(87)
-          })
-        })
-
-        describe('original price', () => {
-          beforeEach(async () => {
-            await prisma.productHistory.createMany({
-              data: [
-                {
-                  product_id: product.id,
-                  original_price: 42,
-                  discount_price: 35,
-                  in_stock: true,
-                  status: 'not_found',
-                  title: 'Title',
-                  crawler_id: crawler.id,
-                },
-                {
-                  product_id: product.id,
-                  original_price: 99,
-                  in_stock: true,
-                  status: 'ok',
-                  title: 'Title',
-                  crawler_id: crawler.id,
-                  created_at: new Date('2021-01-01'),
-                },
-              ],
-            })
-          })
-
-          it('return success', async () => {
-            const result = await execution(user, product.url)
-
-            expect(result).toEqual({
-              status: 201,
-              response: {
-                ...PRODUCT_ADDED_TO_USER,
-                location: `/products/${product.id}`,
-              },
-            })
-          })
-
-          it('adds product to user with original price', async () => {
-            await execution(user, product.url)
-
-            const userProducts = await prisma.userProduct.findMany({
-              where: {
-                user_id: user.id,
-              },
-            })
-
-            expect(userProducts.length).toEqual(1)
-            expect(userProducts[0].product_id).toEqual(product.id)
-            expect(userProducts[0].price).toEqual(99)
-          })
-        })
-
-        describe('when product is on hold', () => {
-          beforeEach(async () => {
-            await prisma.product.update({
-              where: {
-                id: product.id,
-              },
+            await prisma.productHistory.create({
               data: {
-                status: 'hold',
+                product_id: product.id,
+                status: 'skip',
+                title: 'Title',
+                crawler_id: crawler.id,
               },
-            })
-
-            await prisma.productHistory.createMany({
-              data: [
-                {
-                  product_id: product.id,
-                  original_price: 99,
-                  discount_price: 87,
-                  in_stock: true,
-                  status: 'ok',
-                  title: 'Title',
-                  crawler_id: crawler.id,
-                },
-              ],
             })
           })
 
-          it('return success', async () => {
+          it('returns success', async () => {
             const result = await execution(user, product.url)
 
             expect(result).toEqual({
@@ -395,16 +264,545 @@ describe('addProductToUserUseCase', () => {
             })
           })
 
-          it('updates product status to active', async () => {
+          it('adds product to user with zero price', async () => {
             await execution(user, product.url)
 
-            const existedProduct = await prisma.product.findUnique({
-              where: {
-                id: product.id,
-              },
+            const userProducts = await prisma.userProduct.findMany({
+              where: { user_id: user.id },
             })
 
-            expect(existedProduct.status).toEqual('active')
+            expect(userProducts.length).toEqual(1)
+            expect(userProducts[0].product_id).toEqual(product.id)
+            expect(userProducts[0].price).toEqual(0)
+          })
+        })
+
+        describe('status === age_restriction', () => {
+          beforeEach(async () => {
+            await prisma.productHistory.create({
+              data: {
+                product_id: product.id,
+                status: 'age_restriction',
+                title: 'Title',
+                crawler_id: crawler.id,
+              },
+            })
+          })
+
+          it('returns success', async () => {
+            const result = await execution(user, product.url)
+
+            expect(result).toEqual({
+              status: 201,
+              response: {
+                ...PRODUCT_ADDED_TO_USER,
+                location: `/products/${product.id}`,
+              },
+            })
+          })
+
+          it('adds product to user with zero price', async () => {
+            await execution(user, product.url)
+
+            const userProducts = await prisma.userProduct.findMany({
+              where: { user_id: user.id },
+            })
+
+            expect(userProducts.length).toEqual(1)
+            expect(userProducts[0].product_id).toEqual(product.id)
+            expect(userProducts[0].price).toEqual(0)
+          })
+        })
+
+        describe('status === required_to_change_location', () => {
+          beforeEach(async () => {
+            await prisma.productHistory.create({
+              data: {
+                product_id: product.id,
+                status: 'required_to_change_location',
+                title: 'Title',
+                crawler_id: crawler.id,
+              },
+            })
+          })
+
+          it('returns success', async () => {
+            const result = await execution(user, product.url)
+
+            expect(result).toEqual({
+              status: 201,
+              response: {
+                ...PRODUCT_ADDED_TO_USER,
+                location: `/products/${product.id}`,
+              },
+            })
+          })
+
+          it('adds product to user with zero price', async () => {
+            await execution(user, product.url)
+
+            const userProducts = await prisma.userProduct.findMany({
+              where: { user_id: user.id },
+            })
+
+            expect(userProducts.length).toEqual(1)
+            expect(userProducts[0].product_id).toEqual(product.id)
+            expect(userProducts[0].price).toEqual(0)
+          })
+        })
+
+        describe('status === not_found', () => {
+          beforeEach(async () => {
+            await prisma.productHistory.create({
+              data: {
+                product_id: product.id,
+                status: 'not_found',
+                title: 'Title',
+                crawler_id: crawler.id,
+              },
+            })
+          })
+
+          it('returns success', async () => {
+            const result = await execution(user, product.url)
+
+            expect(result).toEqual({
+              status: 201,
+              response: {
+                ...PRODUCT_ADDED_TO_USER,
+                location: `/products/${product.id}`,
+              },
+            })
+          })
+
+          it('adds product to user with zero price', async () => {
+            await execution(user, product.url)
+
+            const userProducts = await prisma.userProduct.findMany({
+              where: { user_id: user.id },
+            })
+
+            expect(userProducts.length).toEqual(1)
+            expect(userProducts[0].product_id).toEqual(product.id)
+            expect(userProducts[0].price).toEqual(0)
+          })
+        })
+
+        describe('status === ok', () => {
+          describe('when product is out of stock', () => {
+            describe('without prices', () => {
+              beforeEach(async () => {
+                await prisma.productHistory.create({
+                  data: {
+                    product_id: product.id,
+                    in_stock: false,
+                    status: 'ok',
+                    title: 'Title',
+                    crawler_id: crawler.id,
+                  },
+                })
+              })
+
+              it('returns success', async () => {
+                const result = await execution(user, product.url)
+
+                expect(result).toEqual({
+                  status: 201,
+                  response: {
+                    ...PRODUCT_ADDED_TO_USER,
+                    location: `/products/${product.id}`,
+                  },
+                })
+              })
+
+              it('adds product to user with zero price', async () => {
+                await execution(user, product.url)
+
+                const userProducts = await prisma.userProduct.findMany({
+                  where: { user_id: user.id },
+                })
+
+                expect(userProducts.length).toEqual(1)
+                expect(userProducts[0].product_id).toEqual(product.id)
+                expect(userProducts[0].price).toEqual(0)
+              })
+            })
+
+            describe('with discount price only', () => {
+              beforeEach(async () => {
+                await prisma.productHistory.createMany({
+                  data: [
+                    {
+                      product_id: product.id,
+                      discount_price: 35,
+                      in_stock: false,
+                      status: 'ok',
+                      title: 'Title',
+                      crawler_id: crawler.id,
+                    },
+                  ],
+                })
+              })
+
+              it('returns success', async () => {
+                const result = await execution(user, product.url)
+
+                expect(result).toEqual({
+                  status: 201,
+                  response: {
+                    ...PRODUCT_ADDED_TO_USER,
+                    location: `/products/${product.id}`,
+                  },
+                })
+              })
+
+              it('adds product to user with discount price', async () => {
+                await execution(user, product.url)
+
+                const userProducts = await prisma.userProduct.findMany({
+                  where: { user_id: user.id },
+                })
+
+                expect(userProducts.length).toEqual(1)
+                expect(userProducts[0].product_id).toEqual(product.id)
+                expect(userProducts[0].price).toEqual(35)
+              })
+            })
+
+            describe('with original_price only', () => {
+              beforeEach(async () => {
+                await prisma.productHistory.createMany({
+                  data: [
+                    {
+                      product_id: product.id,
+                      original_price: 42,
+                      in_stock: false,
+                      status: 'ok',
+                      title: 'Title',
+                      crawler_id: crawler.id,
+                    },
+                  ],
+                })
+              })
+
+              it('returns success', async () => {
+                const result = await execution(user, product.url)
+
+                expect(result).toEqual({
+                  status: 201,
+                  response: {
+                    ...PRODUCT_ADDED_TO_USER,
+                    location: `/products/${product.id}`,
+                  },
+                })
+              })
+
+              it('adds product to user with original price', async () => {
+                await execution(user, product.url)
+
+                const userProducts = await prisma.userProduct.findMany({
+                  where: { user_id: user.id },
+                })
+
+                expect(userProducts.length).toEqual(1)
+                expect(userProducts[0].product_id).toEqual(product.id)
+                expect(userProducts[0].price).toEqual(42)
+              })
+            })
+
+            describe('with both prices', () => {
+              beforeEach(async () => {
+                await prisma.productHistory.createMany({
+                  data: [
+                    {
+                      product_id: product.id,
+                      original_price: 42,
+                      discount_price: 35,
+                      in_stock: false,
+                      status: 'ok',
+                      title: 'Title',
+                      crawler_id: crawler.id,
+                    },
+                  ],
+                })
+              })
+
+              it('returns success', async () => {
+                const result = await execution(user, product.url)
+
+                expect(result).toEqual({
+                  status: 201,
+                  response: {
+                    ...PRODUCT_ADDED_TO_USER,
+                    location: `/products/${product.id}`,
+                  },
+                })
+              })
+
+              it('adds product to user with lowest price', async () => {
+                await execution(user, product.url)
+
+                const userProducts = await prisma.userProduct.findMany({
+                  where: { user_id: user.id },
+                })
+
+                expect(userProducts.length).toEqual(1)
+                expect(userProducts[0].product_id).toEqual(product.id)
+                expect(userProducts[0].price).toEqual(35)
+              })
+            })
+
+            describe('when product is on hold', () => {
+              beforeEach(async () => {
+                await prisma.product.update({
+                  where: { id: product.id },
+                  data: { status: 'hold' },
+                })
+
+                await prisma.productHistory.createMany({
+                  data: [
+                    {
+                      product_id: product.id,
+                      original_price: 99,
+                      discount_price: 87,
+                      in_stock: false,
+                      status: 'ok',
+                      title: 'Title',
+                      crawler_id: crawler.id,
+                    },
+                  ],
+                })
+              })
+
+              it('returns success', async () => {
+                const result = await execution(user, product.url)
+
+                expect(result).toEqual({
+                  status: 201,
+                  response: {
+                    ...PRODUCT_ADDED_TO_USER,
+                    location: `/products/${product.id}`,
+                  },
+                })
+              })
+
+              it('updates product status to active', async () => {
+                await execution(user, product.url)
+
+                const existedProduct = await prisma.product.findUnique({
+                  where: { id: product.id },
+                })
+
+                expect(existedProduct.status).toEqual('active')
+              })
+            })
+          })
+
+          describe('when product is in stock', () => {
+            describe('without prices', () => {
+              beforeEach(async () => {
+                await prisma.productHistory.createMany({
+                  data: [
+                    {
+                      product_id: product.id,
+                      in_stock: true,
+                      status: 'ok',
+                      title: 'Title',
+                      crawler_id: crawler.id,
+                    },
+                  ],
+                })
+              })
+
+              it('returns error', async () => {
+                const result = await execution(user, product.url)
+
+                expect(result).toEqual({
+                  status: 500,
+                  response:
+                    UNABLE_TO_ADD_PRODUCT_TO_USER_RIGHT_NOW_BECAUSE_OF_MISSING_PRICE,
+                })
+              })
+
+              it('does not add product to user', async () => {
+                await execution(user, product.url)
+
+                const userProducts = await prisma.userProduct.findMany({
+                  where: { user_id: user.id },
+                })
+
+                expect(userProducts.length).toEqual(0)
+              })
+            })
+
+            describe('with discount price only', () => {
+              beforeEach(async () => {
+                await prisma.productHistory.createMany({
+                  data: [
+                    {
+                      product_id: product.id,
+                      discount_price: 35,
+                      in_stock: true,
+                      status: 'ok',
+                      title: 'Title',
+                      crawler_id: crawler.id,
+                    },
+                  ],
+                })
+              })
+
+              it('returns success', async () => {
+                const result = await execution(user, product.url)
+
+                expect(result).toEqual({
+                  status: 201,
+                  response: {
+                    ...PRODUCT_ADDED_TO_USER,
+                    location: `/products/${product.id}`,
+                  },
+                })
+              })
+
+              it('adds product to user with discount price', async () => {
+                await execution(user, product.url)
+
+                const userProducts = await prisma.userProduct.findMany({
+                  where: { user_id: user.id },
+                })
+
+                expect(userProducts.length).toEqual(1)
+                expect(userProducts[0].product_id).toEqual(product.id)
+                expect(userProducts[0].price).toEqual(35)
+              })
+            })
+
+            describe('with original price only', () => {
+              beforeEach(async () => {
+                await prisma.productHistory.createMany({
+                  data: [
+                    {
+                      product_id: product.id,
+                      original_price: 42,
+                      in_stock: true,
+                      status: 'ok',
+                      title: 'Title',
+                      crawler_id: crawler.id,
+                    },
+                  ],
+                })
+              })
+
+              it('returns success', async () => {
+                const result = await execution(user, product.url)
+
+                expect(result).toEqual({
+                  status: 201,
+                  response: {
+                    ...PRODUCT_ADDED_TO_USER,
+                    location: `/products/${product.id}`,
+                  },
+                })
+              })
+
+              it('adds product to user with original price', async () => {
+                await execution(user, product.url)
+
+                const userProducts = await prisma.userProduct.findMany({
+                  where: { user_id: user.id },
+                })
+
+                expect(userProducts.length).toEqual(1)
+                expect(userProducts[0].product_id).toEqual(product.id)
+                expect(userProducts[0].price).toEqual(42)
+              })
+            })
+
+            describe('with both prices', () => {
+              beforeEach(async () => {
+                await prisma.productHistory.createMany({
+                  data: [
+                    {
+                      product_id: product.id,
+                      original_price: 42,
+                      discount_price: 35,
+                      in_stock: true,
+                      status: 'ok',
+                      title: 'Title',
+                      crawler_id: crawler.id,
+                    },
+                  ],
+                })
+              })
+
+              it('returns success', async () => {
+                const result = await execution(user, product.url)
+
+                expect(result).toEqual({
+                  status: 201,
+                  response: {
+                    ...PRODUCT_ADDED_TO_USER,
+                    location: `/products/${product.id}`,
+                  },
+                })
+              })
+
+              it('adds product to user with lowest price', async () => {
+                await execution(user, product.url)
+
+                const userProducts = await prisma.userProduct.findMany({
+                  where: { user_id: user.id },
+                })
+
+                expect(userProducts.length).toEqual(1)
+                expect(userProducts[0].product_id).toEqual(product.id)
+                expect(userProducts[0].price).toEqual(35)
+              })
+            })
+
+            describe('when product is on hold', () => {
+              beforeEach(async () => {
+                await prisma.product.update({
+                  where: { id: product.id },
+                  data: { status: 'hold' },
+                })
+
+                await prisma.productHistory.createMany({
+                  data: [
+                    {
+                      product_id: product.id,
+                      original_price: 99,
+                      discount_price: 87,
+                      in_stock: true,
+                      status: 'ok',
+                      title: 'Title',
+                      crawler_id: crawler.id,
+                    },
+                  ],
+                })
+              })
+
+              it('returns success', async () => {
+                const result = await execution(user, product.url)
+
+                expect(result).toEqual({
+                  status: 201,
+                  response: {
+                    ...PRODUCT_ADDED_TO_USER,
+                    location: `/products/${product.id}`,
+                  },
+                })
+              })
+
+              it('updates product status to active', async () => {
+                await execution(user, product.url)
+
+                const existedProduct = await prisma.product.findUnique({
+                  where: { id: product.id },
+                })
+
+                expect(existedProduct.status).toEqual('active')
+              })
+            })
           })
         })
       })

@@ -67,4 +67,16 @@ export const UserProductsRepository = {
       },
     })
   },
+
+  updateProductPriceForUsers: async (productId, price) => {
+    return await prisma.userProduct.updateMany({
+      where: {
+        product_id: productId,
+        price: 0,
+      },
+      data: {
+        price: price,
+      },
+    })
+  },
 }

@@ -648,3 +648,149 @@ describe('findAllProductsGroups', () => {
     })
   })
 })
+
+describe('updateProductPriceForUsers', () => {
+  const execution = async (productId, price) => {
+    return await service.updateProductPriceForUsers(productId, price)
+  }
+
+  describe('when productId is missing', () => {
+    it('raises error', async () => {
+      try {
+        await execution()
+      } catch (e) {
+        expect(e.message).toMatch('Не заполнен productId')
+      }
+    })
+  })
+
+  describe('when productId is empty', () => {
+    it('raises error', async () => {
+      try {
+        await execution(' ')
+      } catch (e) {
+        expect(e.message).toMatch('Не заполнен productId')
+      }
+    })
+  })
+
+  describe('when productId is not a valid UUID', () => {
+    it('raises error', async () => {
+      try {
+        await execution('qwe')
+      } catch (e) {
+        expect(e.message).toMatch('ID товара должен быть UUID')
+      }
+    })
+  })
+
+  describe('when price is missing', () => {
+    it('raises error', async () => {
+      try {
+        await execution(uuid.v4())
+      } catch (e) {
+        expect(e.message).toMatch('Не заполнен price')
+      }
+    })
+  })
+
+  describe('when price is empty', () => {
+    it('raises error', async () => {
+      try {
+        await execution(uuid.v4(), ' ')
+      } catch (e) {
+        expect(e.message).toMatch('Не заполнен price')
+      }
+    })
+  })
+
+  describe('when price is not a number', () => {
+    it('raises error', async () => {
+      try {
+        await execution(uuid.v4(), '1a')
+      } catch (e) {
+        expect(e.message).toMatch('Price должен быть числом')
+      }
+    })
+  })
+
+  describe('when price is a negative number', () => {
+    it('raises error', async () => {
+      try {
+        await execution(uuid.v4(), '-1')
+      } catch (e) {
+        expect(e.message).toMatch('Price должен быть больше нуля')
+      }
+    })
+  })
+
+  describe('when product exists', () => {
+    let product
+
+    beforeEach(async () => {
+      product = await prisma.product.create({
+        data: {
+          title: 'Product',
+          url: 'https://domain.tld',
+          url_hash: 'hash',
+          shop: 'shop',
+        },
+      })
+    })
+
+    describe('with users', () => {
+      let user
+
+      beforeEach(async () => {
+        user = await prisma.user.create({
+          data: {
+            login: 'user1',
+            password: 'password',
+          },
+        })
+      })
+
+      describe('when user has price', () => {
+        beforeEach(async () => {
+          await prisma.userProduct.create({
+            data: {
+              user_id: user.id,
+              product_id: product.id,
+              price: 42.2,
+            },
+          })
+        })
+
+        it('does not update product price', async () => {
+          await execution(product.id, 42)
+
+          const userProducts = await prisma.userProduct.findMany()
+          expect(userProducts.length).toEqual(1)
+
+          expect(userProducts[0].price).toEqual(42.2)
+        })
+      })
+
+      describe('when user does not have price', () => {
+        beforeEach(async () => {
+          await prisma.userProduct.create({
+            data: {
+              user_id: user.id,
+              product_id: product.id,
+              price: 0,
+            },
+          })
+        })
+
+        it('updates product price', async () => {
+          await execution(product.id, 42)
+
+          const userProducts = await prisma.userProduct.findMany()
+          expect(userProducts.length).toEqual(1)
+
+          expect(userProducts[0].price).toEqual(42)
+        })
+      })
+    })
+  })
+})
