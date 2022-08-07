@@ -1,5 +1,4 @@
 import prisma from '../../../../../src/lib/prisma'
-
 import { createMocks } from 'node-mocks-http'
 import handler from '../../../../../src/pages/api/v1/3rdparty/check_product'
 import {
@@ -13,7 +12,6 @@ import {
   INVALID_URL,
   SHOP_IS_NOT_SUPPORTED_YET,
   IT_IS_NOT_A_SINGLE_PRODUCT_URL,
-  UNABLE_TO_GET_PRODUCT_LATEST_PRICE_FROM_HISTORY,
   URL_IS_SUPPORTED_AND_CAN_BE_ADDED_TO_YOUR_LIST,
   PRODUCT_EXISTS_AND_CAN_BE_ADDED_TO_YOUR_LIST,
   YOU_ARE_ALREADY_HAVE_THIS_PRODUCT,
@@ -271,12 +269,12 @@ describe(`POST ${ENDPOINT}`, () => {
         })
 
         describe('when product does not have history', () => {
-          test('returns error', async () => {
+          test('returns actual product status', async () => {
             await prisma.userProduct.create({
               data: {
                 user_id: user.id,
                 product_id: product.id,
-                price: 41,
+                price: 0,
               },
             })
 
@@ -290,10 +288,17 @@ describe(`POST ${ENDPOINT}`, () => {
 
             await handler(req, res)
 
-            expect(parseJSON(res)).toEqual(
-              UNABLE_TO_GET_PRODUCT_LATEST_PRICE_FROM_HISTORY
-            )
-            expect(res._getStatusCode()).toBe(500)
+            expect(parseJSON(res)).toEqual({
+              ...YOU_ARE_ALREADY_HAVE_THIS_PRODUCT,
+              product: {
+                latest_price: 0,
+                my_price: 0,
+                has_discount: false,
+                my_benefit: 0,
+                location: `/products/${product.id}`,
+              },
+            })
+            expect(res._getStatusCode()).toBe(200)
           })
         })
       })

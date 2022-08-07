@@ -14,20 +14,6 @@ export const findProductByURLHash = async (urlHash) => {
   return await findProductBy({ url_hash: urlHash })
 }
 
-export const getProductHistory = async (productId) => {
-  return await prisma.productHistory.findMany({
-    where: { product_id: productId },
-    orderBy: { created_at: 'desc' },
-    select: {
-      created_at: true,
-      original_price: true,
-      discount_price: true,
-      in_stock: true,
-      status: true,
-    },
-  })
-}
-
 export const getProductHistoryGroupedByLastRecordByDate = async (
   productId,
   limit = 30
@@ -59,14 +45,6 @@ export const getProductHistoryGroupedByLastRecordByDate = async (
   })
 }
 
-export const getLastProductHistory = async (productId) => {
-  return await prisma.productHistory.findFirst({
-    where: { product_id: productId },
-    orderBy: { created_at: 'desc' },
-    take: 1,
-  })
-}
-
 export const getProductSubscriptions = async (productId) => {
   return await prisma.userProductSubscription.findMany({
     where: {
@@ -78,7 +56,7 @@ export const getProductSubscriptions = async (productId) => {
 export const getTelegramAccountsSubscribedToProductChangeStatusToInStock =
   async (productId) => {
     return await prisma.$queryRaw`
-      select distinct(u.telegram_account) as telegram_account
+      select distinct(u.telegram_account) as telegram_account, u.id
       from users u
       join user_product_subscriptions ups on ups.user_id = u.id
       join (
@@ -173,25 +151,6 @@ export const addProductSubscription = async (
       payload: payload,
     },
   })
-}
-
-export const getProductLatestValidPriceFromHistory = async (productId) => {
-  const productHistory = await prisma.productHistory.findMany({
-    where: {
-      product_id: productId,
-      status: 'ok',
-    },
-    orderBy: { created_at: 'desc' },
-    take: 1,
-  })
-
-  if (productHistory.length === 0) {
-    return
-  }
-
-  const lastProductHistory = productHistory[0]
-
-  return lastProductHistory.discount_price || lastProductHistory.original_price
 }
 
 export const addNewProductToQueue = async ({ url_hash, url, requested_by }) => {

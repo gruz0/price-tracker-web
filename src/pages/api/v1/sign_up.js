@@ -1,9 +1,7 @@
 import { withSentry } from '@sentry/nextjs'
 import * as Sentry from '@sentry/nextjs'
-
 import { findUserByLogin, createUser } from '../../../services/auth'
 import { isEmptyString, isNotDefined } from '../../../lib/validators'
-
 import {
   LOGIN_IS_INVALID,
   METHOD_NOT_ALLOWED,
@@ -15,7 +13,7 @@ import {
   USER_ALREADY_EXISTS,
 } from '../../../lib/messages'
 import { buildUserResponse, responseJSON } from '../../../lib/helpers'
-import { newUserRegistration } from '../../../services/telegram'
+import { TelegramService } from '../../../services/telegram_service'
 
 const handler = async (req, res) => {
   if (req.method !== 'POST') {
@@ -79,13 +77,13 @@ const handler = async (req, res) => {
   }
 
   try {
-    newUserRegistration(user.id)
+    await TelegramService.newUserRegistration(user.id)
   } catch (err) {
     console.error({ err })
 
     Sentry.withScope(function (scope) {
       scope.setContext('args', { user })
-      scope.setTag('section', 'newUserRegistration')
+      scope.setTag('section', 'TelegramService.newUserRegistration')
       Sentry.captureException(err)
     })
   }
