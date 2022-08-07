@@ -374,6 +374,13 @@ describe('getProductWithRecentHistory', () => {
               {
                 product_id: product.id,
                 crawler_id: crawler.id,
+                status: 'ok',
+                in_stock: true,
+                created_at: new Date('2022-01-02'),
+              },
+              {
+                product_id: product.id,
+                crawler_id: crawler.id,
                 status: 'not_found',
               },
             ],

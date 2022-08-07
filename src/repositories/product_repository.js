@@ -47,7 +47,7 @@ export const ProductRepository = {
         , p.title
         , p.url
         , COALESCE((SELECT in_stock FROM product_history WHERE product_id = ${productId}::UUID ORDER BY created_at DESC LIMIT 1), false) AS recent_in_stock
-        , COALESCE((SELECT true FROM product_history WHERE product_id = ${productId}::UUID AND in_stock = TRUE), false) AS was_in_stock
+        , COALESCE((SELECT true FROM product_history WHERE product_id = ${productId}::UUID AND in_stock = TRUE LIMIT 1), false) AS was_in_stock
         , COALESCE((SELECT true FROM product_history WHERE product_id = ${productId}::UUID LIMIT 1), false) AS has_history
         , COALESCE((SELECT true FROM user_products WHERE product_id = ${productId}::UUID LIMIT 1), false) AS has_users
       FROM products p
