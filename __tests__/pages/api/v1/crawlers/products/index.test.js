@@ -63,7 +63,7 @@ const whenNotAuthorized = (method) => {
 
 const ensureMethodNotAllowed = (method, url) => {
   describe(`${method} ${url}`, () => {
-    test('returns error', async () => {
+    it('returns error', async () => {
       const { req, res } = createMocks({
         method: method,
       })
@@ -94,7 +94,7 @@ describe(`GET ${ENDPOINT}`, () => {
     })
 
     describe('without products', () => {
-      test('returns empty response', async () => {
+      it('returns empty response', async () => {
         const { req, res } = mockAuthorizedGETRequest(crawler.token)
 
         await handler(req, res)
@@ -109,7 +109,7 @@ describe(`GET ${ENDPOINT}`, () => {
     })
 
     describe('with products', () => {
-      test('returns only matched products', async () => {
+      it('returns only matched products', async () => {
         const { req, res } = mockAuthorizedGETRequest(crawler.token)
 
         await prisma.product.create({
@@ -305,7 +305,7 @@ describe(`POST ${ENDPOINT}`, () => {
     })
 
     describe('when missing requested_by', () => {
-      test('returns error', async () => {
+      it('returns error', async () => {
         const { req, res } = mockAuthorizedPOSTRequest(crawler.token, {})
 
         await handler(req, res)
@@ -316,7 +316,7 @@ describe(`POST ${ENDPOINT}`, () => {
     })
 
     describe('when requested_by is not a valid UUID', () => {
-      test('returns error', async () => {
+      it('returns error', async () => {
         const { req, res } = mockAuthorizedPOSTRequest(
           crawler.token,
           {},
@@ -333,7 +333,7 @@ describe(`POST ${ENDPOINT}`, () => {
     })
 
     describe('when missing url_hash', () => {
-      test('returns error', async () => {
+      it('returns error', async () => {
         const { req, res } = mockAuthorizedPOSTRequest(
           crawler.token,
           {},
@@ -350,7 +350,7 @@ describe(`POST ${ENDPOINT}`, () => {
     })
 
     describe('when missing shop', () => {
-      test('returns error', async () => {
+      it('returns error', async () => {
         const { req, res } = mockAuthorizedPOSTRequest(
           crawler.token,
           {},
@@ -368,7 +368,7 @@ describe(`POST ${ENDPOINT}`, () => {
     })
 
     describe('when missing url', () => {
-      test('returns error', async () => {
+      it('returns error', async () => {
         const { req, res } = mockAuthorizedPOSTRequest(
           crawler.token,
           {},
@@ -387,7 +387,7 @@ describe(`POST ${ENDPOINT}`, () => {
     })
 
     describe('when missing status', () => {
-      test('returns error', async () => {
+      it('returns error', async () => {
         const { req, res } = mockAuthorizedPOSTRequest(
           crawler.token,
           {},
@@ -407,7 +407,7 @@ describe(`POST ${ENDPOINT}`, () => {
     })
 
     describe('when status is not supported', () => {
-      test('returns error', async () => {
+      it('returns error', async () => {
         const { req, res } = mockAuthorizedPOSTRequest(
           crawler.token,
           {},
@@ -428,7 +428,7 @@ describe(`POST ${ENDPOINT}`, () => {
     })
 
     describe('when user does not exist', () => {
-      test('returns error', async () => {
+      it('returns error', async () => {
         const { req, res } = mockAuthorizedPOSTRequest(
           crawler.token,
           {},
@@ -449,7 +449,7 @@ describe(`POST ${ENDPOINT}`, () => {
     })
 
     describe('when product queue does not exist', () => {
-      test('returns error', async () => {
+      it('returns error', async () => {
         const { req, res } = mockAuthorizedPOSTRequest(
           crawler.token,
           {},
@@ -484,7 +484,7 @@ describe(`POST ${ENDPOINT}`, () => {
 
       describe('when product does not exist', () => {
         describe('when status === skip', () => {
-          test('does not remove product from queue', async () => {
+          it('does not remove product from queue', async () => {
             const { req, res } = mockAuthorizedPOSTRequest(
               crawler.token,
               {},
@@ -508,7 +508,7 @@ describe(`POST ${ENDPOINT}`, () => {
         })
 
         describe('when status === age_restriction', () => {
-          test('removes product from queue', async () => {
+          it('removes product from queue', async () => {
             const { req, res } = mockAuthorizedPOSTRequest(
               crawler.token,
               {},
@@ -535,7 +535,7 @@ describe(`POST ${ENDPOINT}`, () => {
         })
 
         describe('when status === not_found', () => {
-          test('removes product from queue', async () => {
+          it('removes product from queue', async () => {
             const { req, res } = mockAuthorizedPOSTRequest(
               crawler.token,
               {},
@@ -562,7 +562,7 @@ describe(`POST ${ENDPOINT}`, () => {
         })
 
         describe('when status === required_to_change_location', () => {
-          test('skips crawler for this product', async () => {
+          it('skips crawler for this product', async () => {
             const { req, res } = mockAuthorizedPOSTRequest(
               crawler.token,
               {},
@@ -611,7 +611,7 @@ describe(`POST ${ENDPOINT}`, () => {
                 }
               })
 
-              test('returns success', async () => {
+              it('returns success', async () => {
                 const { req, res } = mockAuthorizedPOSTRequest(
                   crawler.token,
                   {},
@@ -629,7 +629,7 @@ describe(`POST ${ENDPOINT}`, () => {
                 expect(res._getStatusCode()).toBe(201)
               })
 
-              test('creates a new product', async () => {
+              it('creates a new product', async () => {
                 const { req, res } = mockAuthorizedPOSTRequest(
                   crawler.token,
                   {},
@@ -647,7 +647,7 @@ describe(`POST ${ENDPOINT}`, () => {
                 expect(products[0].title).toEqual('Product')
               })
 
-              test('creates a record in product history', async () => {
+              it('creates a record in product history', async () => {
                 const { req, res } = mockAuthorizedPOSTRequest(
                   crawler.token,
                   {},
@@ -668,7 +668,7 @@ describe(`POST ${ENDPOINT}`, () => {
                 expect(productHistory[0].crawler_id).toEqual(crawler.id)
               })
 
-              test('removes product from queue', async () => {
+              it('removes product from queue', async () => {
                 const { req, res } = mockAuthorizedPOSTRequest(
                   crawler.token,
                   {},
@@ -682,7 +682,7 @@ describe(`POST ${ENDPOINT}`, () => {
                 expect(productsInQueueAfter.length).toEqual(0)
               })
 
-              test('adds product to user with zero price', async () => {
+              it('adds product to user with zero price', async () => {
                 const { req, res } = mockAuthorizedPOSTRequest(
                   crawler.token,
                   {},
@@ -718,7 +718,7 @@ describe(`POST ${ENDPOINT}`, () => {
                   }
                 })
 
-                test('returns error', async () => {
+                it('returns error', async () => {
                   const { req, res } = mockAuthorizedPOSTRequest(
                     crawler.token,
                     {},
@@ -748,7 +748,7 @@ describe(`POST ${ENDPOINT}`, () => {
                   }
                 })
 
-                test('returns error', async () => {
+                it('returns error', async () => {
                   const { req, res } = mockAuthorizedPOSTRequest(
                     crawler.token,
                     {},
@@ -778,7 +778,7 @@ describe(`POST ${ENDPOINT}`, () => {
                   }
                 })
 
-                test('returns success', async () => {
+                it('returns success', async () => {
                   const { req, res } = mockAuthorizedPOSTRequest(
                     crawler.token,
                     {},
@@ -798,7 +798,7 @@ describe(`POST ${ENDPOINT}`, () => {
                   expect(res._getStatusCode()).toBe(201)
                 })
 
-                test('creates a new product', async () => {
+                it('creates a new product', async () => {
                   const { req, res } = mockAuthorizedPOSTRequest(
                     crawler.token,
                     {},
@@ -816,7 +816,7 @@ describe(`POST ${ENDPOINT}`, () => {
                   expect(products[0].title).toEqual('Product')
                 })
 
-                test('creates a record in product history', async () => {
+                it('creates a record in product history', async () => {
                   const { req, res } = mockAuthorizedPOSTRequest(
                     crawler.token,
                     {},
@@ -837,7 +837,7 @@ describe(`POST ${ENDPOINT}`, () => {
                   expect(productHistory[0].crawler_id).toEqual(crawler.id)
                 })
 
-                test('removes product from queue', async () => {
+                it('removes product from queue', async () => {
                   const { req, res } = mockAuthorizedPOSTRequest(
                     crawler.token,
                     {},
@@ -851,7 +851,7 @@ describe(`POST ${ENDPOINT}`, () => {
                   expect(productsInQueueAfter.length).toEqual(0)
                 })
 
-                test('adds product to user with discount price', async () => {
+                it('adds product to user with discount price', async () => {
                   const { req, res } = mockAuthorizedPOSTRequest(
                     crawler.token,
                     {},
@@ -888,7 +888,7 @@ describe(`POST ${ENDPOINT}`, () => {
                   }
                 })
 
-                test('returns error', async () => {
+                it('returns error', async () => {
                   const { req, res } = mockAuthorizedPOSTRequest(
                     crawler.token,
                     {},
@@ -918,7 +918,7 @@ describe(`POST ${ENDPOINT}`, () => {
                   }
                 })
 
-                test('returns error', async () => {
+                it('returns error', async () => {
                   const { req, res } = mockAuthorizedPOSTRequest(
                     crawler.token,
                     {},
@@ -948,7 +948,7 @@ describe(`POST ${ENDPOINT}`, () => {
                   }
                 })
 
-                test('returns success', async () => {
+                it('returns success', async () => {
                   const { req, res } = mockAuthorizedPOSTRequest(
                     crawler.token,
                     {},
@@ -968,7 +968,7 @@ describe(`POST ${ENDPOINT}`, () => {
                   expect(res._getStatusCode()).toBe(201)
                 })
 
-                test('creates a new product', async () => {
+                it('creates a new product', async () => {
                   const { req, res } = mockAuthorizedPOSTRequest(
                     crawler.token,
                     {},
@@ -986,7 +986,7 @@ describe(`POST ${ENDPOINT}`, () => {
                   expect(products[0].title).toEqual('Product')
                 })
 
-                test('creates a record in product history', async () => {
+                it('creates a record in product history', async () => {
                   const { req, res } = mockAuthorizedPOSTRequest(
                     crawler.token,
                     {},
@@ -1007,7 +1007,7 @@ describe(`POST ${ENDPOINT}`, () => {
                   expect(productHistory[0].crawler_id).toEqual(crawler.id)
                 })
 
-                test('removes product from queue', async () => {
+                it('removes product from queue', async () => {
                   const { req, res } = mockAuthorizedPOSTRequest(
                     crawler.token,
                     {},
@@ -1021,7 +1021,7 @@ describe(`POST ${ENDPOINT}`, () => {
                   expect(productsInQueueAfter.length).toEqual(0)
                 })
 
-                test('adds product to user with original price', async () => {
+                it('adds product to user with original price', async () => {
                   const { req, res } = mockAuthorizedPOSTRequest(
                     crawler.token,
                     {},
@@ -1058,7 +1058,7 @@ describe(`POST ${ENDPOINT}`, () => {
                 }
               })
 
-              test('returns success', async () => {
+              it('returns success', async () => {
                 const { req, res } = mockAuthorizedPOSTRequest(
                   crawler.token,
                   {},
@@ -1076,7 +1076,7 @@ describe(`POST ${ENDPOINT}`, () => {
                 expect(res._getStatusCode()).toBe(201)
               })
 
-              test('creates a new product', async () => {
+              it('creates a new product', async () => {
                 const { req, res } = mockAuthorizedPOSTRequest(
                   crawler.token,
                   {},
@@ -1094,7 +1094,7 @@ describe(`POST ${ENDPOINT}`, () => {
                 expect(products[0].title).toEqual('Product')
               })
 
-              test('creates a record in product history', async () => {
+              it('creates a record in product history', async () => {
                 const { req, res } = mockAuthorizedPOSTRequest(
                   crawler.token,
                   {},
@@ -1115,7 +1115,7 @@ describe(`POST ${ENDPOINT}`, () => {
                 expect(productHistory[0].crawler_id).toEqual(crawler.id)
               })
 
-              test('removes product from queue', async () => {
+              it('removes product from queue', async () => {
                 const { req, res } = mockAuthorizedPOSTRequest(
                   crawler.token,
                   {},
@@ -1129,7 +1129,7 @@ describe(`POST ${ENDPOINT}`, () => {
                 expect(productsInQueueAfter.length).toEqual(0)
               })
 
-              test('adds product to user with discount price', async () => {
+              it('adds product to user with discount price', async () => {
                 const { req, res } = mockAuthorizedPOSTRequest(
                   crawler.token,
                   {},
@@ -1165,7 +1165,7 @@ describe(`POST ${ENDPOINT}`, () => {
                 }
               })
 
-              test('returns error', async () => {
+              it('returns error', async () => {
                 const { req, res } = mockAuthorizedPOSTRequest(
                   crawler.token,
                   {},
@@ -1178,7 +1178,7 @@ describe(`POST ${ENDPOINT}`, () => {
                 expect(res._getStatusCode()).toBe(400)
               })
 
-              test('does not create a new product', async () => {
+              it('does not create a new product', async () => {
                 const { req, res } = mockAuthorizedPOSTRequest(
                   crawler.token,
                   {},
@@ -1191,7 +1191,7 @@ describe(`POST ${ENDPOINT}`, () => {
                 expect(products).toEqual([])
               })
 
-              test('does not remove product from queue', async () => {
+              it('does not remove product from queue', async () => {
                 const { req, res } = mockAuthorizedPOSTRequest(
                   crawler.token,
                   {},
@@ -1222,7 +1222,7 @@ describe(`POST ${ENDPOINT}`, () => {
                   }
                 })
 
-                test('returns error', async () => {
+                it('returns error', async () => {
                   const { req, res } = mockAuthorizedPOSTRequest(
                     crawler.token,
                     {},
@@ -1252,7 +1252,7 @@ describe(`POST ${ENDPOINT}`, () => {
                   }
                 })
 
-                test('returns error', async () => {
+                it('returns error', async () => {
                   const { req, res } = mockAuthorizedPOSTRequest(
                     crawler.token,
                     {},
@@ -1282,7 +1282,7 @@ describe(`POST ${ENDPOINT}`, () => {
                   }
                 })
 
-                test('returns success', async () => {
+                it('returns success', async () => {
                   const { req, res } = mockAuthorizedPOSTRequest(
                     crawler.token,
                     {},
@@ -1302,7 +1302,7 @@ describe(`POST ${ENDPOINT}`, () => {
                   expect(res._getStatusCode()).toBe(201)
                 })
 
-                test('creates a new product', async () => {
+                it('creates a new product', async () => {
                   const { req, res } = mockAuthorizedPOSTRequest(
                     crawler.token,
                     {},
@@ -1320,7 +1320,7 @@ describe(`POST ${ENDPOINT}`, () => {
                   expect(products[0].title).toEqual('Product')
                 })
 
-                test('creates a record in product history', async () => {
+                it('creates a record in product history', async () => {
                   const { req, res } = mockAuthorizedPOSTRequest(
                     crawler.token,
                     {},
@@ -1341,7 +1341,7 @@ describe(`POST ${ENDPOINT}`, () => {
                   expect(productHistory[0].crawler_id).toEqual(crawler.id)
                 })
 
-                test('removes product from queue', async () => {
+                it('removes product from queue', async () => {
                   const { req, res } = mockAuthorizedPOSTRequest(
                     crawler.token,
                     {},
@@ -1355,7 +1355,7 @@ describe(`POST ${ENDPOINT}`, () => {
                   expect(productsInQueueAfter.length).toEqual(0)
                 })
 
-                test('adds product to user with discount price', async () => {
+                it('adds product to user with discount price', async () => {
                   const { req, res } = mockAuthorizedPOSTRequest(
                     crawler.token,
                     {},
@@ -1392,7 +1392,7 @@ describe(`POST ${ENDPOINT}`, () => {
                   }
                 })
 
-                test('returns error', async () => {
+                it('returns error', async () => {
                   const { req, res } = mockAuthorizedPOSTRequest(
                     crawler.token,
                     {},
@@ -1422,7 +1422,7 @@ describe(`POST ${ENDPOINT}`, () => {
                   }
                 })
 
-                test('returns error', async () => {
+                it('returns error', async () => {
                   const { req, res } = mockAuthorizedPOSTRequest(
                     crawler.token,
                     {},
@@ -1452,7 +1452,7 @@ describe(`POST ${ENDPOINT}`, () => {
                   }
                 })
 
-                test('returns success', async () => {
+                it('returns success', async () => {
                   const { req, res } = mockAuthorizedPOSTRequest(
                     crawler.token,
                     {},
@@ -1472,7 +1472,7 @@ describe(`POST ${ENDPOINT}`, () => {
                   expect(res._getStatusCode()).toBe(201)
                 })
 
-                test('creates a new product', async () => {
+                it('creates a new product', async () => {
                   const { req, res } = mockAuthorizedPOSTRequest(
                     crawler.token,
                     {},
@@ -1490,7 +1490,7 @@ describe(`POST ${ENDPOINT}`, () => {
                   expect(products[0].title).toEqual('Product')
                 })
 
-                test('creates a record in product history', async () => {
+                it('creates a record in product history', async () => {
                   const { req, res } = mockAuthorizedPOSTRequest(
                     crawler.token,
                     {},
@@ -1511,7 +1511,7 @@ describe(`POST ${ENDPOINT}`, () => {
                   expect(productHistory[0].crawler_id).toEqual(crawler.id)
                 })
 
-                test('removes product from queue', async () => {
+                it('removes product from queue', async () => {
                   const { req, res } = mockAuthorizedPOSTRequest(
                     crawler.token,
                     {},
@@ -1525,7 +1525,7 @@ describe(`POST ${ENDPOINT}`, () => {
                   expect(productsInQueueAfter.length).toEqual(0)
                 })
 
-                test('adds product to user with original price', async () => {
+                it('adds product to user with original price', async () => {
                   const { req, res } = mockAuthorizedPOSTRequest(
                     crawler.token,
                     {},
@@ -1562,7 +1562,7 @@ describe(`POST ${ENDPOINT}`, () => {
                 }
               })
 
-              test('returns success', async () => {
+              it('returns success', async () => {
                 const { req, res } = mockAuthorizedPOSTRequest(
                   crawler.token,
                   {},
@@ -1580,7 +1580,7 @@ describe(`POST ${ENDPOINT}`, () => {
                 expect(res._getStatusCode()).toBe(201)
               })
 
-              test('creates a new product', async () => {
+              it('creates a new product', async () => {
                 const { req, res } = mockAuthorizedPOSTRequest(
                   crawler.token,
                   {},
@@ -1598,7 +1598,7 @@ describe(`POST ${ENDPOINT}`, () => {
                 expect(products[0].title).toEqual('Product')
               })
 
-              test('creates a record in product history', async () => {
+              it('creates a record in product history', async () => {
                 const { req, res } = mockAuthorizedPOSTRequest(
                   crawler.token,
                   {},
@@ -1619,7 +1619,7 @@ describe(`POST ${ENDPOINT}`, () => {
                 expect(productHistory[0].crawler_id).toEqual(crawler.id)
               })
 
-              test('removes product from queue', async () => {
+              it('removes product from queue', async () => {
                 const { req, res } = mockAuthorizedPOSTRequest(
                   crawler.token,
                   {},
@@ -1633,7 +1633,7 @@ describe(`POST ${ENDPOINT}`, () => {
                 expect(productsInQueueAfter.length).toEqual(0)
               })
 
-              test('adds product to user with discount price', async () => {
+              it('adds product to user with discount price', async () => {
                 const { req, res } = mockAuthorizedPOSTRequest(
                   crawler.token,
                   {},
@@ -1658,7 +1658,7 @@ describe(`POST ${ENDPOINT}`, () => {
       // Это может быть в случае, когда одновременно один товар добавили два человека в систему.
       // Либо же если два парсера new_products_parser запустились в одно время на разных серверах
       describe('when product exists', () => {
-        test('returns error', async () => {
+        it('returns error', async () => {
           await prisma.product.create({
             data: {
               url_hash: productInQueue.url_hash,

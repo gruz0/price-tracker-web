@@ -53,7 +53,7 @@ const whenNotAuthorized = (method) => {
 
 const ensureMethodNotAllowed = (method, url) => {
   describe(`${method} ${url}`, () => {
-    test('returns error', async () => {
+    it('returns error', async () => {
       const { req, res } = createMocks({
         method: method,
       })
@@ -84,7 +84,7 @@ describe(`PUT ${ENDPOINT}`, () => {
   })
 
   describe('when missing user_id', () => {
-    test('returns error', async () => {
+    it('returns error', async () => {
       const { req, res } = mockAuthorizedPUTRequest(bot.token)
 
       await handler(req, res)
@@ -95,7 +95,7 @@ describe(`PUT ${ENDPOINT}`, () => {
   })
 
   describe('when user_id is not a valid UUID', () => {
-    test('returns error', async () => {
+    it('returns error', async () => {
       const { req, res } = mockAuthorizedPUTRequest(bot.token, {
         user_id: 'qwe',
       })
@@ -108,7 +108,7 @@ describe(`PUT ${ENDPOINT}`, () => {
   })
 
   describe('when user does not exist', () => {
-    test('returns error', async () => {
+    it('returns error', async () => {
       const { req, res } = mockAuthorizedPUTRequest(bot.token, {
         user_id: uuid.v4(),
       })
@@ -121,7 +121,7 @@ describe(`PUT ${ENDPOINT}`, () => {
   })
 
   describe('when missing telegram_account', () => {
-    test('returns error', async () => {
+    it('returns error', async () => {
       const user = await prisma.user.create({
         data: {
           login: 'user1',
@@ -141,7 +141,7 @@ describe(`PUT ${ENDPOINT}`, () => {
   })
 
   describe('when telegram account used by another user', () => {
-    test('returns error', async () => {
+    it('returns error', async () => {
       const user = await prisma.user.create({
         data: {
           login: 'user1',
@@ -175,7 +175,7 @@ describe(`PUT ${ENDPOINT}`, () => {
   })
 
   describe('when user already has this telegram account', () => {
-    test('does nothing', async () => {
+    it('does nothing', async () => {
       const user = await prisma.user.create({
         data: {
           login: 'user1',
@@ -202,7 +202,7 @@ describe(`PUT ${ENDPOINT}`, () => {
   })
 
   describe('when user has another telegram account', () => {
-    test('updates telegram account', async () => {
+    it('updates telegram account', async () => {
       const user = await prisma.user.create({
         data: {
           login: 'user1',
@@ -229,7 +229,7 @@ describe(`PUT ${ENDPOINT}`, () => {
       expect(updatedUser.telegram_account).toEqual('1')
     })
 
-    test('returns response', async () => {
+    it('returns response', async () => {
       const user = await prisma.user.create({
         data: {
           login: 'user1',
@@ -271,7 +271,7 @@ describe(`PUT ${ENDPOINT}`, () => {
       })
     })
 
-    test('sets telegram account', async () => {
+    it('sets telegram account', async () => {
       const { req, res } = mockAuthorizedPUTRequest(
         bot.token,
         {
@@ -290,7 +290,7 @@ describe(`PUT ${ENDPOINT}`, () => {
       expect(updatedUser.telegram_account).toEqual('1')
     })
 
-    test('returns response', async () => {
+    it('returns response', async () => {
       const { req, res } = mockAuthorizedPUTRequest(
         bot.token,
         {
@@ -311,7 +311,7 @@ describe(`PUT ${ENDPOINT}`, () => {
       expect(res._getStatusCode()).toBe(200)
     })
 
-    test('updates last_activity_at', async () => {
+    it('updates last_activity_at', async () => {
       const { req, res } = mockAuthorizedPUTRequest(
         bot.token,
         {

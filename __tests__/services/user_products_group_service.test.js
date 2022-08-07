@@ -75,7 +75,7 @@ describe('getProductsInGroup', () => {
   })
 
   describe('when user does not exist', () => {
-    test('returns empty array', async () => {
+    it('returns empty array', async () => {
       const result = await execution(uuid.v4(), uuid.v4())
 
       expect(result).toEqual([])
@@ -558,7 +558,7 @@ describe('isItemExists', () => {
   })
 
   describe('when user does not exist', () => {
-    test('returns false', async () => {
+    it('returns false', async () => {
       const result = await execution(uuid.v4(), uuid.v4(), uuid.v4())
 
       expect(result).toEqual(false)
@@ -586,7 +586,7 @@ describe('isItemExists', () => {
     })
 
     describe('when products group does not exist', () => {
-      test('returns false', async () => {
+      it('returns false', async () => {
         const result = await execution(user.id, uuid.v4(), uuid.v4())
 
         expect(result).toEqual(false)
@@ -595,7 +595,7 @@ describe('isItemExists', () => {
 
     describe('when products group exists', () => {
       describe('when requested product is not in the group', () => {
-        test('returns false', async () => {
+        it('returns false', async () => {
           const result = await execution(user.id, productsGroup.id, uuid.v4())
 
           expect(result).toEqual(false)
@@ -603,7 +603,7 @@ describe('isItemExists', () => {
       })
 
       describe('when requested product is in the group', () => {
-        test('returns true', async () => {
+        it('returns true', async () => {
           const product = await prisma.product.create({
             data: {
               title: 'Product 1',
@@ -816,7 +816,7 @@ describe('addItem', () => {
         })
 
         describe('when requested product is in the group', () => {
-          test('raises error', async () => {
+          it('raises error', async () => {
             await prisma.userProductsGroupItem.create({
               data: {
                 user_id: user.id,
@@ -836,7 +836,7 @@ describe('addItem', () => {
         })
 
         describe('when requested product is not in the group', () => {
-          test('adds item to the group', async () => {
+          it('adds item to the group', async () => {
             const result = await execution(
               user.id,
               productsGroup.id,

@@ -43,7 +43,7 @@ describe('all', () => {
   })
 
   describe('when user does not exist', () => {
-    test('returns empty array', async () => {
+    it('returns empty array', async () => {
       const result = await execution(uuid.v4())
 
       expect(result).toEqual([])
@@ -52,7 +52,7 @@ describe('all', () => {
 
   describe('when user exists', () => {
     describe('when user does not have products', () => {
-      test('returns empty array', async () => {
+      it('returns empty array', async () => {
         const user = await prisma.user.create({
           data: {
             login: 'user1',
@@ -67,7 +67,7 @@ describe('all', () => {
     })
 
     describe('when user has products', () => {
-      test('returns products ordered by title ascending', async () => {
+      it('returns products ordered by title ascending', async () => {
         const user = await prisma.user.create({
           data: {
             login: 'user1',
@@ -194,7 +194,7 @@ describe('getByUserIdAndProductId', () => {
   })
 
   describe('when user does not exist', () => {
-    test('returns null', async () => {
+    it('returns null', async () => {
       const result = await execution(uuid.v4(), uuid.v4())
 
       expect(result).toBeNull()
@@ -203,7 +203,7 @@ describe('getByUserIdAndProductId', () => {
 
   describe('when user exists', () => {
     describe('when user does not have product', () => {
-      test('returns null', async () => {
+      it('returns null', async () => {
         const user = await prisma.user.create({
           data: {
             login: 'user1',
@@ -218,7 +218,7 @@ describe('getByUserIdAndProductId', () => {
     })
 
     describe('when requested product related to another user', () => {
-      test('returns null', async () => {
+      it('returns null', async () => {
         const user = await prisma.user.create({
           data: {
             login: 'user1',
@@ -257,7 +257,7 @@ describe('getByUserIdAndProductId', () => {
     })
 
     describe('when user has product', () => {
-      test('returns userProduct', async () => {
+      it('returns userProduct', async () => {
         const user = await prisma.user.create({
           data: {
             login: 'user1',
@@ -366,7 +366,7 @@ describe('findForUser', () => {
   })
 
   describe('when user does not exist', () => {
-    test('returns null', async () => {
+    it('returns null', async () => {
       const result = await execution(uuid.v4(), uuid.v4())
 
       expect(result).toBeNull()
@@ -375,7 +375,7 @@ describe('findForUser', () => {
 
   describe('when user exists', () => {
     describe('when user does not have product', () => {
-      test('returns null', async () => {
+      it('returns null', async () => {
         const user = await prisma.user.create({
           data: {
             login: 'user1',
@@ -390,7 +390,7 @@ describe('findForUser', () => {
     })
 
     describe('when requested product related to another user', () => {
-      test('returns null', async () => {
+      it('returns null', async () => {
         const user = await prisma.user.create({
           data: {
             login: 'user1',
@@ -429,7 +429,7 @@ describe('findForUser', () => {
     })
 
     describe('when user has product', () => {
-      test('returns userProduct', async () => {
+      it('returns userProduct', async () => {
         const user = await prisma.user.create({
           data: {
             login: 'user1',
@@ -528,7 +528,7 @@ describe('findAllProductsGroups', () => {
   })
 
   describe('when user does not exist', () => {
-    test('returns empty array', async () => {
+    it('returns empty array', async () => {
       const result = await execution(uuid.v4(), uuid.v4())
 
       expect(result).toEqual([])
@@ -548,7 +548,7 @@ describe('findAllProductsGroups', () => {
     })
 
     describe('when user does not have product', () => {
-      test('returns empty array', async () => {
+      it('returns empty array', async () => {
         const result = await execution(user.id, uuid.v4())
 
         expect(result).toEqual([])
@@ -556,7 +556,7 @@ describe('findAllProductsGroups', () => {
     })
 
     describe('when requested product related to another user', () => {
-      test('returns empty array', async () => {
+      it('returns empty array', async () => {
         const user2 = await prisma.user.create({
           data: {
             login: 'user2',
@@ -611,7 +611,7 @@ describe('findAllProductsGroups', () => {
       })
 
       describe('when user product is not in groups', () => {
-        test('returns empty array', async () => {
+        it('returns empty array', async () => {
           const result = await execution(user.id, userProduct.id)
 
           expect(result).toEqual([])
@@ -619,7 +619,7 @@ describe('findAllProductsGroups', () => {
       })
 
       describe('when user product is in group', () => {
-        test('returns groups', async () => {
+        it('returns groups', async () => {
           const userProductsGroup = await prisma.userProductsGroup.create({
             data: {
               user_id: user.id,

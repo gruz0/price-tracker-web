@@ -11,7 +11,7 @@ const whenSomethingWentWrong = (
   message
 ) => {
   describe(description, () => {
-    test(`returns ${status}`, async () => {
+    it(`returns ${status}`, async () => {
       const { req, res } = createMocks({
         method: method,
         headers: headers,

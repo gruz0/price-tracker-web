@@ -49,7 +49,7 @@ const whenNotAuthorized = (method) => {
 
 const ensureMethodNotAllowed = (method, url) => {
   describe(`${method} ${url}`, () => {
-    test('returns error', async () => {
+    it('returns error', async () => {
       const { req, res } = createMocks({
         method: method,
       })
@@ -81,7 +81,7 @@ describe(`GET ${ENDPOINT}`, () => {
     })
 
     describe('without products groups', () => {
-      test('returns empty response', async () => {
+      it('returns empty response', async () => {
         const { req, res } = mockAuthorizedGETRequest(user.token)
 
         await handler(req, res)
@@ -92,7 +92,7 @@ describe(`GET ${ENDPOINT}`, () => {
         })
       })
 
-      test('updates last_activity_at', async () => {
+      it('updates last_activity_at', async () => {
         const { req, res } = mockAuthorizedGETRequest(user.token)
 
         await handler(req, res)
@@ -104,7 +104,7 @@ describe(`GET ${ENDPOINT}`, () => {
     })
 
     describe('with products groups', () => {
-      test('returns only products groups related to user', async () => {
+      it('returns only products groups related to user', async () => {
         const { req, res } = mockAuthorizedGETRequest(user.token)
 
         const userProductsGroup = await prisma.userProductsGroup.create({
@@ -164,7 +164,7 @@ describe(`POST ${ENDPOINT}`, () => {
     })
 
     describe('when missing title', () => {
-      test('returns error', async () => {
+      it('returns error', async () => {
         const { req, res } = mockAuthorizedPOSTRequest(user.token, {})
 
         await handler(req, res)
@@ -175,7 +175,7 @@ describe(`POST ${ENDPOINT}`, () => {
     })
 
     describe('when title is empty', () => {
-      test('returns error', async () => {
+      it('returns error', async () => {
         const { req, res } = mockAuthorizedPOSTRequest(
           user.token,
           {},
@@ -192,7 +192,7 @@ describe(`POST ${ENDPOINT}`, () => {
     })
 
     describe('when all is good', () => {
-      test('creates a new products group', async () => {
+      it('creates a new products group', async () => {
         const { req, res } = mockAuthorizedPOSTRequest(
           user.token,
           {},
@@ -215,7 +215,7 @@ describe(`POST ${ENDPOINT}`, () => {
         })
       })
 
-      test('updates last_activity_at', async () => {
+      it('updates last_activity_at', async () => {
         const { req, res } = mockAuthorizedPOSTRequest(
           user.token,
           {},

@@ -20,7 +20,7 @@ beforeEach(async () => {
 
 const ensureMethodNotAllowed = (method, url) => {
   describe(`${method} ${url}`, () => {
-    test('returns error', async () => {
+    it('returns error', async () => {
       const { req, res } = createMocks({
         method: method,
       })
@@ -39,7 +39,7 @@ ensureMethodNotAllowed('DELETE', ENDPOINT)
 
 describe(`POST ${ENDPOINT}`, () => {
   describe('when missing login', () => {
-    test('returns error', async () => {
+    it('returns error', async () => {
       const { req, res } = mockPOSTRequest({})
 
       await handler(req, res)
@@ -50,7 +50,7 @@ describe(`POST ${ENDPOINT}`, () => {
   })
 
   describe('when login is empty', () => {
-    test('returns error', async () => {
+    it('returns error', async () => {
       const { req, res } = mockPOSTRequest({ login: ' ' })
 
       await handler(req, res)
@@ -61,7 +61,7 @@ describe(`POST ${ENDPOINT}`, () => {
   })
 
   describe('when missing password', () => {
-    test('returns error', async () => {
+    it('returns error', async () => {
       const { req, res } = mockPOSTRequest({ login: 'user1' })
 
       await handler(req, res)
@@ -72,7 +72,7 @@ describe(`POST ${ENDPOINT}`, () => {
   })
 
   describe('when password is empty', () => {
-    test('returns error', async () => {
+    it('returns error', async () => {
       const { req, res } = mockPOSTRequest({ login: 'user1', password: ' ' })
 
       await handler(req, res)
@@ -83,7 +83,7 @@ describe(`POST ${ENDPOINT}`, () => {
   })
 
   describe('when user does not exist', () => {
-    test('returns error', async () => {
+    it('returns error', async () => {
       const { req, res } = mockPOSTRequest({
         login: 'user1',
         password: 'password',
@@ -113,7 +113,7 @@ describe(`POST ${ENDPOINT}`, () => {
       })
     })
 
-    test('updates user token', async () => {
+    it('updates user token', async () => {
       const { req, res } = mockPOSTRequest({
         login: 'User1',
         password: 'password',
@@ -129,7 +129,7 @@ describe(`POST ${ENDPOINT}`, () => {
       expect(updatedUser.token).not.toEqual('token')
     })
 
-    test('updates last_sign_in_at', async () => {
+    it('updates last_sign_in_at', async () => {
       const { req, res } = mockPOSTRequest({
         login: 'User1',
         password: 'password',
@@ -150,7 +150,7 @@ describe(`POST ${ENDPOINT}`, () => {
       expect(+updatedUser.updated_at).toBeGreaterThan(+user.updated_at)
     })
 
-    test('returns response', async () => {
+    it('returns response', async () => {
       const { req, res } = mockPOSTRequest({
         login: 'User1',
         password: 'password',

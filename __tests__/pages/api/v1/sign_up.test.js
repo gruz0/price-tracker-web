@@ -20,7 +20,7 @@ beforeEach(async () => {
 
 const ensureMethodNotAllowed = (method, url) => {
   describe(`${method} ${url}`, () => {
-    test('returns error', async () => {
+    it('returns error', async () => {
       const { req, res } = createMocks({
         method: method,
       })
@@ -39,7 +39,7 @@ ensureMethodNotAllowed('DELETE', ENDPOINT)
 
 describe(`POST ${ENDPOINT}`, () => {
   describe('when missing login', () => {
-    test('returns error', async () => {
+    it('returns error', async () => {
       const { req, res } = mockPOSTRequest({})
 
       await handler(req, res)
@@ -50,7 +50,7 @@ describe(`POST ${ENDPOINT}`, () => {
   })
 
   describe('when login is empty', () => {
-    test('returns error', async () => {
+    it('returns error', async () => {
       const { req, res } = mockPOSTRequest({ login: ' ' })
 
       await handler(req, res)
@@ -61,7 +61,7 @@ describe(`POST ${ENDPOINT}`, () => {
   })
 
   describe('when missing password', () => {
-    test('returns error', async () => {
+    it('returns error', async () => {
       const { req, res } = mockPOSTRequest({ login: 'user1' })
 
       await handler(req, res)
@@ -72,7 +72,7 @@ describe(`POST ${ENDPOINT}`, () => {
   })
 
   describe('when login is not valid', () => {
-    test('returns error', async () => {
+    it('returns error', async () => {
       const { req, res } = mockPOSTRequest({
         login: ' aZ1-_*',
         password: 'password',
@@ -86,7 +86,7 @@ describe(`POST ${ENDPOINT}`, () => {
   })
 
   describe('when password is too short', () => {
-    test('returns error', async () => {
+    it('returns error', async () => {
       const { req, res } = mockPOSTRequest({
         login: 'user',
         password: 'passwd1',
@@ -100,7 +100,7 @@ describe(`POST ${ENDPOINT}`, () => {
   })
 
   describe('when user with login already exists', () => {
-    test('returns error', async () => {
+    it('returns error', async () => {
       await prisma.user.create({
         data: {
           login: 'user1',
@@ -121,7 +121,7 @@ describe(`POST ${ENDPOINT}`, () => {
   })
 
   describe('when all is good', () => {
-    test('creates a new user', async () => {
+    it('creates a new user', async () => {
       const { req, res } = mockPOSTRequest({
         login: 'user1',
         password: 'password',
@@ -142,6 +142,26 @@ describe(`POST ${ENDPOINT}`, () => {
       expect(response.user.login).toEqual(users[0].login)
     })
 
-    test.todo('sends message to Telegram')
+    it('adds message to telegram_messages', async () => {
+      const { req, res } = mockPOSTRequest({
+        login: 'user1',
+        password: 'password',
+      })
+
+      await handler(req, res)
+      expect(res._getStatusCode()).toBe(201)
+
+      const user = await prisma.user.findUnique({
+        where: { login: 'user1' },
+      })
+
+      const telegramMessages = await prisma.telegramMessage.findMany()
+
+      expect(telegramMessages.length).toEqual(1)
+      expect(telegramMessages[0].user_id).toEqual(user.id)
+      expect(telegramMessages[0].message).toEqual(
+        `***Зарегистрирован новый пользователь!***\nID: ${user.id}`
+      )
+    })
   })
 })

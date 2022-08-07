@@ -54,7 +54,7 @@ const whenNotAuthorized = (method) => {
 
 const ensureMethodNotAllowed = (method, url) => {
   describe(`${method} ${url}`, () => {
-    test('returns error', async () => {
+    it('returns error', async () => {
       const { req, res } = createMocks({
         method: method,
       })
@@ -87,7 +87,7 @@ describe(`DELETE ${ENDPOINT}`, () => {
     })
 
     describe('when product_id missing', () => {
-      test('returns error', async () => {
+      it('returns error', async () => {
         const { req, res } = mockAuthorizedDELETERequest(user.token, {})
 
         await handler(req, res)
@@ -98,7 +98,7 @@ describe(`DELETE ${ENDPOINT}`, () => {
     })
 
     describe('when product_id is not a valid UUID', () => {
-      test('returns error', async () => {
+      it('returns error', async () => {
         const { req, res } = mockAuthorizedDELETERequest(user.token, {
           id: 'qwe',
         })
@@ -111,7 +111,7 @@ describe(`DELETE ${ENDPOINT}`, () => {
     })
 
     describe('when product does not exist', () => {
-      test('returns error', async () => {
+      it('returns error', async () => {
         const { req, res } = mockAuthorizedDELETERequest(user.token, {
           id: uuid.v4(),
         })
@@ -138,7 +138,7 @@ describe(`DELETE ${ENDPOINT}`, () => {
       })
 
       describe('when user does not have product', () => {
-        test('returns error', async () => {
+        it('returns error', async () => {
           const { req, res } = mockAuthorizedDELETERequest(user.token, {
             id: product.id,
           })
@@ -151,7 +151,7 @@ describe(`DELETE ${ENDPOINT}`, () => {
       })
 
       describe('when subscription_id missing', () => {
-        test('returns error', async () => {
+        it('returns error', async () => {
           await prisma.userProduct.create({
             data: {
               user_id: user.id,
@@ -172,7 +172,7 @@ describe(`DELETE ${ENDPOINT}`, () => {
       })
 
       describe('when subscription_id is not a valid UUID', () => {
-        test('returns error', async () => {
+        it('returns error', async () => {
           await prisma.userProduct.create({
             data: {
               user_id: user.id,
@@ -194,7 +194,7 @@ describe(`DELETE ${ENDPOINT}`, () => {
       })
 
       describe('when subscription_id does not exist', () => {
-        test('returns error', async () => {
+        it('returns error', async () => {
           await prisma.userProduct.create({
             data: {
               user_id: user.id,
@@ -218,7 +218,7 @@ describe(`DELETE ${ENDPOINT}`, () => {
       })
 
       describe('when user has product subscription', () => {
-        test('removes subscription', async () => {
+        it('removes subscription', async () => {
           await prisma.userProduct.create({
             data: {
               user_id: user.id,
@@ -286,7 +286,7 @@ describe(`DELETE ${ENDPOINT}`, () => {
           expect(subscription2).not.toBeNull()
         })
 
-        test('updates last_activity_at', async () => {
+        it('updates last_activity_at', async () => {
           await prisma.userProduct.create({
             data: {
               user_id: user.id,

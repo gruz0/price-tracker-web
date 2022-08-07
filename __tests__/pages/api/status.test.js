@@ -8,7 +8,7 @@ const ENDPOINT = '/api/status'
 
 const ensureMethodNotAllowed = (method, url) => {
   describe(`${method} ${url}`, () => {
-    test('returns error', async () => {
+    it('returns error', async () => {
       const { req, res } = createMocks({
         method: method,
       })
@@ -26,7 +26,7 @@ ensureMethodNotAllowed('PUT', ENDPOINT)
 ensureMethodNotAllowed('DELETE', ENDPOINT)
 
 describe(`GET ${ENDPOINT}`, () => {
-  test('returns response', async () => {
+  it('returns response', async () => {
     const { req, res } = mockGETRequest()
 
     await handler(req, res)

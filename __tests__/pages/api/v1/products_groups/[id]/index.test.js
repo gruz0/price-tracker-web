@@ -58,7 +58,7 @@ const whenNotAuthorized = (method) => {
 
 const ensureMethodNotAllowed = (method, url) => {
   describe(`${method} ${url}`, () => {
-    test('returns error', async () => {
+    it('returns error', async () => {
       const { req, res } = createMocks({
         method: method,
       })
@@ -89,7 +89,7 @@ describe(`GET ${ENDPOINT}`, () => {
     })
 
     describe('when id missing', () => {
-      test('returns error', async () => {
+      it('returns error', async () => {
         const { req, res } = mockAuthorizedGETRequest(user.token)
 
         await handler(req, res)
@@ -100,7 +100,7 @@ describe(`GET ${ENDPOINT}`, () => {
     })
 
     describe('when id is not a valid UUID', () => {
-      test('returns error', async () => {
+      it('returns error', async () => {
         const { req, res } = mockAuthorizedGETRequest(user.token, {
           id: 'qwe',
         })
@@ -113,7 +113,7 @@ describe(`GET ${ENDPOINT}`, () => {
     })
 
     describe('when products group does not exist', () => {
-      test('returns error', async () => {
+      it('returns error', async () => {
         const { req, res } = mockAuthorizedGETRequest(user.token, {
           id: uuid.v4(),
         })
@@ -298,7 +298,7 @@ describe(`GET ${ENDPOINT}`, () => {
         })
       })
 
-      test('returns result', async () => {
+      it('returns result', async () => {
         const { req, res } = mockAuthorizedGETRequest(user.token, {
           id: userProductsGroup1.id,
         })
@@ -346,7 +346,7 @@ describe(`GET ${ENDPOINT}`, () => {
         })
       })
 
-      test('updates last_activity_at', async () => {
+      it('updates last_activity_at', async () => {
         const { req, res } = mockAuthorizedGETRequest(user.token, {
           id: userProductsGroup1.id,
         })
@@ -377,7 +377,7 @@ describe(`POST ${ENDPOINT}`, () => {
     })
 
     describe('when id missing', () => {
-      test('returns error', async () => {
+      it('returns error', async () => {
         const { req, res } = mockAuthorizedPOSTRequest(user.token)
 
         await handler(req, res)
@@ -388,7 +388,7 @@ describe(`POST ${ENDPOINT}`, () => {
     })
 
     describe('when id is not a valid UUID', () => {
-      test('returns error', async () => {
+      it('returns error', async () => {
         const { req, res } = mockAuthorizedPOSTRequest(user.token, {
           id: 'qwe',
         })
@@ -401,7 +401,7 @@ describe(`POST ${ENDPOINT}`, () => {
     })
 
     describe('when products group does not exist', () => {
-      test('returns error', async () => {
+      it('returns error', async () => {
         const { req, res } = mockAuthorizedPOSTRequest(user.token, {
           id: uuid.v4(),
         })
@@ -415,7 +415,7 @@ describe(`POST ${ENDPOINT}`, () => {
 
     describe('when products group exists', () => {
       describe('when user_product_id is missing', () => {
-        test('returns error', async () => {
+        it('returns error', async () => {
           const userProductsGroup = await prisma.userProductsGroup.create({
             data: {
               user_id: user.id,
@@ -435,7 +435,7 @@ describe(`POST ${ENDPOINT}`, () => {
       })
 
       describe('when user_product_id is empty', () => {
-        test('returns error', async () => {
+        it('returns error', async () => {
           const userProductsGroup = await prisma.userProductsGroup.create({
             data: {
               user_id: user.id,
@@ -461,7 +461,7 @@ describe(`POST ${ENDPOINT}`, () => {
       })
 
       describe('when user_product_id is not a valid UUID', () => {
-        test('returns error', async () => {
+        it('returns error', async () => {
           const userProductsGroup = await prisma.userProductsGroup.create({
             data: {
               user_id: user.id,
@@ -487,7 +487,7 @@ describe(`POST ${ENDPOINT}`, () => {
       })
 
       describe('when user does not have product', () => {
-        test('returns error', async () => {
+        it('returns error', async () => {
           const userProductsGroup = await prisma.userProductsGroup.create({
             data: {
               user_id: user.id,
@@ -543,7 +543,7 @@ describe(`POST ${ENDPOINT}`, () => {
         })
 
         describe('when item is in products group', () => {
-          test('returns error', async () => {
+          it('returns error', async () => {
             await prisma.userProductsGroupItem.create({
               data: {
                 user_id: user.id,
@@ -572,7 +572,7 @@ describe(`POST ${ENDPOINT}`, () => {
         })
 
         describe('when item is not in products group', () => {
-          test('adds item to products group', async () => {
+          it('adds item to products group', async () => {
             const { req, res } = mockAuthorizedPOSTRequest(
               user.token,
               {
@@ -599,7 +599,7 @@ describe(`POST ${ENDPOINT}`, () => {
             expect(groupItems[0].user_product_id).toEqual(userProduct.id)
           })
 
-          test('updates last_activity_at', async () => {
+          it('updates last_activity_at', async () => {
             const { req, res } = mockAuthorizedPOSTRequest(
               user.token,
               {
@@ -638,7 +638,7 @@ describe(`DELETE ${ENDPOINT}`, () => {
     })
 
     describe('when id missing', () => {
-      test('returns error', async () => {
+      it('returns error', async () => {
         const { req, res } = mockAuthorizedDELETERequest(user.token)
 
         await handler(req, res)
@@ -649,7 +649,7 @@ describe(`DELETE ${ENDPOINT}`, () => {
     })
 
     describe('when id is not a valid UUID', () => {
-      test('returns error', async () => {
+      it('returns error', async () => {
         const { req, res } = mockAuthorizedDELETERequest(user.token, {
           id: 'qwe',
         })
@@ -662,7 +662,7 @@ describe(`DELETE ${ENDPOINT}`, () => {
     })
 
     describe('when products group does not exist', () => {
-      test('returns error', async () => {
+      it('returns error', async () => {
         const { req, res } = mockAuthorizedDELETERequest(user.token, {
           id: uuid.v4(),
         })
@@ -687,7 +687,7 @@ describe(`DELETE ${ENDPOINT}`, () => {
       })
 
       describe('without items in products group', () => {
-        test('removes only specific products group', async () => {
+        it('removes only specific products group', async () => {
           const userProductsGroup2 = await prisma.userProductsGroup.create({
             data: {
               user_id: user.id,
@@ -771,7 +771,7 @@ describe(`DELETE ${ENDPOINT}`, () => {
           })
         })
 
-        test('removes items related to products group', async () => {
+        it('removes items related to products group', async () => {
           const { req, res } = mockAuthorizedDELETERequest(user.token, {
             id: userProductsGroup.id,
           })
@@ -786,7 +786,7 @@ describe(`DELETE ${ENDPOINT}`, () => {
           expect(userProductsGroupItems).toEqual([productsGroup2Item])
         })
 
-        test('updates last_activity_at', async () => {
+        it('updates last_activity_at', async () => {
           const { req, res } = mockAuthorizedDELETERequest(user.token, {
             id: userProductsGroup.id,
           })

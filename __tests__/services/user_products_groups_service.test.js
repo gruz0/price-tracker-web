@@ -54,7 +54,7 @@ describe('all', () => {
 
   describe('when user exists', () => {
     describe('when user does not have products groups', () => {
-      test('returns empty array', async () => {
+      it('returns empty array', async () => {
         const user = await prisma.user.create({
           data: {
             login: 'user1',
@@ -70,7 +70,7 @@ describe('all', () => {
 
     describe('when user has products groups', () => {
       describe('without items', () => {
-        test('returns products groups', async () => {
+        it('returns products groups', async () => {
           const user = await prisma.user.create({
             data: {
               login: 'user1',
@@ -101,7 +101,7 @@ describe('all', () => {
       })
 
       describe('with items', () => {
-        test('returns products groups ordered by created_at descending', async () => {
+        it('returns products groups ordered by created_at descending', async () => {
           const user = await prisma.user.create({
             data: {
               login: 'user1',
@@ -276,7 +276,7 @@ describe('find', () => {
 
   describe('when user exists', () => {
     describe('when products group does not exist', () => {
-      test('returns null', async () => {
+      it('returns null', async () => {
         const user = await prisma.user.create({
           data: {
             login: 'user1',
@@ -291,7 +291,7 @@ describe('find', () => {
     })
 
     describe('when requested products group related to another user', () => {
-      test('returns null', async () => {
+      it('returns null', async () => {
         const user = await prisma.user.create({
           data: {
             login: 'user1',
@@ -321,7 +321,7 @@ describe('find', () => {
 
     describe('when user has products group', () => {
       describe('without items', () => {
-        test('returns products group with products_count equals to zero', async () => {
+        it('returns products group with products_count equals to zero', async () => {
           const user = await prisma.user.create({
             data: {
               login: 'user1',
@@ -350,7 +350,7 @@ describe('find', () => {
       })
 
       describe('with items', () => {
-        test('returns products group with positive products_count', async () => {
+        it('returns products group with positive products_count', async () => {
           const user = await prisma.user.create({
             data: {
               login: 'user1',
@@ -496,7 +496,7 @@ describe('create', () => {
   })
 
   describe('when user exists', () => {
-    test('creates a new products group', async () => {
+    it('creates a new products group', async () => {
       const user = await prisma.user.create({
         data: {
           login: 'user1',
@@ -613,7 +613,7 @@ describe('delete', () => {
     })
 
     describe('when requested products group related to another user', () => {
-      test('raises error', async () => {
+      it('raises error', async () => {
         await prisma.userProductsGroup.create({
           data: {
             user_id: user.id,
@@ -656,7 +656,7 @@ describe('delete', () => {
       })
 
       describe('without items', () => {
-        test('removes products group', async () => {
+        it('removes products group', async () => {
           await execution(user.id, userProductsGroup.id)
 
           const productsGroups = await prisma.userProductsGroup.findMany()
@@ -665,7 +665,7 @@ describe('delete', () => {
       })
 
       describe('with items', () => {
-        test('removes only items from specific products group', async () => {
+        it('removes only items from specific products group', async () => {
           const product1 = await prisma.product.create({
             data: {
               title: 'Product 1',
