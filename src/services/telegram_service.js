@@ -22,7 +22,7 @@ export const TelegramService = {
       return
     }
 
-    usersWithTelegramAccount.forEach(async (user) => {
+    for (const user of usersWithTelegramAccount) {
       const message =
         `Добавленный вами товар [${product.title}](${product.url}) появился в наличии!\n\n` +
         `Текущая цена товара: ${price}.\n` +
@@ -35,7 +35,7 @@ export const TelegramService = {
           parse_mode: 'markdown',
         })
       }
-    })
+    }
   },
 
   // TODO: Добавить тесты
@@ -50,7 +50,7 @@ export const TelegramService = {
       return
     }
 
-    usersWithTelegramAccount.forEach(async (user) => {
+    for (const user of usersWithTelegramAccount) {
       const message =
         `Добавленный вами товар [${product.title}](${product.url}) первый раз появился в наличии!\n\n` +
         `Текущая цена товара: ${price}.\n` +
@@ -63,7 +63,7 @@ export const TelegramService = {
           parse_mode: 'markdown',
         })
       }
-    })
+    }
   },
 
   // TODO: Добавить тесты

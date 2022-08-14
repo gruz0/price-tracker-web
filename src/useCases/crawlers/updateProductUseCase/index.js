@@ -29,7 +29,6 @@ import {
   UNABLE_TO_UPDATE_USER_PRODUCTS_PRICE,
 } from '../../../lib/messages'
 
-// TODO: Добавить тесты
 export const updateProductUseCase = async (crawlerId, productId, body = {}) => {
   if (isEmptyString(productId)) {
     return {
@@ -88,88 +87,96 @@ export const updateProductUseCase = async (crawlerId, productId, body = {}) => {
     }
   }
 
-  if (isNotDefined(in_stock)) {
-    return {
-      status: 400,
-      response: MISSING_IN_STOCK,
-    }
-  }
-
-  // TODO: Проверять, что in_stock булево поле
-
-  let discountPrice
-  let originalPrice
-
-  if (!isEmptyString(discount_price)) {
-    if (!isNumber(discount_price)) {
-      return {
-        status: 422,
-        response: DISCOUNT_PRICE_MUST_BE_A_NUMBER,
-      }
-    }
-
-    if (!isPositiveFloat(discount_price)) {
-      return {
-        status: 422,
-        response: DISCOUNT_PRICE_MUST_BE_POSITIVE,
-      }
-    }
-
-    discountPrice = parseFloat(discount_price)
-  }
-
-  if (!isEmptyString(original_price)) {
-    if (!isNumber(original_price)) {
-      return {
-        status: 422,
-        response: ORIGINAL_PRICE_MUST_BE_A_NUMBER,
-      }
-    }
-
-    if (!isPositiveFloat(original_price)) {
-      return {
-        status: 422,
-        response: ORIGINAL_PRICE_MUST_BE_POSITIVE,
-      }
-    }
-
-    originalPrice = parseFloat(original_price)
-  }
-
-  let price
-
-  // FIXME: Вынести в функцию
-  if (discountPrice && originalPrice) {
-    price = discountPrice < originalPrice ? discountPrice : originalPrice
-  } else {
-    if (discountPrice) {
-      if (!originalPrice) {
-        price = discountPrice
-      } else {
-        price = originalPrice
-      }
-    } else if (originalPrice) {
-      price = originalPrice
-    } else {
-      price = 0
-    }
-  }
+  let newDiscountPrice
+  let newOriginalPrice
+  let newTitle
+  let newInStock
 
   switch (status) {
     case 'ok': {
-      if (in_stock) {
+      if (isNotDefined(in_stock)) {
+        return {
+          status: 400,
+          response: MISSING_IN_STOCK,
+        }
+      }
+
+      // TODO: Проверять, что in_stock булево поле
+      newInStock = in_stock
+
+      if (isEmptyString(title)) {
+        return {
+          status: 400,
+          response: MISSING_TITLE,
+        }
+      }
+
+      newTitle = title.trim().slice(0, 512)
+
+      if (!isEmptyString(discount_price)) {
+        if (!isNumber(discount_price)) {
+          return {
+            status: 422,
+            response: DISCOUNT_PRICE_MUST_BE_A_NUMBER,
+          }
+        }
+
+        if (!isPositiveFloat(discount_price)) {
+          return {
+            status: 422,
+            response: DISCOUNT_PRICE_MUST_BE_POSITIVE,
+          }
+        }
+
+        newDiscountPrice = parseFloat(discount_price)
+      }
+
+      if (!isEmptyString(original_price)) {
+        if (!isNumber(original_price)) {
+          return {
+            status: 422,
+            response: ORIGINAL_PRICE_MUST_BE_A_NUMBER,
+          }
+        }
+
+        if (!isPositiveFloat(original_price)) {
+          return {
+            status: 422,
+            response: ORIGINAL_PRICE_MUST_BE_POSITIVE,
+          }
+        }
+
+        newOriginalPrice = parseFloat(original_price)
+      }
+
+      let price
+
+      // FIXME: Вынести в функцию
+      if (newDiscountPrice && newOriginalPrice) {
+        price =
+          newDiscountPrice < newOriginalPrice
+            ? newDiscountPrice
+            : newOriginalPrice
+      } else {
+        if (newDiscountPrice) {
+          if (!newOriginalPrice) {
+            price = newDiscountPrice
+          } else {
+            price = newOriginalPrice
+          }
+        } else if (newOriginalPrice) {
+          price = newOriginalPrice
+        } else {
+          price = 0
+        }
+      }
+
+      if (newInStock) {
         // Если товар в наличии, у него должна быть хоть какая-то цена
         if (price === 0) {
           return {
             status: 400,
             response: MISSING_PRICES,
-          }
-        }
-
-        if (isEmptyString(title)) {
-          return {
-            status: 400,
-            response: MISSING_TITLE,
           }
         }
 
@@ -255,16 +262,24 @@ export const updateProductUseCase = async (crawlerId, productId, body = {}) => {
         response: {},
       }
     }
+
+    case 'required_to_change_location':
+    case 'age_restriction':
+    case 'not_found': {
+      newOriginalPrice = null
+      newDiscountPrice = null
+      newTitle = null
+    }
   }
 
   let history
 
   const productArgs = {
-    originalPrice,
-    discountPrice,
-    inStock: in_stock,
+    originalPrice: newOriginalPrice,
+    discountPrice: newDiscountPrice,
+    inStock: newInStock,
     status,
-    title,
+    title: newTitle,
     crawlerId,
   }
 
