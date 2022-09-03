@@ -1,6 +1,13 @@
 {
   "name": "price-tracker",
   "version": "0.1.0",
+  "keywords": ["price-tracker", "next.js"],
+  "author": "Alexander Kadyrov <gruz0.mail@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+   "url": "https://github.com/gruz0/price-tracker-web/issues"
+  },
+  "homepage": "https://chartik.ru/",
   "private": true,
   "scripts": {
     "dev": "next dev",
