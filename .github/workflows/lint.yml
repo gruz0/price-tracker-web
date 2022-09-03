@@ -1,9 +1,6 @@
 name: Lint
 
-on:
-  push:
-    branches:
-      - '**'
+on: [push, pull_request]
 
 jobs:
   lint:
@@ -16,11 +13,12 @@ jobs:
       PGTZ: UTC
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
-      - uses: actions/setup-node@v1
+      - uses: actions/setup-node@v3
         with:
           node-version: 17
+          cache: npm
 
       - run: npm ci
       - run: make lint
