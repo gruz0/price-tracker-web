@@ -18,6 +18,10 @@ lint: # Run lint
 	@${NPM_RUN} lint:prisma
 	@${NPM_RUN} lint
 
+fix: # Run automatically fixes
+	@${NPM_RUN} lint-fix
+	@${NPX} prettier -w .
+
 test: # Run test
 	@${NPM_RUN} test:db:prepare
 	@${NPM_RUN} test
