@@ -3,6 +3,8 @@
 [![Test](https://github.com/gruz0/price-tracker-web/actions/workflows/test.yml/badge.svg)](https://github.com/gruz0/price-tracker-web/actions/workflows/test.yml)
 [![Lint](https://github.com/gruz0/price-tracker-web/actions/workflows/lint.yml/badge.svg)](https://github.com/gruz0/price-tracker-web/actions/workflows/lint.yml)
 [![Docker Image CI](https://github.com/gruz0/price-tracker-web/actions/workflows/docker-image.yml/badge.svg)](https://github.com/gruz0/price-tracker-web/actions/workflows/docker-image.yml)
+[![CodeQL](https://github.com/gruz0/price-tracker-web/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/gruz0/price-tracker-web/actions/workflows/codeql-analysis.yml)
+[![Spell](https://github.com/gruz0/price-tracker-web/actions/workflows/spell.yml/badge.svg)](https://github.com/gruz0/price-tracker-web/actions/workflows/spell.yml)
 
 ## Getting Started
 
