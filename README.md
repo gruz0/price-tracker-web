@@ -14,4 +14,4 @@ Please see our [CONTRIBUTING.md](./CONTRIBUTING.md)
 
 ## Authors
 
-* Alexander Kadyrov ([@gruz0](https://github.com/gruz0))
+- Alexander Kadyrov ([@gruz0](https://github.com/gruz0))

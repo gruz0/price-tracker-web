@@ -1,6 +1,11 @@
 {
   "root": true,
-  "extends": ["next/core-web-vitals","plugin:prettier/recommended","eslint:recommended","prettier"],
+  "extends": [
+    "next/core-web-vitals",
+    "plugin:prettier/recommended",
+    "eslint:recommended",
+    "prettier"
+  ],
   "plugins": ["react", "import", "filenames"],
   "env": {
     "jest": true

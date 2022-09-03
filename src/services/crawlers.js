@@ -100,7 +100,9 @@ export const moveProductImageToUploadsDirectory = (originalPath, imageName) => {
   // Удаляем файл, если такой уже есть
   try {
     fs.unlinkSync(to)
-  } catch (err) {}
+  } catch (err) {
+    // Do nothing
+  }
 
   fs.moveSync(originalPath, to)
 }
