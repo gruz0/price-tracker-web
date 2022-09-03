@@ -1,11 +1,14 @@
 {
   "name": "price-tracker",
   "version": "0.1.0",
-  "keywords": ["price-tracker", "next.js"],
+  "keywords": [
+    "price-tracker",
+    "next.js"
+  ],
   "author": "Alexander Kadyrov <gruz0.mail@gmail.com>",
   "license": "MIT",
   "bugs": {
-   "url": "https://github.com/gruz0/price-tracker-web/issues"
+    "url": "https://github.com/gruz0/price-tracker-web/issues"
   },
   "homepage": "https://chartik.ru/",
   "private": true,
@@ -13,7 +16,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint --no-cache",
+    "lint": "next lint --no-cache && npx eslint '**/*.jsx' '**/*.js' && npx prettier --check .",
     "lint-fix": "next lint --fix",
     "lint:prisma": "npx prisma validate",
     "analyze": "cross-env ANALYZE=true npm run-script build",
@@ -54,6 +57,7 @@
     "eslint-plugin-prettier": "^4.0.0",
     "eslint-plugin-react": "^7.29.4",
     "eslint-plugin-react-hooks": "^4.4.0",
+    "husky": "^8.0.1",
     "jest": "^28.1.0",
     "jest-mock-extended": "^2.0.6",
     "node-mocks-http": "^1.11.0",
