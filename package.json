@@ -28,7 +28,7 @@
     "db:migrate_from_json": "node prisma/migrate-from-json.js"
   },
   "dependencies": {
-    "@next/bundle-analyzer": "^12.1.6",
+    "@next/bundle-analyzer": "^12.2.5",
     "@prisma/client": "^4.1.0",
     "@sentry/nextjs": "^7.2.0",
     "fs-extra": "^10.1.0",
