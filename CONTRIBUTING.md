@@ -85,7 +85,7 @@ make lint
 If you get errors, you can fix them with:
 
 ```sh
-npm run lint-fix
+make fix
 ```
 
 ## Testing
