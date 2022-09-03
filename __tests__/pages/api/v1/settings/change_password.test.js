@@ -235,7 +235,7 @@ describe(`POST ${ENDPOINT}`, () => {
       })
 
       expect(existedUser.token).not.toEqual(user.token)
-      expect(existedUser.pasword).not.toEqual(user.password)
+      expect(existedUser.password).not.toEqual(user.password)
     })
 
     it('returns response', async () => {
