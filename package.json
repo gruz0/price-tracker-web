@@ -30,7 +30,7 @@
   "dependencies": {
     "@next/bundle-analyzer": "^12.2.5",
     "@prisma/client": "^4.1.0",
-    "@sentry/nextjs": "^7.2.0",
+    "@sentry/nextjs": "^7.37.2",
     "fs-extra": "^10.1.0",
     "js-cookie": "^3.0.1",
     "multer": "^1.4.5-lts.1",
